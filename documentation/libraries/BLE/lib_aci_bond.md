@@ -19,12 +19,12 @@ Bond data can be received by a peer that is scanning. Bond starts advertising wi
     bool. True when the ACI command is successfully placed in the ACI command queue.
 
 ###Events generated
-* ACI_EVT_CMD_RSP is generated when the nRF8001 device receives the command.
-* ACI_EVT_CONNECTED is generated when a peer device connects to the nRF8001.
-* ACI_EVT_BOND_STATUS with [Returned values](https://devzone.nordicsemi.com/nrf8001_ps_v1.2.pdf#G1051505 "Go to nRF8001 PS") and [Bond status codes](https://devzone.nordicsemi.com/nrf8001_ps_v1.2.pdf#G1053311 "Go to nRF8001 PS").
-* ACI_EVT_DISCONNECTED is generated in case of a failed bonding procedure, [Returned values](https://devzone.nordicsemi.com/nrf8001_ps_v1.2.pdf#G1051356 "Go to nRF8001 PS").
-
-* The lib_aci_get_event() is used to get the ACI events from the nRF8001 device.
+ACI_EVT_CMD_RSP is generated when the nRF8001 device receives the command.  
+ACI_EVT_CONNECTED is generated when a peer device connects to the nRF8001.  
+ACI_EVT_BOND_STATUS with [Returned values](https://devzone.nordicsemi.com/nrf8001_ps_v1.2.pdf#G1051505 "Go to nRF8001 PS") and [Bond status codes](https://devzone.nordicsemi.com/nrf8001_ps_v1.2.pdf#G1053311 "Go to nRF8001 PS").  
+ACI_EVT_DISCONNECTED is generated in case of a failed bonding procedure, [Returned values](https://devzone.nordicsemi.com/nrf8001_ps_v1.2.pdf#G1051356 "Go to nRF8001 PS").  
+  
+The lib_aci_get_event() is used to get the ACI events from the nRF8001 device.
 
 ###Related functions
 [lib_aci_connect()](https://github.com/NordicSemiconductor/arduino_ble_test/blob/master/documentation/libraries/BLE/lib_aci_connect.md "Go to function description") use this function if you want to re-establish a bond.  
