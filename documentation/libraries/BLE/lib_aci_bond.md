@@ -3,7 +3,12 @@
 
 ###Description
 This library starts the nRF8001 radio advertising in bond mode. This function sends the ACI Bond command to the nRF8001 by placing the command in the ACI command queue in the BLE library.
-Bond data can be received by a peer that is scanning. Bond starts advertising with the intent of setting up a trusted relationship with a peer device
+Bond data can be received by a peer that is scanning. Bond starts advertising with the intent of setting up a trusted relationship with a peer device  
+  
+lib_aci_bond is for providing encryption and security on the link by allowing encryption keys to be shared.  
+lib aci connect is used after a bond status of success is received to use the encryption keys on the link.  
+  
+Using a lib aci bond after a bond status success will delete the previous bond information.
 
 ###Syntax
     bool lib_aci_bond(uint16_t run_timeout, uint16_t adv_interval);
@@ -27,7 +32,7 @@ ACI_EVT_DISCONNECTED is generated in case of a failed bonding procedure, [Return
 The lib_aci_get_event() is used to get the ACI events from the nRF8001 device.
 
 ###Related functions
-[lib_aci_connect()](https://github.com/NordicSemiconductor/arduino_ble_test/blob/master/documentation/libraries/BLE/lib_aci_connect.md "Go to function description") use this function if you want to re-establish a bond.  
+[lib_aci_connect()](https://github.com/NordicSemiconductor/arduino_ble_test/blob/master/documentation/libraries/BLE/lib_aci_connect.md "Go to function description")  
 [lib_aci_open_adv_pipes()] link to these.  
 [lib_aci_open_adv_pipe()]  
 [lib_aci_bond_request()]  
