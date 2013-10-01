@@ -24,10 +24,10 @@ Using a lib aci bond after a bond status success will delete the previous bond i
     bool. True when the ACI command is successfully placed in the ACI command queue.
 
 ###Events generated
-ACI_EVT_CMD_RSP is generated when the nRF8001 device receives the command.  
-ACI_EVT_CONNECTED is generated when a peer device connects to the nRF8001.  
-ACI_EVT_BOND_STATUS with [Returned values](https://devzone.nordicsemi.com/nrf8001_ps_v1.2.pdf#G1051505 "Go to nRF8001 PS") and [Bond status codes](https://devzone.nordicsemi.com/nrf8001_ps_v1.2.pdf#G1053311 "Go to nRF8001 PS").  
-ACI_EVT_DISCONNECTED is generated in case of a failed bonding procedure, [Returned values](https://devzone.nordicsemi.com/nrf8001_ps_v1.2.pdf#G1051356 "Go to nRF8001 PS").  
+[ACI_EVT_CMD_RSP](https://devzone.nordicsemi.com/nrf8001_ps_v1.2.pdf#G1050945 "Go to nRF8001 PS") is generated when the nRF8001 device receives the command.  
+[ACI_EVT_CONNECTED](https://devzone.nordicsemi.com/nrf8001_ps_v1.2.pdf#G1051073 "Go to nRF8001 PS") is generated when a peer device connects to the nRF8001.  
+[ACI_EVT_BOND_STATUS](https://devzone.nordicsemi.com/nrf8001_ps_v1.2.pdf#G1051403 "Go to nRF8001 PS") with [Bond status codes](https://devzone.nordicsemi.com/nrf8001_ps_v1.2.pdf#G1053311 "Go to nRF8001 PS") is generated after the bondig procedure is executed.  
+[ACI_EVT_DISCONNECTED](https://devzone.nordicsemi.com/nrf8001_ps_v1.2.pdf#G1051284 "Go to nRF8001 PS") is generated in case of a failed bonding procedure.  
   
 The lib_aci_get_event() is used to get the ACI events from the nRF8001 device.
 
