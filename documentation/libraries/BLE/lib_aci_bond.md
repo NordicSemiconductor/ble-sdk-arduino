@@ -25,3 +25,11 @@ Bond data can be received by a peer that is scanning. Bond starts advertising wi
 * ACI_EVT_DISCONNECTED is generated in case of a failed bonding procedure, [Returned values](https://devzone.nordicsemi.com/nrf8001_ps_v1.2.pdf#G1051356 "Go to nRF8001 PS").
 
 * The lib_aci_get_event() is used to get the ACI events from the nRF8001 device.
+
+###Related functions
+[lib_aci_connect()](https://github.com/NordicSemiconductor/arduino_ble_test/blob/master/documentation/libraries/BLE/lib_aci_connect.md "Go to function description") use this function if you want to re-establish a bond.
+[lib_aci_open_adv_pipes()] link to these.
+[lib_aci_open_adv_pipe()]
+[lib_aci_bond_request()]
+[lib_aci_open_remote_pipe()]
+[lib_aci_close_remote_pipe()]
