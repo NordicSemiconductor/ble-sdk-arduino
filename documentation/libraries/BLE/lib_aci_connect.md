@@ -26,7 +26,7 @@ A peer device can connect to the nRF8001 device during advertising in connectabl
 
 ###Events generated###
 * ACI_EVT_CMD_RSP is generated when the nRF8001 device receives the command.
-* ACI_EVT_CONNECTED is generated when the peer device is connected to the nRF8001 device. See list of [Returned values](https://devzone.nordicsemi.com/nrf8001_ps_v1.2.pdf#G1051027 "Go to nRF8001 PS")
+* ACI_EVT_CONNECTED is generated when the peer device is connected to the nRF8001 device. [Returned values](https://devzone.nordicsemi.com/nrf8001_ps_v1.2.pdf#G1051027 "Go to nRF8001 PS").
 * ACI_EVT_DISCONNECTED with aci_status ACI_STATUS_ERROR_ADVT_TIMEOUT is generated when no peer device connects to the nRF8001 device.
     
-* The lib_aci_get_event() is used to get the ACI events from the nRF8001 device.
+    lib_aci_get_event() is used to get the ACI events from the nRF8001 device.
