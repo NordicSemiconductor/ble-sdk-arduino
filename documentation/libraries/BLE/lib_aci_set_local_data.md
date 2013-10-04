@@ -28,7 +28,7 @@ See the command status in the Command Response Event to verify that the command 
 The lib_aci_get_event() is used to get the ACI events from the nRF8001.
 
 ###Related functions
-senddata
+senddata  
 senddataack  
 requestdata  
 senddatanack  
