@@ -1,4 +1,5 @@
-####[BLE](https://github.com/NordicSemiconductor/arduino_ble_test/tree/master/documentation/libraries/BLE "Go to BLE folder")
+####[BLE](https://github.com/NordicSemiconductor/ble-sdk-arduino/tree/master/documentation/libraries/BLE "Go to BLE folder")
+
 #lib_aci_bond()
 
 ###Description

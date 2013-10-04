@@ -1,4 +1,5 @@
-####[BLE](https://github.com/NordicSemiconductor/arduino_ble_test/tree/master/documentation/libraries/BLE "Go to BLE folder")
+####[BLE](https://github.com/NordicSemiconductor/ble-sdk-arduino/tree/master/documentation/libraries/BLE "Go to BLE folder")
+
 #lib_aci_connect()
 
 ###Description
@@ -26,7 +27,7 @@ A peer device can connect to the nRF8001 device during advertising in connectabl
 The lib_aci_get_event() is used to get the ACI events from the nRF8001 device.
 
 ###Related functions
-[lib_aci_bond()](https://github.com/NordicSemiconductor/arduino_ble_test/blob/master/documentation/libraries/BLE/lib_aci_bond.md "Go to function description")  
+[lib_aci_bond()](https://github.com/NordicSemiconductor/ble-sdk-arduino/blob/master/documentation/libraries/BLE/lib_aci_bond.md "Go to function description")  
 [lib_aci_open_adv_pipes()] link to these.  
 [lib_aci_open_adv_pipe()]  
 [lib_aci_open_remote_pipe()]  
