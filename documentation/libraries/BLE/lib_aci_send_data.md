@@ -3,7 +3,7 @@
 #lib_aci_send_data()
 
 ###Description
-Sends data on a given pipe. This function sends a SendData ACI command with application data to the nRF8001. 
+Sends data on a given pipe. This function queues a SendData ACI command with application data, in the ACI command queue.
 
 
 ###Syntax
