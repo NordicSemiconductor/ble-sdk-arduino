@@ -1,4 +1,7 @@
-Bluetooth low energy API for Arduino (uses the nRF8001 from Nordic Semiconductor)
+####[BLE](https://github.com/NordicSemiconductor/ble-sdk-arduino/tree/master/documentation/libraries/BLE "Go to BLE folder")
+
+#Bluetooth low energy SDK for Arduino
+The Bluetooth low energy uses the nRF8001 from Nordic Semiconductor)
 This has been tested using the Arduino UNO board and the nRF2740/nRF2741 module and the redbearlab Arduino shield.
 
 
@@ -50,10 +53,6 @@ Make sure you always run the run_me_compile_xml_to_nRF8001_setup.bat with the nR
 
 Using the nRF8001 SDK for Arduino with the Redbear lab shield
 =============================================================
-
-Get the code for the nRF8001 SDK for Arduino from the developer.bluetooth.org
-https://forumarchive.bluetooth.org/pages/forum.aspx?action=ViewPosts&fid=6&tid=63
-
 
 
 Unzip and extract the files in the zip file of the latest release
