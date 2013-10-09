@@ -20,5 +20,5 @@ Make sure you always run the run_me_compile_xml_to_nRF8001_setup.bat with the nR
 ##Resources
 [Arduino](http://arduino.cc/ "Go to Arduino.cc")  
 [nRF8001](https://www.nordicsemi.com/eng/Products/Bluetooth-R-low-energy/nRF8001 "Go to product")  
-[RedBearLab BLE Shield from MakerSHED](http://www.makershed.com/Bluetooth_Low_Energy_BLE_Shield_for_Arduino_p/mkrbl1.htm "Go to product")
+[RedBearLab BLE Shield from MakerSHED](http://www.makershed.com/Bluetooth_Low_Energy_BLE_Shield_for_Arduino_p/mkrbl1.htm "Go to product")  
 [RedBearLab BLE Shield from seeed](http://www.seeedstudio.com/depot/bluetooth-40-low-energy-ble-shield-p-1255.html "Go to product")  
