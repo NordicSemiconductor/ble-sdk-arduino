@@ -1,11 +1,10 @@
 ####[BLE](https://github.com/NordicSemiconductor/ble-sdk-arduino/tree/master/documentation/libraries/BLE "Go to BLE folder")
 
 #Bluetooth low energy SDK for Arduino
-The Bluetooth low energy uses the nRF8001 from Nordic Semiconductor)
-This has been tested using the Arduino UNO board and the nRF2740/nRF2741 module and the redbearlab Arduino shield.
+The Bluetooth low energy SDK for arduino uses the nRF8001 from Nordic Semiconductor.
+The SDK has been tested using the Arduino UNO board and the nRF2740/nRF2741 module and the redbearlab Arduino shield.
 
-
-Arduino UNO -> nRF2740 Wiring:
+* Arduino UNO -> nRF2740 Wiring:
 PIN3 -> RDYN
 PIN4 -> RESET
 PIN5 -> ACTIVE
@@ -19,47 +18,43 @@ PIN13 -> SCK
 GND  -> GND
 
 
-On the nRF2740 board the connectors are 
+* On the nRF2740 board the connectors are 
+1 GND
+2 VCC_nRF
+3 ACTIVE
+4 Not in use
+5 SCK
+6 MOSI
+7 MISO
+8 RDYN
+9 REQN
+10 RESET
 
-1 - GND
-2 - VCC_nRF
-3 - ACTIVE
-4 - Not in use
-5 - SCK
-6 - MOSI
-7 - MISO
-8 - RDYN
-9 - REQN
-10- RESET
-
-The pin arrangement on the nRF2740
-
+* The pin arrangement on the nRF2740
 1 2
 3 4
 5 6
 7 8
 9 10
 
-Contents:
-BLE folder contains the ported bluetooth library. This folder (BLE) should be extracted into the arduino libraries folder. This contains the ACI library. 
+###Contents
+The BLE folder contains the ACI library. This folder (BLE) should be extracted into the arduino libraries folder.  
+  
+BLE_arduino_demos should be placed outside the Arduino install folder.  
+  
+The I/O lines between the Arduino and the nRF8001 can be connected directly. Using a 5v Arduino directly with the nRF8001 will eventually destroy the nRF8001 over time and possibly lead to undefined behavior.  
+  
+Note: The Arduino is usually a 5v chip, so depending on you board, you might have to use level converters or a resistive divider to get the voltage to 3.3v for the lines that are output from Arduino to the nRF8001.  
+  
+Make sure you always run the run_me_compile_xml_to_nRF8001_setup.bat with the nRFgo studio installed on a Windows PC to generate the setup required for the nRF8001 (services.h). You need to run this again whenever you change the configuration in the nRFgo studio.  
 
-BLE_arduino_demos should be placed outside the Arduino install folder.
-
-The I/O lines between the Arduino and the nRF8001 can be connected directly. Using a 5v Arduino directly with the nRF8001 will eventually destroy the nRF8001 over time and possibly lead to undefined behavior.
-
-Note: The Arduino is usually a 5v chip, so depending on you board, you might have to use level converters or a resistive divider to get the voltage to 3.3v for the lines that are output from Arduino to the nRF8001.
-
-Make sure you always run the run_me_compile_xml_to_nRF8001_setup.bat with the nRFgo studio installed on a Windows PC to generate the setup required for the nRF8001 (services.h). You need to run this again whenever you change the configuration in the nRFgo studio.
-
-Using the nRF8001 SDK for Arduino with the Redbear lab shield
-=============================================================
-
+###Using the nRF8001 SDK for Arduino with the Redbear lab shield
 
 Unzip and extract the files in the zip file of the latest release
 
 Copy the BLE folder to the libraries folder in the Arduino installation
 
-Copy the BLE_arduino_demos_latest to a folder outside the Arduino installation
+Copy the BLE_arduino_demos to a folder outside the Arduino installation
 
 -----
 
