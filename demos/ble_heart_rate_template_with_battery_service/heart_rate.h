@@ -1,31 +1,15 @@
-/*Copyright (c) 2013, Nordic Semiconductor ASA
- *All rights reserved.
- *
- *Redistribution and use in source and binary forms, with or without modification,
- *are permitted provided that the following conditions are met:
- *
- *  Redistributions of source code must retain the above copyright notice, this
- *  list of conditions and the following disclaimer.
- *
- *  Redistributions in binary form must reproduce the above copyright notice, this
- *  list of conditions and the following disclaimer in the documentation and/or
- *  other materials provided with the distribution.
- *
- *  Neither the name of Nordic Semiconductor ASA nor the names of its
- *  contributors may be used to endorse or promote products derived from
- *  this software without specific prior written permission.
- *
- *THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
- *ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
- *WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- *DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
- *ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
- *(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- *LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
- *ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
- *SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
+/* Copyright (c) 2011 Nordic Semiconductor. All Rights Reserved.
+*
+* The information contained herein is property of Nordic Semiconductor ASA.
+* Terms and conditions of usage are described in detail in NORDIC
+* SEMICONDUCTOR STANDARD SOFTWARE LICENSE AGREEMENT.
+*
+* Licensees are granted free, non-transferable use of the information. NO
+* WARRANTY of ANY KIND is provided. This heading must NOT be removed from
+* the file.
+*
+* $LastChangedRevision$
+*/
 
 /* Attention! 
 *  To maintain compliance with Nordic Semiconductor ASA's Bluetooth profile 
@@ -50,6 +34,11 @@
 /** HEART RATE Maximum number of byte per packet.*/
 #define HR_MAX_PAYLOAD 19
 
+/**HEART RATE DATA BUFFER SIZE: Set to 0 to disable data buffering. If 0, heart-rate data will be discarded when there is 
+* no data credit. If non 0, data will be inserted in FIFO buffer and sent whenever data credit is available.
+*/
+#define HEART_RATE_DATA_BUFF_SIZE 0
+
 
 /** HEART RATE Flags */
 /**HEART RATE FLAGS bit 0: Heart Rate Value Format bit, if 0 then Heart Rate on 8 bits; if 1 then Heart Rate on 16 bits.*/
@@ -67,7 +56,8 @@
 /**HEART RATE FLAGS bit 6: RESERVED FOR FUTURE USE.*/
 #define HEART_RATE_FLAGS_RESERVED3_BIT                           0x40     
 /**HEART RATE FLAGS bit 7: RESERVED FOR FUTURE USE.*/
-#define HEART_RATE_FLAGS_RESERVED4_BIT                           0x80     
+#define HEART_RATE_FLAGS_RESERVED4_BIT                           0x80    
+
 
 /** Possible Heart Rate Control Point Opcodes */
 typedef enum hrcp_op_codes_t{
@@ -81,6 +71,26 @@ typedef enum
   HRCP_ERR_OK                          = 0x00, /**<No error in control point command.*/
   HRCP_ERR_CONTROL_POINT_NOT_SUPPORTED = 0x80  /**<The received Heart Rate Control Point value is not supported.*/
 } hrcp_error_codes_t;
+
+/** @brief Gets heart rate measurment
+ */
+uint8_t get_heart_rate_measurement(void);
+
+/** @brief Insert data into the heart-rate data buffer if it is not full.
+ *  @details Returns SUCCESS if data is inserted, otherwise BUFFER_FULL.
+ */
+uint8_t insert_data_into_heart_rate_buffer(uint8_t heart_rate);
+
+/** @brief Sends data over the air if there is any data in the heart-rate data buffer.
+ *  @details Returns SUCCESS if data is sent, otherwise BUFFER_EMPTY.
+ */
+uint8_t send_data_from_heart_rate_buffer(aci_state_t * aci_state);
+
+/** @brief Sends heart-rate data over the air if data credit is available.
+ *  @details Sends heart-rate data over the air if data credit is available.
+ *  @param heart_rate The heart rate value to send.
+ */
+void update_heart_rate(aci_state_t *aci_state, uint8_t heart_rate);
 
 /** @brief Function to initialize heart_rate service.
  */
