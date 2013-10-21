@@ -489,6 +489,16 @@ void aci_loop()
       case ACI_EVT_TIMING:
         Serial.print(F("Timing change received conn Interval: 0x"));
         Serial.println(aci_evt->params.timing.conn_rf_interval, HEX);
+        //Disconnect as soon as we are bonded and required pipes are available
+        //This is used to store the bonding info on disconnect and then re-connect to verify the bond
+        if((ACI_BOND_STATUS_SUCCESS == aci_state.bonded) &&
+           (true == bonded_first_time) &&
+           (GAP_PPCP_MAX_CONN_INT >= aci_state.connection_interval) && 
+           (GAP_PPCP_MIN_CONN_INT <= aci_state.connection_interval) && //Timing change already done: Provide time for the the peer to finish
+           (lib_aci_is_pipe_available(&aci_state, PIPE_HID_SERVICE_HID_REPORT_TX)))
+           {
+             lib_aci_disconnect(&aci_state, ACI_REASON_TERMINATE);
+           }  
         break;
       
       case ACI_EVT_DATA_CREDIT:
