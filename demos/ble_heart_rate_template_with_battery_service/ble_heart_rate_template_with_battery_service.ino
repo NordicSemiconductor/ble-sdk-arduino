@@ -1,55 +1,14 @@
-/*Copyright (c) 2013, Nordic Semiconductor ASA
- *All rights reserved.
- *
- *Redistribution and use in source and binary forms, with or without modification,
- *are permitted provided that the following conditions are met:
- *
- *  Redistributions of source code must retain the above copyright notice, this
- *  list of conditions and the following disclaimer.
- *
- *  Redistributions in binary form must reproduce the above copyright notice, this
- *  list of conditions and the following disclaimer in the documentation and/or
- *  other materials provided with the distribution.
- *
- *  Neither the name of Nordic Semiconductor ASA nor the names of its
- *  contributors may be used to endorse or promote products derived from
- *  this software without specific prior written permission.
- *
- *THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
- *ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
- *WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- *DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
- *ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
- *(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- *LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
- *ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- *(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
- *SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
-/**
- *
- * Click on the "Serial Monitor" button on the Arduino IDE to get reset the Arduino and start the application.
- * The setup() function is called first and is called only one for each reset of the Arduino.
- * The loop() function as the name implies is called in a loop.
- * The setup() and loop() function are called in this way.
- * main() 
- *  {
- *   setup(); 
- *   while(1)
- *   {
- *     loop();
- *   }
- * }
- * 
- */
 #include <SPI.h>
 #include <avr/pgmspace.h>
 #include "services.h"
+#include <ble_system.h>
 #include <lib_aci.h>
 #include <aci_setup.h>
 #include "heart_rate.h"
 #include "battery.h"
 #include "lib_battery_level.h"
+#include "hrm_definitions.h"
+#include "EEPROM.h"
 
 
 #ifdef SERVICES_PIPE_TYPE_MAPPING_CONTENT
@@ -58,17 +17,20 @@
 #else
     #define NUMBER_OF_PIPES 0
     static services_pipe_type_mapping_t * services_pipe_type_mapping = NULL;
-#endif
+#endif 
 
-#define BATT_SERVICE_SIMULATION 1
-#define BATT_MEASUREMENT_DELAY 3             
-#define HEART_RATE_DATA_BUFF_SIZE 1
+#define BATT_MEASUREMENT_DELAY         3      //Prescaler for the battery measurement frequency, offset to Timer event frequency TCCR1B
+#define HEART_RATE_MEASUREMENT_DELAY   5      //Prescaler for the heart rate measurement frequency, offset to Timer event frequency TCCR1B
+
+#define ENABLE_BATTERY_MEASUREMENT_PRINTOUT      1     //Set to 1 to enable, set to 0 to disable. Only valid with battery_level_data_source = MEASUREMENT
+#define ENABLE_CREDIT_PRINTOUT                   0     //Set to 1 to enable, set to 0 to disable
 
 /*
 Store the nRF8001 setup information generated on the flash of the AVR.
 This reduces the RAM requirements for the nRF8001.
 */
 static hal_aci_data_t setup_msgs[NB_SETUP_MESSAGES] PROGMEM = SETUP_MESSAGES_CONTENT;
+
 // an aci_struct that will contain 
 // total initial credits
 // current credit
@@ -84,18 +46,18 @@ static aci_state_t aci_state;
 static hal_aci_evt_t aci_data;
 static hal_aci_data_t aci_cmd;
 
-//static bool radio_ack_pending  = false;
 static bool timing_change_done = false;
 
-static uint8_t batt_percentage_simulated = 100;
-static uint8_t battery_measurement_delay_counter = 0;
+static uint8_t battery_measurement_delay_counter = 0;      //Variable to control frequency of battery data handling           
+static uint8_t heart_rate_measurement_delay_counter = 0;   //Variable to control frequency of heart-rate data handling
 
-static uint8_t heart_rate_data_buffer[HEART_RATE_DATA_BUFF_SIZE];
+static data_source_t battery_level_data_source = MEASUREMENT;  //Selects the data source for the battery data
+static data_source_t heart_rate_data_source = SIMULATION;     //Selects the data source for the heart-rate data
 
-/*
-Variables used for the timer on the AVR
-*/
-static volatile uint8_t timer1_f = 0;
+static volatile uint8_t credit_printout_flag = 0;          //flag to enable data credit printout only once after timer execution
+static volatile uint8_t battery_measurement_flag = 0;      //flag to enable battery measurement printout only once after timer execution
+static uint8_t battery_percent_level;                      //Battery measurement value
+static uint8_t heart_rate = 0;                             //Heart-rate measurement value
 
 
 /*** FUNC
@@ -132,7 +94,7 @@ void Timer1start()
     TIFR1   = 0x00;        // Timer1 INT Flag Reg: Clear Timer Overflow Flag
     TIMSK1  = 0x01;        // Timer1 INT Reg: Timer1 Overflow Interrupt Enable
     TCCR1A  = 0x00;        // Timer1 Control Reg A: Wave Gen Mode normal
-    TCCR1B  = 0x05;        // Timer1 Control Reg B: Timer Prescaler set to 1024
+    TCCR1B  = 0x03;        // Timer1 Control Reg B: Timer prescaler.
 }
 
 void Timer1stop()
@@ -147,61 +109,77 @@ Function:   Handles the Timer1-overflow interrupt
 FUNC ***/
 ISR(TIMER1_OVF_vect) 
 {  
-     uint8_t battery_percent_level;
-    
-     //Send heart rate simulation notification  
-     perform_heart_rate_simulation();
-     
-     //Send battery measurement notification
-     if(battery_measurement_delay_counter >= BATT_MEASUREMENT_DELAY)
-     {
-       battery_percent_level = measure_battery(&aci_state);
-       update_battery(&aci_state, battery_percent_level);
-       
-       battery_measurement_delay_counter = 0;
-     }
-     battery_measurement_delay_counter++;
+	uint8_t return_value;
+	
+	//Get heart-rate data and send it over the BLE link
+	if(heart_rate_measurement_delay_counter == HEART_RATE_MEASUREMENT_DELAY)
+	{
+		//Get heart-rate data
+		if(heart_rate_data_source == SIMULATION)
+		{
+			heart_rate++;
+			if (heart_rate == 200)
+			{
+				heart_rate = 0;
+			}
+		}
+		else if(heart_rate_data_source == MEASUREMENT)
+		{
+			heart_rate = get_heart_rate_measurement();
+		}
+		
+		//Send heart-rate data
+		if(HEART_RATE_DATA_BUFF_SIZE == 0)
+		{
+			update_heart_rate(&aci_state, heart_rate);    //Send heart-rate data over the air
+		}
+		else
+		{
+			insert_data_into_heart_rate_buffer(heart_rate);   //Insert heart-rate data into send buffer to be sent over the BLE link via nRF8001
+		}
+		
+		heart_rate_measurement_delay_counter = 0;           
+	}
+	heart_rate_measurement_delay_counter++;
+	
+	//Get battery data and send it over the BLE link
+	if(battery_measurement_delay_counter >= BATT_MEASUREMENT_DELAY)
+	{
+		//Get battery data
+		if(battery_level_data_source == SIMULATION)
+		{	
+			battery_percent_level = get_simulated_battery_value();    //Get simulated battery value
+		} 
+		else if(battery_level_data_source == MEASUREMENT)
+		{		
+			battery_percent_level = measure_battery(&aci_state);      //Sample actual battery voltage
+		}
+		
+		//Send battery data
+		if(BATTERY_DATA_BUFF_SIZE == 0)
+		{
+			update_battery(&aci_state, battery_percent_level);    //Send battery data over the air
+		}
+		else
+		{
+			insert_data_into_battery_buffer(battery_percent_level);   //Insert battery data into send buffer to be sent over the BLE link via nRF8001
+		}
+					
+		battery_measurement_delay_counter = 0;
+		battery_measurement_flag = 1;             //Enable battery measurement printout after timer execution
+	}
+	battery_measurement_delay_counter++;
 
-    //Set timer flag 
-    if (0 == timer1_f)
+    //Enable credit printout after timer execution
+    if (credit_printout_flag == 0)
     {
-      timer1_f = 1;
+      credit_printout_flag = 1;
     }
 
     TCNT1H = 11;    // Approx 4000 ms - Reload
     TCNT1L = 0;
     TIFR1  = 0x00;    // timer1 int flag reg: clear timer overflow flag
 };
-
-void perform_heart_rate_simulation(void)
-{
-  static uint8_t dummy_heart_rate = 65;
-
-  if (lib_aci_is_pipe_available(&aci_state, PIPE_HEART_RATE_HEART_RATE_MEASUREMENT_TX) 
-      && (true == timing_change_done))
-  {
-      heart_rate_set_support_contact_bit();
-      heart_rate_set_contact_status_bit();
-      if(aci_state.data_credit_available > 0)
-      {
-        if (heart_rate_send_hr((uint8_t)dummy_heart_rate))
-        {
-          aci_state.data_credit_available--;
-        }
-      }
-      else
-      {
-        //Currently no data credit is available.
-        heart_rate_data_buffer[0] = dummy_heart_rate;   //Insert heart rate data into heart rate data buffer
-      }
-      
-      dummy_heart_rate++;
-      if (dummy_heart_rate == 200)
-      {
-        dummy_heart_rate = 65;
-      }    
-  }
-}
 
 
 void setup(void)
@@ -224,29 +202,48 @@ void setup(void)
   aci_state.aci_setup_info.setup_msgs         = setup_msgs;
   aci_state.aci_setup_info.num_setup_msgs     = NB_SETUP_MESSAGES;
 
-	//Tell the ACI library, the MCU to nRF8001 pin connections
-	aci_state.aci_pins.board_name = REDBEARLAB_SHIELD_V1_1; //REDBEARLAB_SHIELD_V1_1 See board.h for details
-	aci_state.aci_pins.reqn_pin   = 9;
-	aci_state.aci_pins.rdyn_pin   = 8;
-	aci_state.aci_pins.mosi_pin   = MOSI;
-	aci_state.aci_pins.miso_pin   = MISO;
-	aci_state.aci_pins.sck_pin    = SCK;
+  /*
+  Tell the ACI library, the MCU to nRF8001 pin connections.
+  The Active pin is optional and can be marked UNUSED
+  */	  	
+  aci_state.aci_pins.board_name = REDBEARLAB_SHIELD_V1_1; //See board.h for details
+  aci_state.aci_pins.reqn_pin   = 10;
+  aci_state.aci_pins.rdyn_pin   = 3;
+  aci_state.aci_pins.mosi_pin   = MOSI;
+  aci_state.aci_pins.miso_pin   = MISO;
+  aci_state.aci_pins.sck_pin    = SCK;
 
-	aci_state.aci_pins.spi_clock_divider     = SPI_CLOCK_DIV8;
+  aci_state.aci_pins.spi_clock_divider     = SPI_CLOCK_DIV8;
 	  
-	aci_state.aci_pins.reset_pin             = UNUSED;
-	aci_state.aci_pins.active_pin            = UNUSED;
-	aci_state.aci_pins.optional_chip_sel_pin = UNUSED;
+  aci_state.aci_pins.reset_pin             = 4;
+  aci_state.aci_pins.active_pin            = UNUSED;
+  aci_state.aci_pins.optional_chip_sel_pin = UNUSED;
 	  
-	aci_state.aci_pins.interface_is_interrupt	  = false;
-	aci_state.aci_pins.interrupt_number			  = UNUSED;
-  
+  aci_state.aci_pins.interface_is_interrupt	  = false;
+  aci_state.aci_pins.interrupt_number	      = 1;
+	
 
   /** We reset the nRF8001 here by toggling the RESET line connected to the nRF8001
    *  and initialize the data structures required to setup the nRF8001
    */
+  
   lib_aci_init(&aci_state);
+	
+	pinMode(6, INPUT); //Pin #6 on Arduino -> PAIRING CLEAR pin: Connect to 3.3v to clear the pairing
+	if (0x01 == digitalRead(6))
+	{
+		//Clear the pairing
+		Serial.println(F("Pairing cleared. Remove the wire on Pin 6 and reset the board for normal operation."));
+		//Address. Value
+		EEPROM.write(0, 0);
+		while(1) {};
+	}
+		
+	//Initialize the state of the bond
+	aci_state.bonded = ACI_BOND_STATUS_FAILED;
+		
   heart_rate_init();
+  init_battery_data_buffers();
 }
 
 void aci_loop()
@@ -256,7 +253,7 @@ void aci_loop()
   if (lib_aci_event_get(&aci_state, &aci_data))
   {
     aci_evt_t * aci_evt;
-    
+  
     aci_evt = &aci_data.evt;    
     //@todo change this so that the commands and events can be processed here in a switch case instead of callbacks
     //hal_aci_tl_msg_rcv_hook(&aci_data); 
@@ -264,7 +261,7 @@ void aci_loop()
     {
         case ACI_EVT_DEVICE_STARTED:
         {          
-          aci_state.data_credit_total = aci_evt->params.device_started.credit_available;
+		  aci_state.data_credit_total = aci_evt->params.device_started.credit_available;
           switch(aci_evt->params.device_started.device_mode)
           {
             case ACI_DEVICE_SETUP:
@@ -284,13 +281,13 @@ void aci_loop()
               Serial.println(F("Evt Device Started: Standby"));
               Timer1start();
               lib_aci_connect(30/* in seconds */, 0x0100 /* advertising interval 100ms*/);
-              Serial.println(F("Advertising started"));
+              Serial.println(F("Advertising started..."));
               break;
           }
         }
         break; //ACI Device Started Event
         
-      case ACI_EVT_CMD_RSP:
+      case ACI_EVT_CMD_RSP:		    	  
         //If an ACI command response event comes with an error -> stop
         if (ACI_STATUS_SUCCESS != aci_evt->params.cmd_rsp.cmd_status )
         {
@@ -310,34 +307,7 @@ void aci_loop()
           switch (aci_evt->params.cmd_rsp.cmd_opcode)
           {
             case ACI_CMD_GET_BATTERY_LEVEL:
-              uint16_t battery_percent_value;
-              
-              if(BATT_SERVICE_SIMULATION)
-              {
-                batt_percentage_simulated -= 1;
-                if(batt_percentage_simulated < 1)
-                  batt_percentage_simulated = 100;
-                battery_percent_value = batt_percentage_simulated;
-              }
-              else
-              {
-                uint16_t battery_level_value;
-                float battery_volt_level;
-                
-                battery_level_value = aci_evt->params.cmd_rsp.params.get_battery_level.battery_level;
-                battery_volt_level = (float)battery_level_value * 0.00352;
-                battery_percent_value = lib_battery_level_percent(battery_volt_level*1000);
-                //Serial.print(F("Battery level value received: "));
-                //Serial.print(battery_level_value);
-                //Serial.print(F("    Volts: "));
-                //Serial.print(battery_volt_level);
-                //Serial.print(F("V"));
-              }
-              Serial.print(F("Battery remaining: "));
-              Serial.print(battery_percent_value);
-              Serial.println(F("%"));
-              update_battery(&aci_state, battery_percent_value);
-              break;
+				break;
           }
         }      
         break;
@@ -380,13 +350,9 @@ void aci_loop()
         /**
         Bluetooth Radio ack received from the peer radio for the data packet sent.
         This also signals that the buffer used by the nRF8001 for the data packet is available again.
-        */        
-        Serial.print(F("Evt data credit: "));
-        Serial.println(aci_evt->params.data_credit.credit);
-        
-        update_battery_from_data_buffer(&aci_state);
+        */                
         break;
-      
+		
       case ACI_EVT_PIPE_ERROR:
         //See the appendix in the nRF8001 Product Specication for details on the error codes
                 
@@ -437,7 +403,7 @@ void aci_loop()
 }
 
 /*
-Use this function to reset the expended energy iff the Heart Rate Control Point is present.
+Use this function to reset the expended energy if the Heart Rate Control Point is present.
 */
 #ifdef PIPE_HEART_RATE_HEART_RATE_CONTROL_POINT_RX_ACK
 void hook_for_resetting_energy_expended(void)
@@ -447,15 +413,37 @@ void hook_for_resetting_energy_expended(void)
 
 
 void loop()
-{  
-  if(1 == timer1_f)
-  {
-    Serial.print(F("Credit available: "));
-    Serial.println(aci_state.data_credit_available);
-    Serial.print(F("Credit total: "));
-    Serial.println(aci_state.data_credit_total);
-    timer1_f = 0;
-  }
-  aci_loop();
+{ 
+	//Perform any serial printout here when timer is inactive
+	//This will prevent conflicts with the timer interrupt and the serial interrupt	
+	
+	//Data credits printout  
+	if(ENABLE_CREDIT_PRINTOUT == 1 && credit_printout_flag == 1)
+	{ 
+		Serial.print(F("Credit available: "));
+		Serial.println(aci_state.data_credit_available);
+		Serial.print(F("Credit total: "));
+		Serial.println(aci_state.data_credit_total);	
+		credit_printout_flag = 0;    //Clear flag to allow only one printout per timer interrupt
+	}
+	
+	//Battery measurement printout
+	if(ENABLE_BATTERY_MEASUREMENT_PRINTOUT == 1 && battery_measurement_flag == 1)
+	{
+  	print_battery_measurement_data();
+		battery_measurement_flag = 0;   //Clear flag to allow only one printout per timer interrupt
+	}
+  
+	//Send data from data buffers
+	if(aci_state.data_credit_available > 0)             //Check if there are any data credits available
+	{
+		if(HEART_RATE_DATA_BUFF_SIZE != 0)                //If there is no heart-rate data buffer, there is nothing to send
+			send_data_from_heart_rate_buffer(&aci_state);   //Send any buffered heart-rate data over the BLE link via nRF8001
+		if(BATTERY_DATA_BUFF_SIZE != 0)										//If there is no heart-rate data buffer, there is nothing to send
+			send_data_from_battery_buffer(&aci_state);      //Send any buffered battery data over the BLE link via nRF8001
+	}
+  
+	//Check for any incoming events
+	aci_loop();
 }
 
