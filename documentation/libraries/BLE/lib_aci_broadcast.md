@@ -3,7 +3,7 @@
 #lib_aci_broadcast()
 
 ###Description
-This library starts the nRF8001 radio advertising in broadcast mode. This function sends the ACI Broadcast command to the nRF8001 by placing the command in the ACI command queue in the BLE library.
+This function starts the nRF8001 radio advertising in broadcast mode. This function sends the ACI Broadcast command to the nRF8001 by placing the command in the ACI command queue in the BLE library.
 Broadcast data can be received by a peer that is scanning, but the peer cannot connect to a nRF8001 in broadcast mode.
 
 ###Syntax

@@ -3,7 +3,8 @@
 #lib_aci_connect()
 
 ###Description
-This library starts the nRF8001 radio advertising in connectable mode. This function sends the ACI Connect command to the nRF8001 by placing the command in the ACI command queue in the BLE library.
+This function starts the nRF8001 radio advertising in connectable mode.
+This function sends the ACI Connect command to the nRF8001 by placing the command in the ACI command queue in the BLE library.
 A peer device can connect to the nRF8001 device during advertising in connectable mode.
 
 ###Syntax
@@ -20,9 +21,9 @@ A peer device can connect to the nRF8001 device during advertising in connectabl
     bool. True when the ACI command is successfully placed in the ACI command queue.
 
 ###Events generated
-[ACI_EVT_CMD_RSP](https://devzone.nordicsemi.com/documentation/ps/nRF8001_PS_v1.2.pdf#G1050945 "Go to nRF8001 PS") is generated when the nRF8001 device receives the command.
-[ACI_EVT_CONNECTED](https://devzone.nordicsemi.com/documentation/ps/nRF8001_PS_v1.2.pdf#G1051073 "Go to nRF8001 PS") is generated when a peer device connects to the nRF8001. 
-[ACI_EVT_DISCONNECTED](https://devzone.nordicsemi.com/documentation/ps/nRF8001_PS_v1.2.pdf#G1051284 "Go to nRF8001 PS") with aci_status ACI_STATUS_ERROR_ADVT_TIMEOUT is generated when no peer device connects to the nRF8001 device.
+[ACI_EVT_CMD_RSP](https://devzone.nordicsemi.com/documentation/ps/nRF8001_PS_v1.2.pdf#G1050945 "Go to nRF8001 PS") is generated when the nRF8001 device receives the command.  
+[ACI_EVT_CONNECTED](https://devzone.nordicsemi.com/documentation/ps/nRF8001_PS_v1.2.pdf#G1051073 "Go to nRF8001 PS") is generated when a peer device connects to the nRF8001.  
+[ACI_EVT_DISCONNECTED](https://devzone.nordicsemi.com/documentation/ps/nRF8001_PS_v1.2.pdf#G1051284 "Go to nRF8001 PS") with aci_status ACI_STATUS_ERROR_ADVT_TIMEOUT is generated when no peer device connects to the nRF8001 device.  
   
 The lib_aci_get_event() is used to get the ACI events from the nRF8001 device.
 
