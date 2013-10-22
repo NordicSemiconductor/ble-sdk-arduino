@@ -35,10 +35,90 @@
 #include "lib_aci.h"
 #include "services.h"
 #include "heart_rate.h"
+#include "hrm_definitions.h"
 
-
+static uint8_t heart_rate_data_buffer[HEART_RATE_DATA_BUFF_SIZE];
+static uint8_t heart_rate_data_buff_insert_ptr;
+static uint8_t heart_rate_data_buff_fetch_ptr;
 
 static uint8_t current_heart_rate_data[HR_MAX_PAYLOAD];
+
+
+void update_heart_rate(aci_state_t *aci_state, uint8_t heart_rate)
+{
+	if (lib_aci_is_pipe_available(aci_state, PIPE_HEART_RATE_HEART_RATE_MEASUREMENT_TX))
+	{
+		heart_rate_set_support_contact_bit();
+		heart_rate_set_contact_status_bit();
+		if(aci_state->data_credit_available > 0)
+		{
+			if (heart_rate_send_hr((uint8_t)heart_rate))
+			{
+				aci_state->data_credit_available--;
+			}
+		}
+	}
+}
+
+uint8_t get_heart_rate_measurement(void)
+{
+	//YOUR JOB: insert code here to get data from actual heart rate sensor.
+	
+	return 0;
+}
+
+void init_heart_rate_data_buffers()
+{
+	int i;
+	
+	for(i=0;i<HEART_RATE_DATA_BUFF_SIZE;i++)
+	{
+		heart_rate_data_buffer[i] = NO_DATA;
+	}
+	heart_rate_data_buff_fetch_ptr = 0;
+	heart_rate_data_buff_insert_ptr = 0;
+}
+
+uint8_t insert_data_into_heart_rate_buffer(uint8_t heart_rate)
+{
+	if(heart_rate_data_buffer[heart_rate_data_buff_insert_ptr] != NO_DATA)
+	{
+		return BUFFER_FULL;
+	}
+	else
+	{
+		heart_rate_data_buffer[heart_rate_data_buff_insert_ptr] = heart_rate;
+		
+		//Move data-buffer insert pointer location
+		if(heart_rate_data_buff_insert_ptr == (HEART_RATE_DATA_BUFF_SIZE - 1))
+			heart_rate_data_buff_insert_ptr = 0;
+		else
+			heart_rate_data_buff_insert_ptr++;
+		
+		return SUCCESS;
+	}
+}
+
+uint8_t send_data_from_heart_rate_buffer(aci_state_t * aci_state)
+{
+	if(heart_rate_data_buffer[heart_rate_data_buff_fetch_ptr] == NO_DATA)
+	{
+		return BUFFER_EMPTY;
+	}
+	else
+	{
+		update_heart_rate(aci_state, heart_rate_data_buffer[heart_rate_data_buff_fetch_ptr]);    //Send data from the buffer over the air
+		heart_rate_data_buffer[heart_rate_data_buff_fetch_ptr] = NO_DATA;                     //Erase the data from the buffer we just sent
+		
+		//Move data-buffer fetch pointer location
+		if(heart_rate_data_buff_fetch_ptr == (HEART_RATE_DATA_BUFF_SIZE - 1))
+			heart_rate_data_buff_fetch_ptr = 0;
+		else
+			heart_rate_data_buff_fetch_ptr++;
+		
+		return SUCCESS;
+	}
+}
 
 void heart_rate_init()
 {
@@ -47,6 +127,7 @@ void heart_rate_init()
   {
     current_heart_rate_data[i] = 0;
   }
+  init_heart_rate_data_buffers();
 }
 
 void heart_rate_set_support_contact_bit()

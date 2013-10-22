@@ -50,6 +50,11 @@
 /** HEART RATE Maximum number of byte per packet.*/
 #define HR_MAX_PAYLOAD 19
 
+/**HEART RATE DATA BUFFER SIZE: Set to 0 to disable data buffering. If 0, heart-rate data will be discarded when there is 
+* no data credit. If non 0, data will be inserted in FIFO buffer and sent whenever data credit is available.
+*/
+#define HEART_RATE_DATA_BUFF_SIZE 0
+
 
 /** HEART RATE Flags */
 /**HEART RATE FLAGS bit 0: Heart Rate Value Format bit, if 0 then Heart Rate on 8 bits; if 1 then Heart Rate on 16 bits.*/
@@ -67,7 +72,8 @@
 /**HEART RATE FLAGS bit 6: RESERVED FOR FUTURE USE.*/
 #define HEART_RATE_FLAGS_RESERVED3_BIT                           0x40     
 /**HEART RATE FLAGS bit 7: RESERVED FOR FUTURE USE.*/
-#define HEART_RATE_FLAGS_RESERVED4_BIT                           0x80     
+#define HEART_RATE_FLAGS_RESERVED4_BIT                           0x80    
+
 
 /** Possible Heart Rate Control Point Opcodes */
 typedef enum hrcp_op_codes_t{
@@ -81,6 +87,26 @@ typedef enum
   HRCP_ERR_OK                          = 0x00, /**<No error in control point command.*/
   HRCP_ERR_CONTROL_POINT_NOT_SUPPORTED = 0x80  /**<The received Heart Rate Control Point value is not supported.*/
 } hrcp_error_codes_t;
+
+/** @brief Gets heart rate measurment
+ */
+uint8_t get_heart_rate_measurement(void);
+
+/** @brief Insert data into the heart-rate data buffer if it is not full.
+ *  @details Returns SUCCESS if data is inserted, otherwise BUFFER_FULL.
+ */
+uint8_t insert_data_into_heart_rate_buffer(uint8_t heart_rate);
+
+/** @brief Sends data over the air if there is any data in the heart-rate data buffer.
+ *  @details Returns SUCCESS if data is sent, otherwise BUFFER_EMPTY.
+ */
+uint8_t send_data_from_heart_rate_buffer(aci_state_t * aci_state);
+
+/** @brief Sends heart-rate data over the air if data credit is available.
+ *  @details Sends heart-rate data over the air if data credit is available.
+ *  @param heart_rate The heart rate value to send.
+ */
+void update_heart_rate(aci_state_t *aci_state, uint8_t heart_rate);
 
 /** @brief Function to initialize heart_rate service.
  */
