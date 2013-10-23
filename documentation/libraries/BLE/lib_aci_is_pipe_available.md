@@ -18,7 +18,7 @@ bool lib_aci_is_pipe_available(aci_state_t *aci_stat, uint8_t pipe);
     bool. True if the pipe is available, otherwise false.
 
 ###Events generated
-[ACI_EVT_PIPE_STATUS](https://devzone.nordicsemi.com/documentation/ps/nRF8001_PS_v1.2.pdf#G1051601 "Go to nRF8001 PS") is sent from nRF8001 to the external application controller whenever there is a change in service pipe availability status.  
+[ACI_EVT_PIPE_STATUS](https://devzone.nordicsemi.com/documentation/ps/nRF8001_PS_v1.2.pdf#G1051601 "Go to nRF8001 PS") is sent from the nRF8001 to the external application controller whenever there is a change in service pipe availability status.  
 
 ###Related functions
 [lib_aci_is_pipe_closed]  
