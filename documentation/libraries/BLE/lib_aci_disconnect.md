@@ -14,8 +14,8 @@ If the application sends another massage before the bitmap is updated an ACI_EVT
 ###Parameters
 * aci_stat: The structure that contains the the current pipe available bitmap.  
 * reason: Reason for disconnecting:  
-    0x01 "Remote user terminated connection"  
-    0x02 "Unacceptable connection timing"  
+  * 0x01 "Remote user terminated connection"  
+  * 0x02 "Unacceptable connection timing"  
 
 ###Returns
     bool. True when the ACI command is successfully placed in the ACI command queue.

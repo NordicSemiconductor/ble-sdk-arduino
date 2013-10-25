@@ -21,6 +21,7 @@ The update procedure is started by sending a Connection paramter update request 
 ###Events generated
 [ACI_EVT_CMD_RSP](https://devzone.nordicsemi.com/documentation/ps/nRF8001_PS_v1.2.pdf#G1050945 "Go to nRF8001 PS") is generated when the nRF8001 device receives the command.   
 [ACI_EVT_TIMING](https://devzone.nordicsemi.com/documentation/ps/nRF8001_PS_v1.2.pdf#G1052567 "Go to nRF8001 PS") will return the current connection timing information when the parameters have changed.  
+  
 The lib_aci_get_event() is used to get the ACI events from the nRF8001 device.
 
 ###Related functions
