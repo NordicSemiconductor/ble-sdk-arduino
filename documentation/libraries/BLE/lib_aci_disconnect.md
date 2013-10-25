@@ -4,8 +4,8 @@
 
 ###Description
 This function is used to disconnect from the central device.
-It will update the pipe available bitmap imidiatley when the disconnect command is placed in the command queue.
-This is done to stopp the application from sending additinal massages to the nRF8001.
+It will update the pipe available bitmap immediately  when the disconnect command is placed in the command queue.
+This is done to stop the application from sending additional  massages to the nRF8001.
 If the application sends another massage before the bitmap is updated an ACI_EVT_PIPE_ERROR will be received from the nRF8001.
 
 ###Syntax

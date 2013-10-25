@@ -4,7 +4,7 @@
 
 ###Description
 This function is used to initiate a connection parameters update procedure using the connection parameters configured in nRFgo studio.
-The update procedure is started by sending a Connection paramter update request to the Central.  
+The update procedure is started by sending a Connection parameter  update request to the Central.  
 * If the master rejects or accepts but doesn't change the connection parameters within 30 seconds, a timing event with the unchanged connection parameters is generated.  
 * If the request is accepted and the master changes connection parameters, a timing event with the new connection parameters is generated.  
 * If the master doesn't reply to the request within 60 seconds, the radio disconnects.  
