@@ -7,7 +7,7 @@ The dynamic data will contain bonding addresses and keys, which would normally b
 By writing the dynamic data back into the nRf8001 it is possible to re-establish a bond after a power failure or reset.
 If you have enabled security on your device, it is recommended that the dynamic data is read from the chip and stored in Non-volatile memory by the application controller.  
   
-This function  is used to read the dynamic data from the nRF8001 by placing a ReadDynamicData command in the ACI command queue in the BLE library.
+This function is used to read the dynamic data from the nRF8001 by placing a ReadDynamicData command in the ACI command queue in the BLE library.
 The nRf8001 will respond with a command response event containing a status code and response data (the dynamic data, 1..26 bytes).
 The application is expected to call this function untill it receives a Command response with a ACI_STATUS_TRANSACTION_COMPLETE status code.
 Note that this command response will contain the last part of the dynamic data.

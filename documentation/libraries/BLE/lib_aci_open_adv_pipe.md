@@ -19,5 +19,11 @@ This function can be called during advertising to enable/disable broadcast pipes
 ###Returns
     True if the Open Adv Pipe message is sent successfully to the radio.
 
+###Events generated
+[ACI_EVT_CMD_RSP](https://devzone.nordicsemi.com/documentation/ps/nRF8001_PS_v1.2.pdf#G1050945 "Go to nRF8001 PS") is generated when the nRF8001 device receives the command.   
+  
+The lib_aci_get_event() is used to get the ACI events from the nRF8001 device.
+
+
 ###Related functions
 [lib_aci_open_adv_pipes()] link to these.
