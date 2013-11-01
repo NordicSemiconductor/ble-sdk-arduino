@@ -4,7 +4,7 @@ Bluetooth low energy SDK for Arduino (uses the nRF8001 from Nordic Semiconductor
 This has been tested using the Arduino UNO, Mega, Leaonardo boards and the nRF2740/nRF2741 module or the Bluetooth low energy shield from Redbearlab. The shield is available from seeedstudio and makershed.
 
 ##Contents
-The BLE folder in \libraries\ contains the ported bluetooth library. This folder (BLE) should be extracted into the arduino libraries folder. This contains the ACI library. 
+The BLE folder in \libraries\ contains the ported bluetooth library. This folder (BLE) should be extracted into the Arduino "libraries" folder. This contains the ACI library. 
 
 The demos folder contains example projects and should be placed outside the Arduino install folder.
 
@@ -22,7 +22,7 @@ When the Arduino uses a 5v microcontroller,you may have to use level converters 
 The Arduino(3.3v-1.9v) or the Arduino DUE can be wired directly to the nRF8001 without any level converters or resistive dividers.
 
 When using the nRF2740/nRF2741 modules with the nRF8001/nRF24L01+ shield adapter for Arduino:
-Plug the nRF8001/nRF24L01+ shiled adapter for Arduino to the Arduino.
+Plug the nRF8001/nRF24L01+ shield adapter for Arduino to the Arduino.
 The nRF8001 RDYN is on Digital 3. The nRF8001 REQN is on Digital 10.
 The SPI lines are available on Digital 11, 12, 13 and the central ICSP connector.
 To change the REQN and RDYN line to a different Arduino pin, cut the track on the PCB connecting the lines and wire the nRF8001 pins on the shield adapter at P10 to the required Arduino pin.
