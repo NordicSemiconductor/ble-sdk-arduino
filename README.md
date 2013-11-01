@@ -31,7 +31,7 @@ To change the REQN and RDYN line to a different Arduino pin, cut the track on th
 Modifying existing nRF8001 configuration:
 Make sure you always run the run_me_compile_xml_to_nRF8001_setup.bat with the nRFgo studio installed on a Windows PC to generate the setup required for the nRF8001 (services.h). You need to run this again whenever you change the configuration in nRFgo studio.
 
-The nRFgo studio is a Windows program can be run on the OS X using playonmac (tested) and could also be run on Linux using playonlinux (not tested).
+The nRFgo studio is a Windows program that can be run on the OS X using playonmac (tested) and could also be run on Linux using playonlinux (not tested).
 
 ##Forum
 [Nordic Developer Zone](http://devzone.nordicsemi.com/ "Go to nordic developer zone")
