@@ -12,7 +12,7 @@ If the application sends another massage before the bitmap is updated an ACI_EVT
     bool lib_aci_disconnect(aci_state_t *aci_stat, aci_disconnect_reason_t reason);
 
 ###Parameters
-* aci_stat: The structure that contains the the current pipe available bitmap.  
+* aci_stat: The structure that contains the current pipe available bitmap.  
 * reason: Reason for disconnecting:  
   * 0x01 "Remote user terminated connection"  
   * 0x02 "Unacceptable connection timing"  
