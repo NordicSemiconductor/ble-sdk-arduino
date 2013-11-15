@@ -7,8 +7,8 @@ This function starts the nRF8001 radio advertising in bond mode.
 This function sends the ACI Bond command to the nRF8001 by placing the command in the ACI command queue in the BLE library.
 Bond data can be received by a peer that is scanning. Bond starts advertising with the intent of setting up a trusted relationship with a peer device  
   
-lib_aci_bond is for providing encryption and security on the link by allowing encryption keys to be shared.  
-lib aci connect is used after a bond status of success is received to use the encryption keys on the link.  
+* lib_aci_bond is for providing encryption and security on the link by allowing encryption keys to be shared.  
+* lib aci connect is used after a bond status of success is received to use the encryption keys on the link.  
   
 Using a lib aci bond after a bond status success will delete the previous bond information.
 
