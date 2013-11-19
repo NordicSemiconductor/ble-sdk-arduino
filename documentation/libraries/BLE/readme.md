@@ -17,8 +17,8 @@ The library includes workarounds for the Redbearlab v1.1 and v2012.07 Arduino sh
 
 ##Set up
 
-You can download a copy of the BLE library and example applications from [here](http://developer.bluetooth.org/Forum/Pages/Forum.aspx?action=ViewTopics&fid=6)
-You will also need an Arduino UNO, a [BLE shield from RedBearlab] (http://redbearlab.com/bleshield/) or an [nRF8001 Development kit](http://no.mouser.com/nordicsemiconductor), and jumper wires (female-female and male-male).
+You need the BLE SDK for Arduino.
+You will also need an Arduino board, a [BLE shield] (http://redbearlab.com/bleshield/) or an [nRF8001 Development kit](http://no.mouser.com/nordicsemiconductor), and jumper wires (female-female and male-male).
 
 ##Usage
 
