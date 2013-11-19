@@ -15,7 +15,10 @@ The SPI lines are routed through the central ICSP connector of the Arduino.
 To change the REQN and RDYN line to a different Arduino pin, set the "Default Handshaking" switch to OFF, wire the nRF8001 pins on the shield at J5 to the required Arduino pin.
 
 When using the Bluetooth low energy shield v.2.0:
-(To be added)
+Plug the Bluetooth low energy shield to the Arduino.
+The REQN and RDYN pins selectable from pin 2 to 12, Select the Arduino pins to use for REQN and RDYN and put the jumpers to those pins
+Reset of the Arduino is connected to the Reset of the nRF8001, so every time a sketch is downloaded from the Arduino IDE the nRF8001 is also reset.
+The SPI lines are routed through the central ICSP connector of the Arduino.
 
 When using the nRF2740/nRF2741 modules directly wired to the Arduino:
 When the Arduino uses a 5v microcontroller,you may have to use level converters or a resistive divider to get the voltage to 3.3v for the lines that are output from Arduino to the nRF8001.
