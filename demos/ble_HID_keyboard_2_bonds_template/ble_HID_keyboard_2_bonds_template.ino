@@ -750,9 +750,9 @@ void setup(void)
   disconnect_started = false;  
 
   pinMode(2, INPUT); //Pin #2 on Arduino -> Bonding pin: Connect to 3.3v to start bonding  
-  pinMode(8, INPUT); //Pin #8 on Arduino -> PAIRING CLEAR pin: Connect to 3.3v to clear the stored bonding information
+  pinMode(6, INPUT); //Pin #6 on Arduino -> PAIRING CLEAR pin: Connect to 3.3v to clear the stored bonding information
 
-  if (0x01 == digitalRead(8))
+  if (0x01 == digitalRead(6))
   {
     //Clear the pairing
     Serial.println(F("Pairing cleared. Remove the wire on Pin 8 and reset the board for normal operation."));

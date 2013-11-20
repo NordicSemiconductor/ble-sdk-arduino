@@ -557,7 +557,7 @@ void setup(void)
 
   aci_state.aci_pins.spi_clock_divider     = SPI_CLOCK_DIV8;
 	  
-  aci_state.aci_pins.reset_pin             = UNUSED;
+  aci_state.aci_pins.reset_pin             = 4;
   aci_state.aci_pins.active_pin            = UNUSED;
   aci_state.aci_pins.optional_chip_sel_pin = UNUSED;
 	  
@@ -569,8 +569,8 @@ void setup(void)
    */
   lib_aci_init(&aci_state);
   
-  pinMode(8, INPUT); //Pin #8 on Arduino -> PAIRING CLEAR pin: Connect to 3.3v to clear the pairing
-  if (0x01 == digitalRead(8))
+  pinMode(6, INPUT); //Pin #6 on Arduino -> PAIRING CLEAR pin: Connect to 3.3v to clear the pairing
+  if (0x01 == digitalRead(6))
   {
     //Clear the pairing
     Serial.println(F("Pairing cleared. Remove the wire on Pin 8 and reset the board for normal operation."));
