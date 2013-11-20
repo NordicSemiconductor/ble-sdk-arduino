@@ -401,6 +401,17 @@ void aci_loop()
       case ACI_EVT_TIMING:
         Serial.print(F("Timing change received conn Interval: 0x"));
         Serial.println(aci_evt->params.timing.conn_rf_interval, HEX);
+        //Disconnect as soon as we are bonded and required pipes are available
+        //This is used to store the bonding info on disconnect and then re-connect to verify the bond
+        if((ACI_BOND_STATUS_SUCCESS == aci_state.bonded) &&
+           (true == bonded_first_time) &&
+           (GAP_PPCP_MAX_CONN_INT >= aci_state.connection_interval) && 
+           (GAP_PPCP_MIN_CONN_INT <= aci_state.connection_interval) && //Timing change already done: Provide time for the the peer to finish
+           (lib_aci_is_pipe_available(&aci_state, PIPE_HID_SERVICE_HID_REPORT_ID1_TX) &&
+           (lib_aci_is_pipe_available(&aci_state, PIPE_HID_SERVICE_HID_REPORT_ID2_TX))))
+           {
+             lib_aci_disconnect(&aci_state, ACI_REASON_TERMINATE);
+           }  
         break;
       
       case ACI_EVT_DATA_CREDIT:
@@ -554,7 +565,7 @@ void setup(void)
 
   aci_state.aci_pins.spi_clock_divider     = SPI_CLOCK_DIV8;
 	  
-  aci_state.aci_pins.reset_pin             = UNUSED;
+  aci_state.aci_pins.reset_pin             = 4;
   aci_state.aci_pins.active_pin            = UNUSED;
   aci_state.aci_pins.optional_chip_sel_pin = UNUSED;
 	  
@@ -566,8 +577,8 @@ void setup(void)
    */
   lib_aci_init(&aci_state);
   
-  pinMode(8, INPUT); //Pin #8 on Arduino -> PAIRING CLEAR pin: Connect to 3.3v to clear the pairing
-  if (0x01 == digitalRead(8))
+  pinMode(6, INPUT); //Pin #6 on Arduino -> PAIRING CLEAR pin: Connect to 3.3v to clear the pairing
+  if (0x01 == digitalRead(6))
   {
     //Clear the pairing
     Serial.println(F("Pairing cleared. Remove the wire on Pin 8 and reset the board for normal operation."));
