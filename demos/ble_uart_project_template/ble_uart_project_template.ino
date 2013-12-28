@@ -71,6 +71,7 @@ The following instructions describe the steps to be made on the Windows PC:
 #include <avr/pgmspace.h>
 #include <lib_aci.h>
 #include <aci_setup.h>
+#include "uart_over_ble.h"
 
 /**
 Put the nRF8001 setup in the RAM of the nRF8001.
@@ -116,13 +117,14 @@ static hal_aci_evt_t  aci_data;
 /*
 Timing change state variable
 */
-static bool timing_change_done = false;
+static bool timing_change_done          = false;
 
 /*
 Used to test the UART TX characteristic notification
 */
-static uint8_t uart_buffer[20];
-static uint8_t uart_buffer_len = 0;
+static uart_over_ble_t uart_over_ble;
+static uint8_t         uart_buffer[20];
+static uint8_t         uart_buffer_len = 0;
 
 /*
 Initialize the radio_ack. This is the ack received for every transmitted packet.
@@ -169,18 +171,18 @@ void setup(void)
 	Tell the ACI library, the MCU to nRF8001 pin connections.
 	The Active pin is optional and can be marked UNUSED
 	*/	  	
-	aci_state.aci_pins.board_name = REDBEARLAB_SHIELD_V1_1; //See board.h for details
-	aci_state.aci_pins.reqn_pin   = 9;
+	aci_state.aci_pins.board_name = BOARD_DEFAULT; //See boards.h for details
+	aci_state.aci_pins.reqn_pin   = 10;
 	aci_state.aci_pins.rdyn_pin   = 8;
 	aci_state.aci_pins.mosi_pin   = MOSI;
 	aci_state.aci_pins.miso_pin   = MISO;
 	aci_state.aci_pins.sck_pin    = SCK;
 	
-	aci_state.aci_pins.spi_clock_divider     = SPI_CLOCK_DIV8;
+	aci_state.aci_pins.spi_clock_divider          = SPI_CLOCK_DIV8;
 	  
-	aci_state.aci_pins.reset_pin             = UNUSED;
-	aci_state.aci_pins.active_pin            = UNUSED;
-	aci_state.aci_pins.optional_chip_sel_pin = UNUSED;
+	aci_state.aci_pins.reset_pin                  = 4;
+	aci_state.aci_pins.active_pin                 = UNUSED;
+	aci_state.aci_pins.optional_chip_sel_pin      = UNUSED;
 	  
 	aci_state.aci_pins.interface_is_interrupt	  = false;
 	aci_state.aci_pins.interrupt_number			  = 1;
@@ -193,6 +195,11 @@ void setup(void)
 	//then we initialize the data structures required to setup the nRF8001
 	lib_aci_init(&aci_state);
   
+}
+
+void uart_over_ble_init(void)
+{
+    uart_over_ble.uart_rts_local = true;
 }
 
 bool uart_tx(uint8_t *buffer, uint8_t buffer_len)
@@ -210,6 +217,82 @@ bool uart_tx(uint8_t *buffer, uint8_t buffer_len)
 	}
 	
 	return status;
+}
+
+bool uart_process_control_point_rx(uint8_t *byte, uint8_t length)
+{
+    bool status = false;
+    aci_ll_conn_params_t *conn_params;
+    
+	if (lib_aci_is_pipe_available(&aci_state, PIPE_UART_OVER_BTLE_UART_CONTROL_POINT_TX) )
+    {
+        Serial.println(*byte, HEX);
+        switch(*byte)
+        {
+            /*
+            Queues a ACI Disconnect to the nRF8001 when this packet is received.
+            May cause some of the UART packets being sent to be dropped
+            */
+            case UART_OVER_BLE_DISCONNECT:
+                /*
+                Parameters:
+                None
+                */                
+                lib_aci_disconnect(&aci_state, ACI_REASON_TERMINATE);
+                status = true;
+                break;
+                
+                
+            /*
+            Queues an ACI Change Timing to the nRF8001
+            */
+            case UART_OVER_BLE_LINK_TIMING_REQ:
+                /*
+                Parameters:
+                Connection interval min: 2 bytes
+                Connection interval max: 2 bytes
+                Slave latency:           2 bytes
+                Timeout:                 2 bytes
+                Same format as Peripheral Preferred Connection Parameters (See nRFgo studio -> nRF8001 Configuration -> GAP Settings
+                Refer to the ACI Change Timing Request in the nRF8001 Product Specifications 
+                */
+                conn_params = (aci_ll_conn_params_t *)(byte+1);
+                lib_aci_change_timing( conn_params->min_conn_interval, 
+                                        conn_params->max_conn_interval, 
+                                        conn_params->slave_latency, 
+                                        conn_params->timeout_mult);
+                status = true;
+                break;
+                
+                
+            /*
+            Clears the RTS of the UART over BLE
+            */
+            case UART_OVER_BLE_TRANSMIT_STOP:
+                /*
+                Parameters:
+                None
+                */
+                uart_over_ble.uart_rts_local = false;
+                status = true;                
+                break;
+                
+                
+            /*
+            Set the RTS of the UART over BLE
+            */
+            case UART_OVER_BLE_TRANSMIT_OK:
+                /*
+                Parameters:
+                None
+                */
+                uart_over_ble.uart_rts_local = true;
+                status = true;                
+                break;
+        }
+    }
+    
+    return status;
 }
 
 void aci_loop()
@@ -261,8 +344,8 @@ void aci_loop()
           //all other ACI commands will have status code of ACI_STATUS_SCUCCESS for a successful command
           Serial.print(F("ACI Command "));
           Serial.println(aci_evt->params.cmd_rsp.cmd_opcode, HEX);
-          Serial.println(F("Evt Cmd respone: Error. Arduino is in an while(1); loop"));
-          while (1);
+          Serial.print(F("Evt Cmd respone: Status "));
+          Serial.println(aci_evt->params.cmd_rsp.cmd_status, HEX);
         }
         if (ACI_CMD_GET_DEVICE_VERSION == aci_evt->params.cmd_rsp.cmd_opcode)
         {
@@ -274,6 +357,8 @@ void aci_loop()
         
       case ACI_EVT_CONNECTED:
         Serial.println(F("Evt Connected"));
+        uart_over_ble_init();
+        timing_change_done              = false;
         aci_state.data_credit_available = aci_state.data_credit_total;
         
         /*
@@ -294,6 +379,10 @@ void aci_loop()
         
       case ACI_EVT_TIMING:
         Serial.println(F("Evt link connection interval changed"));
+        lib_aci_set_local_data(&aci_state, 
+                                PIPE_UART_OVER_BTLE_UART_LINK_TIMING_CURRENT_SET,
+                                (uint8_t *)&(aci_evt->params.timing.conn_rf_interval), /* Byte aligned */
+                                PIPE_UART_OVER_BTLE_UART_LINK_TIMING_CURRENT_SET_MAX_SIZE);
         break;
         
       case ACI_EVT_DISCONNECTED:
@@ -304,7 +393,7 @@ void aci_loop()
         
       case ACI_EVT_DATA_RECEIVED:
 		Serial.print(F("Pipe Number: "));	  
-		Serial.print(aci_evt->params.data_received.rx_data.pipe_number, DEC);
+		Serial.println(aci_evt->params.data_received.rx_data.pipe_number, DEC);
 
 		if (PIPE_UART_OVER_BTLE_UART_RX_RX == aci_evt->params.data_received.rx_data.pipe_number)					
 			{
@@ -335,6 +424,10 @@ void aci_loop()
 					*/
 			  }
 		}
+        if (PIPE_UART_OVER_BTLE_UART_CONTROL_POINT_RX == aci_evt->params.data_received.rx_data.pipe_number)
+        {
+            uart_process_control_point_rx(&aci_evt->params.data_received.rx_data.aci_data[0], aci_evt->len - 2); //Subtract for Opcode and Pipe number
+        }
         break;
    
       case ACI_EVT_DATA_CREDIT:
