@@ -83,20 +83,19 @@ void aci_setup_fill(aci_state_t *aci_stat, uint8_t *num_cmd_offset)
 
 aci_status_code_t do_aci_setup(aci_state_t *aci_stat)
 {
-  uint8_t setup_offset     = 0;
-  uint16_t i               = 0x0000;
-  aci_evt_t * aci_evt      = NULL;
+  uint8_t setup_offset         = 0;
+  uint16_t i                   = 0x0000;
+  aci_evt_t * aci_evt          = NULL;
+  aci_status_code_t cmd_status = ACI_STATUS_ERROR_CRC_MISMATCH;
   
   /*
-  We are using the same buffer since we are copying the contents of the buffer when queuing and immediately processing the
-  buffer when receiving
+  We are using the same buffer since we are copying the contents of the buffer 
+  when queuing and immediately processing the buffer when receiving
   */
   hal_aci_evt_t  *aci_data = (hal_aci_evt_t *)&msg_to_send;
   
-  
-  aci_evt->params.cmd_rsp.cmd_status = ACI_STATUS_ERROR_CRC_MISMATCH;
  
-  while (aci_evt->params.cmd_rsp.cmd_status != ACI_STATUS_TRANSACTION_COMPLETE)
+  while (cmd_status != ACI_STATUS_TRANSACTION_COMPLETE)
   {	  
 	if (setup_offset < aci_stat->aci_setup_info.num_setup_msgs)
 	{
@@ -111,14 +110,16 @@ aci_status_code_t do_aci_setup(aci_state_t *aci_stat)
 	
     if (true == lib_aci_event_get(aci_stat, aci_data))
     {
-		  aci_evt = &(aci_data->evt);
+		  aci_evt    = &(aci_data->evt);
+
 		  
 		  if (ACI_EVT_CMD_RSP != aci_evt->evt_opcode )
 		  {
 			  //Got something other than a command response evt -> Error
 			  return ACI_STATUS_ERROR_INTERNAL;
-		  }      
-      
+		  }
+		        
+          cmd_status = (aci_status_code_t) aci_evt->params.cmd_rsp.cmd_status;
 		  switch (aci_evt->params.cmd_rsp.cmd_status)
 		  {
 			  case ACI_STATUS_TRANSACTION_CONTINUE:
@@ -138,7 +139,6 @@ aci_status_code_t do_aci_setup(aci_state_t *aci_stat)
   }
   
   return (aci_status_code_t)aci_evt->params.cmd_rsp.cmd_status;
-}
-  
+}  
   
 
