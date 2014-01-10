@@ -108,16 +108,16 @@ void setup(void)
   Tell the ACI library, the MCU to nRF8001 pin connections.
   The Active pin is optional and can be marked UNUSED
   */	  	
-  aci_state.aci_pins.board_name = REDBEARLAB_SHIELD_V1_1; //See board.h for details
-  aci_state.aci_pins.reqn_pin   = 9;
-  aci_state.aci_pins.rdyn_pin   = 8;
+  aci_state.aci_pins.board_name = REDBEARLAB_SHIELD_V1_1; //See board.h for details REDBEARLAB_SHIELD_V1_1 or BOARD_DEFAULT
+  aci_state.aci_pins.reqn_pin   = 9; //SS for Nordic board, 9 for REDBEARLABS
+  aci_state.aci_pins.rdyn_pin   = 8; //3 for Nordic board, 8 for REDBEARLABS
   aci_state.aci_pins.mosi_pin   = MOSI;
   aci_state.aci_pins.miso_pin   = MISO;
   aci_state.aci_pins.sck_pin    = SCK;
 
   aci_state.aci_pins.spi_clock_divider     = SPI_CLOCK_DIV8;
 	  
-  aci_state.aci_pins.reset_pin             = UNUSED;
+  aci_state.aci_pins.reset_pin             = UNUSED; //4 for Nordic board, UNUSED for REDBEARLABS
   aci_state.aci_pins.active_pin            = UNUSED;
   aci_state.aci_pins.optional_chip_sel_pin = UNUSED;
 	  
@@ -198,7 +198,6 @@ void aci_loop()
           Change the setting in nRFgo studio -> nRF8001 configuration -> GAP Settings and recompile the xml file.
           */
           lib_aci_change_timing_GAP_PPCP();
-          timing_change_done = true;
         }      
         break;
         
@@ -206,7 +205,8 @@ void aci_loop()
         /*
         Link timing has changed.
         */
-        Serial.println(F("Timing changed"));
+        timing_change_done = true;
+        Serial.print(F("Timing changed: "));
         Serial.println(aci_evt->params.timing.conn_rf_interval, HEX);
         break;
         
@@ -300,7 +300,7 @@ void loop()
   static uint8_t dummy_heart_rate = 65;
     
   aci_loop();
-  
+
   if (lib_aci_is_pipe_available(&aci_state, PIPE_HEART_RATE_HEART_RATE_MEASUREMENT_TX) 
       && (false == radio_ack_pending)
       && (true == timing_change_done))
@@ -310,8 +310,12 @@ void loop()
       if (heart_rate_send_hr((uint8_t)dummy_heart_rate))
       {
         aci_state.data_credit_available--;
+        Serial.print(F("HRM sent: "));
+        Serial.println(dummy_heart_rate);
+        radio_ack_pending = true;
       }
-      radio_ack_pending = true;
+      
+
       
       dummy_heart_rate++;
       if (dummy_heart_rate == 200)
