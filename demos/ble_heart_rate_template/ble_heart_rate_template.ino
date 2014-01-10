@@ -198,7 +198,6 @@ void aci_loop()
           Change the setting in nRFgo studio -> nRF8001 configuration -> GAP Settings and recompile the xml file.
           */
           lib_aci_change_timing_GAP_PPCP();
-          timing_change_done = true;
         }      
         break;
         
@@ -206,7 +205,8 @@ void aci_loop()
         /*
         Link timing has changed.
         */
-        Serial.println(F("Timing changed"));
+        timing_change_done = true;
+        Serial.print(F("Timing changed: "));
         Serial.println(aci_evt->params.timing.conn_rf_interval, HEX);
         break;
         
@@ -300,7 +300,7 @@ void loop()
   static uint8_t dummy_heart_rate = 65;
     
   aci_loop();
-  
+
   if (lib_aci_is_pipe_available(&aci_state, PIPE_HEART_RATE_HEART_RATE_MEASUREMENT_TX) 
       && (false == radio_ack_pending)
       && (true == timing_change_done))
@@ -310,8 +310,12 @@ void loop()
       if (heart_rate_send_hr((uint8_t)dummy_heart_rate))
       {
         aci_state.data_credit_available--;
+        Serial.print(F("HRM sent: "));
+        Serial.println(dummy_heart_rate);
+        radio_ack_pending = true;
       }
-      radio_ack_pending = true;
+      
+
       
       dummy_heart_rate++;
       if (dummy_heart_rate == 200)
