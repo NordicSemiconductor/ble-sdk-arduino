@@ -1,4 +1,4 @@
-﻿/*Copyright (c) 2013, Nordic Semiconductor ASA
+ /*Copyright (c) 2013, Nordic Semiconductor ASA
  *All rights reserved.
  *
  *Redistribution and use in source and binary forms, with or without modification,
@@ -35,13 +35,13 @@
 /** @defgroup battery battery
 * @{
 * @ingroup services
-*  
+*
 * @brief battery service implementation.
 * @details
 * This module implements the battery service with characteristics : battery_level, battery_state and the aggregate of level and state.
 *
 * The level, in percent, is computed using @ref lib_battery_level by the function @ref update_battery.
-* 
+*
 */
 #include <stdint.h>
 
