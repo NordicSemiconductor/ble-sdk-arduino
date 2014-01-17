@@ -78,16 +78,16 @@ void setup(void)
   {}  
   Serial.println(F("Arduino setup"));
   //Tell the ACI library, the MCU to nRF8001 pin connections
-  aci_state.aci_pins.board_name = BOARD_DEFAULT; //See board.h for details REDBEARLAB_SHIELD_V1_1 or BOARD_DEFAULT
-  aci_state.aci_pins.reqn_pin   = SS; //SS for Nordic board, 9 for REDBEARLABS
-  aci_state.aci_pins.rdyn_pin   = 3; //3 for Nordic board, 8 for REDBEARLABS
+  aci_state.aci_pins.board_name = REDBEARLAB_SHIELD_V1_1; //See board.h for details REDBEARLAB_SHIELD_V1_1 or BOARD_DEFAULT
+  aci_state.aci_pins.reqn_pin   = 9; //SS for Nordic board, 9 for REDBEARLABS
+  aci_state.aci_pins.rdyn_pin   = 8; //3 for Nordic board, 8 for REDBEARLABS
   aci_state.aci_pins.mosi_pin   = MOSI;
   aci_state.aci_pins.miso_pin   = MISO;
   aci_state.aci_pins.sck_pin    = SCK;
 	
   aci_state.aci_pins.spi_clock_divider     = SPI_CLOCK_DIV8;
 	  
-  aci_state.aci_pins.reset_pin             = 4; //4 for Nordic board, UNUSED for REDBEARLABS
+  aci_state.aci_pins.reset_pin             = UNUSED; //4 for Nordic board, UNUSED for REDBEARLABS
   aci_state.aci_pins.active_pin            = UNUSED;
   aci_state.aci_pins.optional_chip_sel_pin = UNUSED;
   
