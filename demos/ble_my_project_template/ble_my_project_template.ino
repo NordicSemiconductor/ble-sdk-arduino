@@ -139,55 +139,6 @@ void setup(void)
   lib_aci_init(&aci_state);
   
   lib_aci_debug_print(true);
-  
-  /*
-  The Bluetooth low energy Arduino shield v1.1 requires about 100ms to reset.
-  This is not required for the nRF2740, nRF2741 modules
-  */
-  delay(100);
-  
-  /*
-  Send the soft reset command to the nRF8001 to get the nRF8001 to a known state.
-  */
-  lib_aci_radio_reset();
-  
-  while (1)
-  {
-    /*Wait for the command response of the radio reset command.
-    as the nRF8001 will be in either SETUP or STANDBY after the ACI Reset Radio is processed
-	*/	
-    if (true == lib_aci_event_get(&aci_state, &aci_data))
-    {
-      aci_evt_t * aci_evt;      
-      aci_evt = &aci_data.evt;
-	  
-      if (ACI_EVT_CMD_RSP == aci_evt->evt_opcode)
-      {
-            if (ACI_STATUS_ERROR_DEVICE_STATE_INVALID == aci_evt->params.cmd_rsp.cmd_status) //in SETUP
-            {
-              Serial.println(F("Do setup"));
-              if (ACI_STATUS_TRANSACTION_COMPLETE != do_aci_setup(&aci_state))
-              {
-                Serial.println(F("Error in ACI Setup"));
-              }              
-            }
-            else if (ACI_STATUS_SUCCESS == aci_evt->params.cmd_rsp.cmd_status) //We are now in STANDBY
-            {
-              /*Looking for an phone by sending radio advertisements
-              When an phone connects to us we will get an ACI_EVT_CONNECTED event from the nRF8001
-			  */
-              lib_aci_connect(180/* in seconds */, 0x0050 /* advertising interval 50ms*/);
-              Serial.println(F("Advertising started"));              
-            }
-          break;
-      }
-      else
-      {
-        Serial.println(F("Discard any other ACI Events"));
-      }
-	  
-    }
-  }
 }
 
 
