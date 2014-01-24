@@ -294,16 +294,16 @@ bool hal_aci_tl_send(hal_aci_data_t *p_aci_cmd)
     if (m_aci_q_enqueue(&aci_tx_q, p_aci_cmd))
     {
       ret_val = true;
+      digitalWrite(a_pins_local_ptr->reqn_pin, 0); //Place request line low only if enqueued
     }
   }
 
-  if (true == aci_debug_print)
+  if ((true == aci_debug_print) && (true == ret_val))
   {
     Serial.print("C");
     m_print_aci_data(p_aci_cmd);
   }
   
-  digitalWrite(a_pins_local_ptr->reqn_pin, 0);
   return ret_val;
 }
 
