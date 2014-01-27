@@ -557,7 +557,7 @@ void setup(void)
 
   aci_state.aci_pins.spi_clock_divider     = SPI_CLOCK_DIV8;
 	  
-  aci_state.aci_pins.reset_pin             = 4;
+  aci_state.aci_pins.reset_pin             = UNUSED;
   aci_state.aci_pins.active_pin            = UNUSED;
   aci_state.aci_pins.optional_chip_sel_pin = UNUSED;
 	  
