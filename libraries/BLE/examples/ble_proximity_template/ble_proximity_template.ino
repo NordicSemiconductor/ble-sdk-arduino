@@ -529,42 +529,42 @@ void aci_loop()
         }
         Serial.println();
         
-                //Manage the bond in EEPROM of the AVR
-                {
-                  uint8_t eeprom_status = 0;
-                  eeprom_status = EEPROM.read(0);
-                  if (eeprom_status != 0x00)
-                  {
-                    Serial.println(F("Previous Bond present. Restoring"));
-                    Serial.println(F("Using existing bond stored in EEPROM."));
-                    Serial.println(F("   To delete the bond stored in EEPROM, connect Pin 6 to 3.3v and Reset."));
-                    Serial.println(F("   Make sure that the bond on the phone/PC is deleted as well."));
-                    //We must have lost power and restarted and must restore the bonding infromation using the ACI Write Dynamic Data
-                    if (ACI_STATUS_TRANSACTION_COMPLETE == bond_data_restore(&aci_state, eeprom_status, &bonded_first_time))
-                    {
-                      Serial.println(F("Bond restored successfully"));
-                    }
-                    else
-                    {
-                      Serial.println(F("Bond restore failed. Delete the bond and try again."));
-                    }                  
-                  }                
-                }
-           
-                // Start bonding as all proximity devices need to be bonded to be usable
-                if (ACI_BOND_STATUS_SUCCESS != aci_state.bonded)
-                {
-                  lib_aci_bond(180/* in seconds */, 0x0050 /* advertising interval 50ms*/);
-                  Serial.println(F("No Bond present in EEPROM."));
-                  Serial.println(F("Advertising started : Waiting to be connected and bonded"));
-                }
-                else
-                {
-                    //connect to an already bonded device
-                    //Use lib_aci_direct_connect for faster re-connections with PC, not recommended to use with iOS/OS X
-                    lib_aci_connect(100/* in seconds */, 0x0020 /* advertising interval 20ms*/);
-                    Serial.println(F("Already bonded : Advertising started : Waiting to be connected"));
-                }
+        //Manage the bond in EEPROM of the AVR
+        {
+          uint8_t eeprom_status = 0;
+          eeprom_status = EEPROM.read(0);
+          if (eeprom_status != 0x00)
+          {
+            Serial.println(F("Previous Bond present. Restoring"));
+            Serial.println(F("Using existing bond stored in EEPROM."));
+            Serial.println(F("   To delete the bond stored in EEPROM, connect Pin 6 to 3.3v and Reset."));
+            Serial.println(F("   Make sure that the bond on the phone/PC is deleted as well."));
+            //We must have lost power and restarted and must restore the bonding infromation using the ACI Write Dynamic Data
+            if (ACI_STATUS_TRANSACTION_COMPLETE == bond_data_restore(&aci_state, eeprom_status, &bonded_first_time))
+            {
+              Serial.println(F("Bond restored successfully"));
+            }
+            else
+            {
+              Serial.println(F("Bond restore failed. Delete the bond and try again."));
+            }                  
+          }                
+        }
+   
+        // Start bonding as all proximity devices need to be bonded to be usable
+        if (ACI_BOND_STATUS_SUCCESS != aci_state.bonded)
+        {
+          lib_aci_bond(180/* in seconds */, 0x0050 /* advertising interval 50ms*/);
+          Serial.println(F("No Bond present in EEPROM."));
+          Serial.println(F("Advertising started : Waiting to be connected and bonded"));
+        }
+        else
+        {
+            //connect to an already bonded device
+            //Use lib_aci_direct_connect for faster re-connections with PC, not recommended to use with iOS/OS X
+            lib_aci_connect(100/* in seconds */, 0x0020 /* advertising interval 20ms*/);
+            Serial.println(F("Already bonded : Advertising started : Waiting to be connected"));
+        }
         break;
            
     }
