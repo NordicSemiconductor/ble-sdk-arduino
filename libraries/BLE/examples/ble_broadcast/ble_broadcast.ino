@@ -212,6 +212,17 @@ void loop()
         Serial.println(aci_evt->params.data_received.rx_data.pipe_number, HEX);
         Serial.print(F("Length of data received: 0x"));
         Serial.println(aci_evt->len - 2, HEX);
+        break;
+
+      case ACI_EVT_HW_ERROR:
+        Serial.println(F("HW error: "));
+        Serial.println(aci_evt->params.hw_error.line_num, DEC);
+      
+        for(uint8_t counter = 0; counter <= (aci_evt->len - 3); counter++)
+        {
+        Serial.write(aci_evt->params.hw_error.file_name[counter]); //uint8_t file_name[20];
+        }
+        Serial.println();
         break;      
     }
   }
