@@ -310,37 +310,48 @@ void aci_loop()
             
             case ACI_DEVICE_STANDBY:
               Serial.println(F("Evt Device Started: Standby"));
-              //Manage the bond in EEPROM of the AVR
+              if (aci_evt->params.device_started.hw_error)
               {
-                uint8_t eeprom_status = 0;
-                eeprom_status = EEPROM.read(0);
-                if (eeprom_status != 0x00)
-                {
-                  Serial.println(F("Previous Bond present. Restoring"));
-                  //We must have lost power and restarted and must restore the bonding infromation using the ACI Write Dynamic Data
-                  if (ACI_STATUS_TRANSACTION_COMPLETE == bond_data_restore(&aci_state, eeprom_status, &bonded_first_time))
-                  {
-                    Serial.println(F("Bond restored successfully"));
-                  }
-                  else
-                  {
-                    Serial.println(F("Bond restore failed"));
-                  }                  
-                }                
-              }
-              
-              // Start bonding as all HID devices need to be bonded to be usable
-              if (ACI_BOND_STATUS_SUCCESS != aci_state.bonded)
-              {
-                lib_aci_connect(180/* in seconds */, 0x0050 /* advertising interval 50ms*/);
-                Serial.println(F("Advertising started : Waiting to be connected and bonded"));
+                delay(20); //Magic number used to make sure the HW error event is handled correctly.
               }
               else
-              {
-                //connect to an already bonded device
-                //Use lib_aci_direct_connect for faster re-connections
-                lib_aci_connect(10/* in seconds */, 0x0020 /* advertising interval 20ms*/);
-                Serial.println(F("Already bonded : Advertising started : Waiting to be connected"));
+              { 
+                //Manage the bond in EEPROM of the AVR
+                {
+                  uint8_t eeprom_status = 0;
+                  eeprom_status = EEPROM.read(0);
+                  if (eeprom_status != 0x00)
+                  {
+                    Serial.println(F("Previous Bond present. Restoring"));
+                    Serial.println(F("Using existing bond stored in EEPROM."));
+                    Serial.println(F("   To delete the bond stored in EEPROM, connect Pin 6 to 3.3v and Reset."));
+                    Serial.println(F("   Make sure that the bond on the phone/PC is deleted as well."));
+                    //We must have lost power and restarted and must restore the bonding infromation using the ACI Write Dynamic Data
+                    if (ACI_STATUS_TRANSACTION_COMPLETE == bond_data_restore(&aci_state, eeprom_status, &bonded_first_time))
+                    {
+                      Serial.println(F("Bond restored successfully"));
+                    }
+                    else
+                    {
+                      Serial.println(F("Bond restore failed. Delete the bond and try again."));
+                    }                  
+                  }                
+                }
+           
+                // Start bonding as all proximity devices need to be bonded to be usable
+                if (ACI_BOND_STATUS_SUCCESS != aci_state.bonded)
+                {
+                  lib_aci_bond(180/* in seconds */, 0x0050 /* advertising interval 50ms*/);
+                  Serial.println(F("No Bond present in EEPROM."));
+                  Serial.println(F("Advertising started : Waiting to be connected and bonded"));
+                }
+                else
+                {
+                    //connect to an already bonded device
+                    //Use lib_aci_direct_connect for faster re-connections with PC, not recommended to use with iOS/OS X
+                    lib_aci_connect(100/* in seconds */, 0x0020 /* advertising interval 20ms*/);
+                    Serial.println(F("Already bonded : Advertising started : Waiting to be connected"));
+                }
               }
               break;
           }
@@ -357,15 +368,14 @@ void aci_loop()
           //TRANSACTION_CONTINUE and TRANSACTION_COMPLETE
           //all other ACI commands will have status code of ACI_STATUS_SCUCCESS for a successful command         
 
-          Serial.print(F("ACI Status of ACI Evt Cmd Rsp 0x"));
-          Serial.println(aci_evt->params.cmd_rsp.cmd_status, HEX);           
-          Serial.print(F("ACI Command 0x"));
-          Serial.println(aci_evt->params.cmd_rsp.cmd_opcode, HEX);          
-          Serial.println(F("Evt Cmd respone: Error. Arduino is in an while(1); loop"));
-          while (1);
+          Serial.print(F("ACI Command "));
+          Serial.println(aci_evt->params.cmd_rsp.cmd_opcode, HEX);
+          Serial.print(F("Evt Cmd respone: Status "));
+          Serial.println(aci_evt->params.cmd_rsp.cmd_status, HEX);
         }
         if (ACI_CMD_GET_DEVICE_VERSION == aci_evt->params.cmd_rsp.cmd_opcode)
         {
+          //Store the version and configuration information of the nRF8001 in the Hardware Revision String Characteristic
           lib_aci_set_local_data(&aci_state, PIPE_DEVICE_INFORMATION_HARDWARE_REVISION_STRING_SET, 
                                  (uint8_t *)&(aci_evt->params.cmd_rsp.params.get_device_version), 
                                  sizeof(aci_evt_cmd_rsp_params_get_device_version_t));
@@ -493,6 +503,54 @@ void aci_loop()
           }
         }
         Serial.println(F(""));
+        break;
+        
+      case ACI_EVT_HW_ERROR:
+        Serial.print(F("HW error: "));
+        Serial.println(aci_evt->params.hw_error.line_num, DEC);
+        
+        for(uint8_t counter = 0; counter <= (aci_evt->len - 3); counter++)
+        {
+        Serial.write(aci_evt->params.hw_error.file_name[counter]); //uint8_t file_name[20];
+        }
+        Serial.println();
+        
+                //Manage the bond in EEPROM of the AVR
+                {
+                  uint8_t eeprom_status = 0;
+                  eeprom_status = EEPROM.read(0);
+                  if (eeprom_status != 0x00)
+                  {
+                    Serial.println(F("Previous Bond present. Restoring"));
+                    Serial.println(F("Using existing bond stored in EEPROM."));
+                    Serial.println(F("   To delete the bond stored in EEPROM, connect Pin 6 to 3.3v and Reset."));
+                    Serial.println(F("   Make sure that the bond on the phone/PC is deleted as well."));
+                    //We must have lost power and restarted and must restore the bonding infromation using the ACI Write Dynamic Data
+                    if (ACI_STATUS_TRANSACTION_COMPLETE == bond_data_restore(&aci_state, eeprom_status, &bonded_first_time))
+                    {
+                      Serial.println(F("Bond restored successfully"));
+                    }
+                    else
+                    {
+                      Serial.println(F("Bond restore failed. Delete the bond and try again."));
+                    }                  
+                  }                
+                }
+           
+                // Start bonding as all proximity devices need to be bonded to be usable
+                if (ACI_BOND_STATUS_SUCCESS != aci_state.bonded)
+                {
+                  lib_aci_bond(180/* in seconds */, 0x0050 /* advertising interval 50ms*/);
+                  Serial.println(F("No Bond present in EEPROM."));
+                  Serial.println(F("Advertising started : Waiting to be connected and bonded"));
+                }
+                else
+                {
+                    //connect to an already bonded device
+                    //Use lib_aci_direct_connect for faster re-connections with PC, not recommended to use with iOS/OS X
+                    lib_aci_connect(100/* in seconds */, 0x0020 /* advertising interval 20ms*/);
+                    Serial.println(F("Already bonded : Advertising started : Waiting to be connected"));
+                }
         break;      
     }
   }
