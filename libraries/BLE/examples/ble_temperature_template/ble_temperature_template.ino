@@ -319,7 +319,7 @@ void aci_loop()
         Serial.println();
         lib_aci_connect(30/* in seconds */, 0x0100 /* advertising interval 100ms*/);
         Serial.println(F("Advertising started"));
-      break;
+        break;
         
         default:
           Serial.print(F("Evt Opcode 0x"));
