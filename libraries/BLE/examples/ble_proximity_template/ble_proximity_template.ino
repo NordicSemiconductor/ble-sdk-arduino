@@ -359,19 +359,20 @@ void aci_loop()
                   }                
                 }
            
-                // Start bonding as all proximity devices need to be bonded to be usable
-                if (ACI_BOND_STATUS_SUCCESS != aci_state.bonded)
-                {
-                  lib_aci_bond(180/* in seconds */, 0x0050 /* advertising interval 50ms*/);
-                  Serial.println(F("No Bond present in EEPROM."));
-                  Serial.println(F("Advertising started : Waiting to be connected and bonded"));
-                }
-                else
-                {
+                  // Start bonding as all proximity devices need to be bonded to be usable
+                  if (ACI_BOND_STATUS_SUCCESS != aci_state.bonded)
+                  {
+                    lib_aci_bond(180/* in seconds */, 0x0050 /* advertising interval 50ms*/);
+                    Serial.println(F("No Bond present in EEPROM."));
+                    Serial.println(F("Advertising started : Waiting to be connected and bonded"));
+                  }
+                  else
+                  {
                     //connect to an already bonded device
                     //Use lib_aci_direct_connect for faster re-connections with PC, not recommended to use with iOS/OS X
                     lib_aci_connect(100/* in seconds */, 0x0020 /* advertising interval 20ms*/);
                     Serial.println(F("Already bonded : Advertising started : Waiting to be connected"));
+                  }
                 }
               }
               break;

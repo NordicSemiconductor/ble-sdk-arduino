@@ -448,52 +448,59 @@ void aci_loop()
             
             case ACI_DEVICE_STANDBY:
               Serial.println(F("Evt Device Started: Standby"));
-              //Manage the bond in EEPROM of the AVR
+              if (aci_evt->params.device_started.hw_error)
               {
-                uint8_t eeprom_status = 0;
-                
-                //Reset the number of bonds and count from the EEPROM header
-                bond_number = 0;
-                eeprom_status = EEPROM.read(0);
-                if (eeprom_status != 0x00)
-                {
-                  bond_number++;
-                  //Update the write offset to the correct number
-                  eeprom_write_offset = EEPROM.read(bond_number * BYTES_PER_BOND_IN_HEADER + 1);
-                  if (0x00 != EEPROM.read(2))
-                  {
-                    bond_number++;
-                    //This is needed only if we wanted to add a 3rd bond
-                    eeprom_write_offset = EEPROM.read(bond_number * BYTES_PER_BOND_IN_HEADER + 1);                    
-                  }
-                  //bond 0
-                  current_bond_index = 0;
-                  Serial.println(F("Previous Bond present. Restoring bond 0"));
-                  //We must have lost power and restarted and must restore the bonding infromation using the ACI Write Dynamic Data                  
-                  if (ACI_STATUS_TRANSACTION_COMPLETE == bond_data_restore(&aci_state, current_bond_index))
-                  {
-                    Serial.println(F("Bond 0 restored successfully"));
-                    current_bond_index++;
-                  }
-                  else
-                  {
-                    Serial.println(F("Bond 0 restore failed"));
-                  }                  
-                }                
-              }
-              
-              // Start bonding if no bonds are available
-              if (bond_number == 0)
-              {
-                lib_aci_bond(180/* in seconds */, 0x0050 /* advertising interval 50ms*/);
-                Serial.println(F("Advertising started : Waiting to be connected and bonded"));
+                delay(20); //Magic number used to make sure the HW error event is handled correctly.
               }
               else
               {
-                //connect to an already bonded device
-                //Use lib_aci_direct_connect for faster re-connections
-                lib_aci_connect(10/* in seconds */, 0x0020 /* advertising interval 20ms*/);
-                Serial.println(F("Already bonded : Advertising started : Waiting to be connected"));
+                //Manage the bond in EEPROM of the AVR
+                {
+                  uint8_t eeprom_status = 0;
+                  
+                  //Reset the number of bonds and count from the EEPROM header
+                  bond_number = 0;
+                  eeprom_status = EEPROM.read(0);
+                  if (eeprom_status != 0x00)
+                  {
+                    bond_number++;
+                    //Update the write offset to the correct number
+                    eeprom_write_offset = EEPROM.read(bond_number * BYTES_PER_BOND_IN_HEADER + 1);
+                    if (0x00 != EEPROM.read(2))
+                    {
+                      bond_number++;
+                      //This is needed only if we wanted to add a 3rd bond
+                      eeprom_write_offset = EEPROM.read(bond_number * BYTES_PER_BOND_IN_HEADER + 1);                    
+                    }
+                    //bond 0
+                    current_bond_index = 0;
+                    Serial.println(F("Previous Bond present. Restoring bond 0"));
+                    //We must have lost power and restarted and must restore the bonding infromation using the ACI Write Dynamic Data                  
+                    if (ACI_STATUS_TRANSACTION_COMPLETE == bond_data_restore(&aci_state, current_bond_index))
+                    {
+                      Serial.println(F("Bond 0 restored successfully"));
+                      current_bond_index++;
+                    }
+                    else
+                    {
+                      Serial.println(F("Bond 0 restore failed"));
+                    }                  
+                  }                
+                }
+                
+                // Start bonding if no bonds are available
+                if (bond_number == 0)
+                {
+                  lib_aci_bond(180/* in seconds */, 0x0050 /* advertising interval 50ms*/);
+                  Serial.println(F("Advertising started : Waiting to be connected and bonded"));
+                }
+                else
+                {
+                  //connect to an already bonded device
+                  //Use lib_aci_direct_connect for faster re-connections
+                  lib_aci_connect(10/* in seconds */, 0x0020 /* advertising interval 20ms*/);
+                  Serial.println(F("Already bonded : Advertising started : Waiting to be connected"));
+                }
               }
               break;
           }
@@ -510,12 +517,10 @@ void aci_loop()
           //TRANSACTION_CONTINUE and TRANSACTION_COMPLETE
           //all other ACI commands will have status code of ACI_STATUS_SCUCCESS for a successful command         
 
-          Serial.print(F("ACI Status of ACI Evt Cmd Rsp 0x"));
-          Serial.println(aci_evt->params.cmd_rsp.cmd_status, HEX);           
-          Serial.print(F("ACI Command 0x"));
-          Serial.println(aci_evt->params.cmd_rsp.cmd_opcode, HEX);          
-          Serial.println(F("Evt Cmd respone: Error. Arduino is in an while(1); loop"));
-          while (1);
+          Serial.print(F("ACI Command "));
+          Serial.println(aci_evt->params.cmd_rsp.cmd_opcode, HEX);
+          Serial.print(F("Evt Cmd respone: Status "));
+          Serial.println(aci_evt->params.cmd_rsp.cmd_status, HEX);
         }
         if (ACI_CMD_GET_DEVICE_VERSION == aci_evt->params.cmd_rsp.cmd_opcode)
         {          
@@ -679,7 +684,66 @@ void aci_loop()
           }
         }
         Serial.println(F(""));
-        break;      
+        break;
+
+      case ACI_EVT_HW_ERROR:
+        Serial.print(F("HW error: "));
+        Serial.println(aci_evt->params.hw_error.line_num, DEC);
+        
+        for(uint8_t counter = 0; counter <= (aci_evt->len - 3); counter++)
+        {
+        Serial.write(aci_evt->params.hw_error.file_name[counter]); //uint8_t file_name[20];
+        }
+        Serial.println();
+                
+        //Manage the bond in EEPROM of the AVR
+        {
+          uint8_t eeprom_status = 0;
+          
+          //Reset the number of bonds and count from the EEPROM header
+          bond_number = 0;
+          eeprom_status = EEPROM.read(0);
+          if (eeprom_status != 0x00)
+          {
+            bond_number++;
+            //Update the write offset to the correct number
+            eeprom_write_offset = EEPROM.read(bond_number * BYTES_PER_BOND_IN_HEADER + 1);
+            if (0x00 != EEPROM.read(2))
+            {
+              bond_number++;
+              //This is needed only if we wanted to add a 3rd bond
+              eeprom_write_offset = EEPROM.read(bond_number * BYTES_PER_BOND_IN_HEADER + 1);                    
+            }
+            //bond 0
+            current_bond_index = 0;
+            Serial.println(F("Previous Bond present. Restoring bond 0"));
+            //We must have lost power and restarted and must restore the bonding infromation using the ACI Write Dynamic Data                  
+            if (ACI_STATUS_TRANSACTION_COMPLETE == bond_data_restore(&aci_state, current_bond_index))
+            {
+              Serial.println(F("Bond 0 restored successfully"));
+              current_bond_index++;
+            }
+            else
+            {
+              Serial.println(F("Bond 0 restore failed"));
+            }                  
+          }                
+        }
+        
+        // Start bonding if no bonds are available
+        if (bond_number == 0)
+        {
+          lib_aci_bond(180/* in seconds */, 0x0050 /* advertising interval 50ms*/);
+          Serial.println(F("Advertising started : Waiting to be connected and bonded"));
+        }
+        else
+        {
+          //connect to an already bonded device
+          //Use lib_aci_direct_connect for faster re-connections
+          lib_aci_connect(10/* in seconds */, 0x0020 /* advertising interval 20ms*/);
+          Serial.println(F("Already bonded : Advertising started : Waiting to be connected"));
+        }
+      break;      
     }
   }
   else
@@ -724,7 +788,7 @@ void setup(void)
   Tell the ACI library, the MCU to nRF8001 pin connections.
   The Active pin is optional and can be marked UNUSED
   */	  	
-  aci_state.aci_pins.board_name = REDBEARLAB_SHIELD_V1_1; //See board.h for details
+  aci_state.aci_pins.board_name = REDBEARLAB_SHIELD_V1_1; //See board.h for details REDBEARLAB_SHIELD_V1_1
   aci_state.aci_pins.reqn_pin   = 9;
   aci_state.aci_pins.rdyn_pin   = 8;
   aci_state.aci_pins.mosi_pin   = MOSI;
