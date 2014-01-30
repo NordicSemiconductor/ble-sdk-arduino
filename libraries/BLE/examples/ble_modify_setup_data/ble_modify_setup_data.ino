@@ -77,7 +77,7 @@ Change the Device name value permissions to Read 0x14 -> 0x04
 Recompute the CRC in the code and put it back into the header file
 */
 
-#include "services_sec_trigger_passkey.h"
+#include "services_ota_with_pipe_ota_removed.h"
 /**
 Include the services_lock.h to put the setup in the OTP memory of the nRF8001
 This would mean that the setup cannot be changed once put in
@@ -213,16 +213,16 @@ void setup(void)
   Tell the ACI library, the MCU to nRF8001 pin connections.
   The Active pin is optional and can be marked UNUSED
   */	  	
-  aci_state.aci_pins.board_name = REDBEARLAB_SHIELD_V1_1; //See board.h for details
-  aci_state.aci_pins.reqn_pin   = 9;
-  aci_state.aci_pins.rdyn_pin   = 8;
+  aci_state.aci_pins.board_name = BOARD_DEFAULT; //See board.h for details REDBEARLAB_SHIELD_V1_1
+  aci_state.aci_pins.reqn_pin   = SS;
+  aci_state.aci_pins.rdyn_pin   = 3;
   aci_state.aci_pins.mosi_pin   = MOSI;
   aci_state.aci_pins.miso_pin   = MISO;
   aci_state.aci_pins.sck_pin    = SCK;
 
   aci_state.aci_pins.spi_clock_divider     = SPI_CLOCK_DIV8;
 	  
-  aci_state.aci_pins.reset_pin             = UNUSED;
+  aci_state.aci_pins.reset_pin             = 4;
   aci_state.aci_pins.active_pin            = UNUSED;
   aci_state.aci_pins.optional_chip_sel_pin = UNUSED;
 	  
@@ -236,7 +236,7 @@ void setup(void)
 
 void uart_tx()
 {
-  lib_aci_send_data(PIPE_FBTRACKER_TXPIPE_TX, uart_buffer, uart_buffer_len);
+  lib_aci_send_data(PIPE_UART_OVER_BTLE_UART_TX_TX, uart_buffer, uart_buffer_len);
   aci_state.data_credit_available--;
 }
 
@@ -273,7 +273,7 @@ void aci_loop()
               Serial.println(F("Evt Device Started: Standby"));
               //Looking for an iPhone by sending radio advertisements
               //When an iPhone connects to us we will get an ACI_EVT_CONNECTED event from the nRF8001
-              lib_aci_bond(180/* in seconds */, 0x0050 /* advertising interval 50ms*/);
+              lib_aci_connect(180/* in seconds */, 0x0050 /* advertising interval 50ms*/);
               Serial.println(F("Advertising started"));
               break;
           }
@@ -312,7 +312,7 @@ void aci_loop()
         
       case ACI_EVT_PIPE_STATUS:
         Serial.println(F("Evt Pipe Status"));
-        if (lib_aci_is_pipe_available(&aci_state, PIPE_FBTRACKER_TXPIPE_TX) && (false == timing_change_done))
+        if (lib_aci_is_pipe_available(&aci_state, PIPE_UART_OVER_BTLE_UART_TX_TX) && (false == timing_change_done))
         {
           lib_aci_change_timing_GAP_PPCP(); // change the timing on the link as specified in the nRFgo studio -> nRF8001 conf. -> GAP. 
                                             // Used to increase or decrease bandwidth
@@ -346,20 +346,7 @@ void aci_loop()
         
       case ACI_EVT_DISCONNECTED:
         Serial.println(F("Evt Disconnected/Advertising timed out"));
-		if (bonded)
-		{
-			/*
-			Read the dynamic data and store it away at this point.
-			Restore the dynamic data whenever the application mcu is reset using Write Dynamic Data
-			Wait for 10ms after the restore and then send the next command
-			Call the ACI Connect when a bond exists
-			*/
-			lib_aci_connect(180/* in seconds */, 0x0100 /* advertising interval 100ms*/);
-		}
-		else
-		{
-			lib_aci_bond(180/* in seconds */, 0x0100 /* advertising interval 100ms*/);
-		}
+	lib_aci_connect(180/* in seconds */, 0x0100 /* advertising interval 100ms*/);
         Serial.println(F("Advertising started"));        
         break;
         
@@ -377,7 +364,7 @@ void aci_loop()
           uart_buffer_len = aci_evt->len - 2;
         }
         Serial.println(F(""));
-        if (lib_aci_is_pipe_available(&aci_state, PIPE_FBTRACKER_TXPIPE_TX))
+        if (lib_aci_is_pipe_available(&aci_state, PIPE_UART_OVER_BTLE_UART_TX_TX))
         {
           uart_tx();
         }
