@@ -147,8 +147,8 @@ void aci_loop()
               }
               else
               {
-              lib_aci_connect(30/* in seconds */, 0x0100 /* advertising interval 100ms*/);
-              Serial.println(F("Advertising started"));
+                lib_aci_connect(30/* in seconds */, 0x0100 /* advertising interval 100ms*/);
+                Serial.println(F("Advertising started"));
               }
               break;
             }
@@ -314,12 +314,12 @@ void aci_loop()
       
         for(uint8_t counter = 0; counter <= (aci_evt->len - 3); counter++)
         {
-        Serial.write(aci_evt->params.hw_error.file_name[counter]); //uint8_t file_name[20];
+          Serial.write(aci_evt->params.hw_error.file_name[counter]); //uint8_t file_name[20];
         }
         Serial.println();
         lib_aci_connect(30/* in seconds */, 0x0100 /* advertising interval 100ms*/);
         Serial.println(F("Advertising started"));
-      break;
+        break;
         
         default:
           Serial.print(F("Evt Opcode 0x"));

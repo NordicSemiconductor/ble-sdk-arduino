@@ -325,9 +325,17 @@ void aci_loop()
             case ACI_DEVICE_STANDBY:
               aci_state.device_state = ACI_DEVICE_STANDBY;
               Serial.println(F("Evt Device Started: Standby"));
-              Timer1start();
-              lib_aci_connect(30/* in seconds */, 0x0100 /* advertising interval 100ms*/);
-              Serial.println(F("Advertising started..."));
+              
+              if (aci_evt->params.device_started.hw_error)
+              {
+                delay(20); //Magic number used to make sure the HW error event is handled correctly.
+              }
+              else
+              {
+                Timer1start();
+                lib_aci_connect(30/* in seconds */, 0x0100 /* advertising interval 100ms*/);
+                Serial.println(F("Advertising started"));
+              }
               break;
           }
         }
@@ -438,6 +446,19 @@ void aci_loop()
           lib_aci_connect(180/* in seconds */, 0x0050 /* advertising interval 50ms*/);
           Serial.println(F("Advertising started"));
         }
+        break;
+      case ACI_EVT_HW_ERROR:
+        Serial.println(F("HW error: "));
+        Serial.println(aci_evt->params.hw_error.line_num, DEC);
+      
+        for(uint8_t counter = 0; counter <= (aci_evt->len - 3); counter++)
+        {
+          Serial.write(aci_evt->params.hw_error.file_name[counter]); //uint8_t file_name[20];
+        }
+        Serial.println();
+        Timer1start();
+        lib_aci_connect(30/* in seconds */, 0x0100 /* advertising interval 100ms*/);
+        Serial.println(F("Advertising started"));
         break;     
     }
   }

@@ -175,7 +175,7 @@ void loop()
               Serial.println(F("Evt Device Started: Standby"));
               if (aci_evt->params.device_started.hw_error)
               {
-                //do nothing, wait for the HW-error.
+                delay(20); //Magic number used to make sure the HW error event is handled correctly.
               }
               else
               {
