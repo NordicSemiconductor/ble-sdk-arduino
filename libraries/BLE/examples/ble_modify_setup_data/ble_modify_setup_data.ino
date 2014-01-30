@@ -273,8 +273,15 @@ void aci_loop()
               Serial.println(F("Evt Device Started: Standby"));
               //Looking for an iPhone by sending radio advertisements
               //When an iPhone connects to us we will get an ACI_EVT_CONNECTED event from the nRF8001
+              if (aci_evt->params.device_started.hw_error)
+              {
+                delay(20); //Magic number used to make sure the HW error event is handled correctly.
+              }
+              else
+              {
               lib_aci_connect(180/* in seconds */, 0x0050 /* advertising interval 50ms*/);
               Serial.println(F("Advertising started"));
+              }
               break;
           }
         }
@@ -388,6 +395,18 @@ void aci_loop()
         {
           aci_state.data_credit_available++;
         }
+        break;
+      case ACI_EVT_HW_ERROR:
+        Serial.println(F("HW error: "));
+        Serial.println(aci_evt->params.hw_error.line_num, DEC);
+      
+        for(uint8_t counter = 0; counter <= (aci_evt->len - 3); counter++)
+        {
+          Serial.write(aci_evt->params.hw_error.file_name[counter]); //uint8_t file_name[20];
+        }
+        Serial.println();
+        lib_aci_connect(30/* in seconds */, 0x0100 /* advertising interval 100ms*/);
+        Serial.println(F("Advertising started"));
         break;   
            
     }
