@@ -391,3 +391,7 @@ void m_aci_pins_set(aci_pins_t *a_pins_ptr)
 {
   a_pins_local_ptr = a_pins_ptr;	
 }
+
+void m_aci_pin_reset(aci_pins_t *a_pins_ptr)
+{
+}
