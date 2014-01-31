@@ -139,13 +139,44 @@ void m_print_aci_data(hal_aci_data_t *p_data)
   Serial.println(F(""));
 }
 
+/** @brief Pin reset the nRF8001                           					          */
+/*  @details																		  */
+/*  The reset lin of the nF8001 needs to kept low for 200 ns.                         */
+/*  Redbearlab shield v1.1 and v2012.07 are exceptions as they                        */
+/*  have a Power ON Reset circuit that works differently                              */
+/************************************************************************/
+static void m_aci_pin_reset(aci_pins_t *a_pins)
+{
+    if (UNUSED != a_pins->reset_pin)
+    {
+        pinMode(a_pins->reset_pin,	OUTPUT);
+
+        if ((REDBEARLAB_SHIELD_V1_1     == a_pins->board_name) ||
+            (REDBEARLAB_SHIELD_V2012_07 == a_pins->board_name))
+        {
+            //The reset for the Redbearlab v1.1 and v2012.07 boards are inverted and has a Power On Reset
+            //circuit that takes about 100ms to trigger the reset
+            digitalWrite(a_pins->reset_pin, 1);
+            delay(100);
+            digitalWrite(a_pins->reset_pin, 0);		
+        }
+        else
+        {
+            digitalWrite(a_pins->reset_pin, 1);
+            digitalWrite(a_pins->reset_pin, 0);		
+            digitalWrite(a_pins->reset_pin, 1);
+        }
+    }
+}
 
 void m_rdy_line_handle(void)
 {
   hal_aci_data_t *p_aci_data;
   
-  sleep_disable();
-  detachInterrupt(1);
+  if (a_pins_local_ptr->interface_is_interrupt)
+  {
+    detachInterrupt(a_pins_local_ptr->interrupt_number);
+  }
   
   // Receive or transmit data
   p_aci_data = hal_aci_tl_poll_get();
@@ -191,7 +222,7 @@ bool hal_aci_tl_event_get(hal_aci_data_t *p_aci_data)
 	  if (true == a_pins_local_ptr->interface_is_interrupt)
 	  {
 		/* Enable RDY line interrupt again */
-		EIMSK |= (0x2);
+		EIMSK |= (0x2); /* Make it more portable as this is ATmega specific */
 	  }
     }
     return true;
@@ -235,29 +266,11 @@ void hal_aci_tl_init(aci_pins_t *a_pins)
 	pinMode(a_pins->active_pin,	INPUT);  
   }
   
-
-  if (UNUSED != a_pins->reset_pin)
-  {
-	pinMode(a_pins->reset_pin,	OUTPUT);
+  /* Pin reset the nRF8001 , required when the nRF8001 setup is being changed */
+  m_aci_pin_reset(a_pins);
 	
-	if (REDBEARLAB_SHIELD_V1_1 == a_pins->board_name)
-	{
-		//The reset for this board is inverted and has a Power On Reset
-		//circuit that takes about 100ms to trigger the reset
-		digitalWrite(a_pins->reset_pin, 1);
-		delay(100);
-		digitalWrite(a_pins->reset_pin, 0);		
-	}
-	else
-	{
-		digitalWrite(a_pins->reset_pin, 1);
-		digitalWrite(a_pins->reset_pin, 0);		
-		digitalWrite(a_pins->reset_pin, 1);
-	}
-	
-  }
   
-  
+  /* Set the nRF8001 to a known state as required by the datasheet*/
   digitalWrite(a_pins->miso_pin, 0);
   digitalWrite(a_pins->mosi_pin, 0);
   digitalWrite(a_pins->reqn_pin, 1);
@@ -265,7 +278,7 @@ void hal_aci_tl_init(aci_pins_t *a_pins)
   
   delay(30); //Wait for the nRF8001 to get hold of its lines - the lines float for a few ms after the reset
   
-  //Attach the interrupt to the RDYN line as requested by the caller
+  /* Attach the interrupt to the RDYN line as requested by the caller */
   if (a_pins->interface_is_interrupt)
   {
 	attachInterrupt(a_pins->interrupt_number, m_rdy_line_handle, LOW); // We use the LOW level of the RDYN line as the atmega328 can wakeup from sleep only on LOW  
@@ -390,8 +403,4 @@ void m_aci_q_flush(void)
 void m_aci_pins_set(aci_pins_t *a_pins_ptr)
 {
   a_pins_local_ptr = a_pins_ptr;	
-}
-
-void m_aci_pin_reset(aci_pins_t *a_pins_ptr)
-{
 }

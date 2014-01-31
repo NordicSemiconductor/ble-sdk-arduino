@@ -186,13 +186,6 @@ bool m_aci_q_enqueue(aci_queue_t *aci_q, hal_aci_data_t *p_data);
 /************************************************************************/
 void m_aci_pins_set(aci_pins_t *a_pins_ptr);
 
-/** @brief Pin reset the nRF8001                           					          */
-/*  @details																		  */
-/*   */
-/*   */                                                                    */
-/************************************************************************/
-void m_aci_pin_reset(aci_pins_t *a_pins_ptr);
-
 #endif // HAL_ACI_TL_H__
 /** @} */
 
