@@ -1,1 +1,7 @@
-*.* eol=crlf
+*.md eol=crlf
+*.txt eol=crlf
+*.bat eol=crlf
+*.ino eol=crlf
+*.xml eol=crlf
+*.cpp eol=crlf
+*.h eol=crlf
