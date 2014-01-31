@@ -760,3 +760,8 @@ void lib_aci_debug_print(bool enable)
   hal_aci_debug_print(enable);
 }
 
+void lib_aci_pin_reset(void)
+{
+    hal_aci_pin_reset();
+}
+

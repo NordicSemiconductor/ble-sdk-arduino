@@ -139,32 +139,26 @@ void m_print_aci_data(hal_aci_data_t *p_data)
   Serial.println(F(""));
 }
 
-/** @brief Pin reset the nRF8001                           					          */
-/*  @details																		  */
-/*  The reset lin of the nF8001 needs to kept low for 200 ns.                         */
-/*  Redbearlab shield v1.1 and v2012.07 are exceptions as they                        */
-/*  have a Power ON Reset circuit that works differently                              */
-/************************************************************************/
-static void m_aci_pin_reset(aci_pins_t *a_pins)
+void hal_aci_pin_reset(void)
 {
-    if (UNUSED != a_pins->reset_pin)
+    if (UNUSED != a_pins_local_ptr->reset_pin)
     {
-        pinMode(a_pins->reset_pin,	OUTPUT);
+        pinMode(a_pins_local_ptr->reset_pin, OUTPUT);
 
-        if ((REDBEARLAB_SHIELD_V1_1     == a_pins->board_name) ||
-            (REDBEARLAB_SHIELD_V2012_07 == a_pins->board_name))
+        if ((REDBEARLAB_SHIELD_V1_1     == a_pins_local_ptr->board_name) ||
+            (REDBEARLAB_SHIELD_V2012_07 == a_pins_local_ptr->board_name))
         {
             //The reset for the Redbearlab v1.1 and v2012.07 boards are inverted and has a Power On Reset
             //circuit that takes about 100ms to trigger the reset
-            digitalWrite(a_pins->reset_pin, 1);
+            digitalWrite(a_pins_local_ptr->reset_pin, 1);
             delay(100);
-            digitalWrite(a_pins->reset_pin, 0);		
+            digitalWrite(a_pins_local_ptr->reset_pin, 0);		
         }
         else
         {
-            digitalWrite(a_pins->reset_pin, 1);
-            digitalWrite(a_pins->reset_pin, 0);		
-            digitalWrite(a_pins->reset_pin, 1);
+            digitalWrite(a_pins_local_ptr->reset_pin, 1);
+            digitalWrite(a_pins_local_ptr->reset_pin, 0);		
+            digitalWrite(a_pins_local_ptr->reset_pin, 1);
         }
     }
 }
@@ -237,6 +231,7 @@ void hal_aci_tl_init(aci_pins_t *a_pins)
 {
   received_data.buffer[0] = 0;
   
+  /* Needs to be called as the first thing for proper intialization*/
   m_aci_pins_set(a_pins);
   
   /*
@@ -267,7 +262,7 @@ void hal_aci_tl_init(aci_pins_t *a_pins)
   }
   
   /* Pin reset the nRF8001 , required when the nRF8001 setup is being changed */
-  m_aci_pin_reset(a_pins);
+  hal_aci_pin_reset();
 	
   
   /* Set the nRF8001 to a known state as required by the datasheet*/
