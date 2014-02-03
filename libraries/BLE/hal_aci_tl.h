@@ -186,6 +186,15 @@ bool m_aci_q_enqueue(aci_queue_t *aci_q, hal_aci_data_t *p_data);
 /************************************************************************/
 void m_aci_pins_set(aci_pins_t *a_pins_ptr);
 
+/** @brief Pin reset the nRF8001                           					          */
+/*  @details																		  */
+/*  The reset line of the nF8001 needs to kept low for 200 ns.                        */
+/*  Redbearlab shield v1.1 and v2012.07 are exceptions as they                        */
+/*  have a Power ON Reset circuit that works differently.                             */
+/*  The function handles the exceptions based on the board_name in aci_pins_t         */
+/************************************************************************/
+void hal_aci_pin_reset(void);
+
 #endif // HAL_ACI_TL_H__
 /** @} */
 
