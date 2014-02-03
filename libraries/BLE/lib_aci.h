@@ -1,27 +1,23 @@
-/*Copyright (c) 2014, Nordic Semiconductor ASA
+/* Copyright (c) 2014, Nordic Semiconductor ASA
  *
- *Permission is hereby granted, free of charge, to any person obtaining a copy
- *of this software and associated documentation files (the "Software"), to deal
- *in the Software without restriction, including without limitation the rights
- *to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *copies of the Software, and to permit persons to whom the Software is
- *furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- *The above copyright notice and this permission notice shall be included in all
- *copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
  *
- *THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- *AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- *SOFTWARE.
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
  */
-/* Attention! 
-*  To maintain compliance with Nordic Semiconductor ASA’s Bluetooth profile 
-*  qualification listings, this section of source code must not be modified.
-*/
 
 #ifndef LIB_ACI_H__
 #define LIB_ACI_H__
@@ -35,7 +31,6 @@
 @brief Library for the logical part of the Application Controller Interface (ACI)
 */
 
-
 #include "hal_platform.h"
 #include "hal_aci_tl.h"
 #include "aci.h"
@@ -43,16 +38,17 @@
 #include "aci_evts.h"
 
 
-
 #define EVT_CMD_RESPONSE_MIN_LENGTH              3
 
 #define PIPES_ARRAY_SIZE                ((ACI_DEVICE_MAX_PIPES + 7)/8)
 
 /* Same size as a hal_aci_data_t */
-typedef struct __attribute__ ((__packed__)) hal_aci_evt_t{
+typedef struct {
   uint8_t   debug_byte;
   aci_evt_t evt;
-} hal_aci_evt_t;
+} _aci_packed_ hal_aci_evt_t;
+
+ACI_ASSERT_SIZE(hal_aci_evt_t, 34);
 
 typedef struct
 {

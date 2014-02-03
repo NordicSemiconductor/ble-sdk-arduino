@@ -1,22 +1,22 @@
-/*Copyright (c) 2014, Nordic Semiconductor ASA
+/* Copyright (c) 2014, Nordic Semiconductor ASA
  *
- *Permission is hereby granted, free of charge, to any person obtaining a copy
- *of this software and associated documentation files (the "Software"), to deal
- *in the Software without restriction, including without limitation the rights
- *to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *copies of the Software, and to permit persons to whom the Software is
- *furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- *The above copyright notice and this permission notice shall be included in all
- *copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
  *
- *THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- *AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- *SOFTWARE.
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
  */
 
 /** @file
@@ -32,10 +32,7 @@ static void           m_print_aci_data(hal_aci_data_t *p_data);
 static uint8_t        spi_readwrite(uint8_t aci_byte);
 
 static hal_aci_data_t received_data;
-static bool           aci_debug_print;
-
-
-
+static bool           aci_debug_print = false;
 
 aci_queue_t    aci_tx_q;
 aci_queue_t    aci_rx_q;
@@ -46,7 +43,6 @@ static void m_aci_q_init(aci_queue_t *aci_q)
 {
   uint8_t loop;
   
-  aci_debug_print = false;
   aci_q->head = 0;
   aci_q->tail = 0;
   for(loop=0; loop<ACI_QUEUE_SIZE; loop++)
@@ -94,12 +90,12 @@ static bool m_aci_q_dequeue(aci_queue_t *aci_q, hal_aci_data_t *p_data)
   return true;
 }
 
-bool m_aci_q_is_empty(aci_queue_t *aci_q)
+static bool m_aci_q_is_empty(aci_queue_t *aci_q)
 {
   return (aci_q->head == aci_q->tail);
 }
 
-bool m_aci_q_is_full(aci_queue_t *aci_q)
+static bool m_aci_q_is_full(aci_queue_t *aci_q)
 {
   uint8_t next;
   bool state;
@@ -122,8 +118,6 @@ bool m_aci_q_is_full(aci_queue_t *aci_q)
   
   return state;
 }
-
-
 
 void m_print_aci_data(hal_aci_data_t *p_data)
 {
@@ -163,7 +157,7 @@ void hal_aci_pin_reset(void)
     }
 }
 
-void m_rdy_line_handle(void)
+static void m_rdy_line_handle(void)
 {
   hal_aci_data_t *p_aci_data;
   
@@ -201,6 +195,43 @@ void m_rdy_line_handle(void)
 
 bool hal_aci_tl_event_get(hal_aci_data_t *p_aci_data)
 {
+  if (false == a_pins_local_ptr->interface_is_interrupt)
+  {
+	  /*
+	   Check the RDYN line
+	   When the RDYN line goes low
+	   Run the SPI master
+	   place the returned ACI Event in the p_aci_evt_data
+	  */
+
+	  /*
+	  When the RDYN goes low it means the nRF8001 is ready for the SPI transaction
+	  */
+	  if (0 == digitalRead(a_pins_local_ptr->rdyn_pin))
+	  {
+		/*
+		Now process the Master SPI
+		*/
+		m_rdy_line_handle();
+	  }
+	  else
+	  {
+		/*
+		 RDYN line was not low
+		 When there are commands in the Command queue and the event queue has space for
+		 more events place the REQN line low, so the RDYN line will go low later
+		*/
+		if ((false == m_aci_q_is_empty(&aci_tx_q)) &&
+			(false == m_aci_q_is_full(&aci_rx_q)))
+		{
+			digitalWrite(a_pins_local_ptr->reqn_pin, 0);
+		}
+
+		/*
+		Master SPI cannot be run , no event to process
+		*/
+	  }
+  }
   bool was_full = m_aci_q_is_full(&aci_rx_q);
   
   if (m_aci_q_dequeue(&aci_rx_q, p_aci_data))
@@ -230,6 +261,7 @@ bool hal_aci_tl_event_get(hal_aci_data_t *p_aci_data)
 void hal_aci_tl_init(aci_pins_t *a_pins)
 {
   received_data.buffer[0] = 0;
+  aci_debug_print         = false;
   
   /* Needs to be called as the first thing for proper intialization*/
   m_aci_pins_set(a_pins);
@@ -245,8 +277,6 @@ void hal_aci_tl_init(aci_pins_t *a_pins)
   SPI.setBitOrder(LSBFIRST);
   SPI.setClockDivider(a_pins->spi_clock_divider);
   SPI.setDataMode(SPI_MODE0);
-
-
   
   /* initialize aci cmd queue */
   m_aci_q_init(&aci_tx_q);  
@@ -264,7 +294,7 @@ void hal_aci_tl_init(aci_pins_t *a_pins)
   /* Pin reset the nRF8001 , required when the nRF8001 setup is being changed */
   hal_aci_pin_reset();
 	
-  
+    
   /* Set the nRF8001 to a known state as required by the datasheet*/
   digitalWrite(a_pins->miso_pin, 0);
   digitalWrite(a_pins->mosi_pin, 0);
@@ -294,13 +324,16 @@ bool hal_aci_tl_send(hal_aci_data_t *p_aci_cmd)
     if (m_aci_q_enqueue(&aci_tx_q, p_aci_cmd))
     {
       ret_val = true;
-      digitalWrite(a_pins_local_ptr->reqn_pin, 0); //Place request line low only if enqueued
+      /*
+      Lower the REQN only when successfully enqueued
+      */
+      digitalWrite(a_pins_local_ptr->reqn_pin, 0);
     }
   }
 
   if ((true == aci_debug_print) && (true == ret_val))
   {
-    Serial.print("C");
+    Serial.print("C"); //ACI Command
     m_print_aci_data(p_aci_cmd);
   }
   
@@ -315,10 +348,6 @@ hal_aci_data_t * hal_aci_tl_poll_get(void)
   uint8_t byte_sent_cnt;
   uint8_t max_bytes;
   hal_aci_data_t data_to_send;
-
-
- 
-    
 
   digitalWrite(a_pins_local_ptr->reqn_pin, 0);
   
@@ -369,8 +398,6 @@ hal_aci_data_t * hal_aci_tl_poll_get(void)
 	attachInterrupt(a_pins_local_ptr->interrupt_number, m_rdy_line_handle, LOW);	  
   }
 
-
-  
   if (false == m_aci_q_is_empty(&aci_tx_q))
   {
     //Lower the REQN line to start a new ACI transaction         
