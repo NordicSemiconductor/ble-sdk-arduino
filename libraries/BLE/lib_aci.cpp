@@ -1,27 +1,23 @@
-/*Copyright (c) 2014, Nordic Semiconductor ASA
+/* Copyright (c) 2014, Nordic Semiconductor ASA
  *
- *Permission is hereby granted, free of charge, to any person obtaining a copy
- *of this software and associated documentation files (the "Software"), to deal
- *in the Software without restriction, including without limitation the rights
- *to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- *copies of the Software, and to permit persons to whom the Software is
- *furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- *The above copyright notice and this permission notice shall be included in all
- *copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
  *
- *THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- *IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- *FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- *AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- *LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- *OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- *SOFTWARE.
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
  */
-/* Attention! 
-*  To maintain compliance with Nordic Semiconductor ASA’s Bluetooth profile 
-*  qualification listings, this section of source code must not be modified.
-*/
 
 /** @file
   @brief Implementation of the ACI library.
@@ -158,7 +154,7 @@ void lib_aci_board_init(aci_state_t *aci_stat)
 				}
 				else if (ACI_STATUS_ERROR_CMD_UNKNOWN == aci_evt->params.cmd_rsp.cmd_status) //We are now in TEST
 				{
-					//Inject a Device Started Event Standby to the ACI Event Queue
+					//Inject a Device Started Event Test to the ACI Event Queue
 					msg_to_send.buffer[0] = 4;    //Length
 					msg_to_send.buffer[1] = 0x81; //Device Started Event
 					msg_to_send.buffer[2] = 0x01; //Test
@@ -563,49 +559,12 @@ bool lib_aci_bond_request()
 
 bool lib_aci_event_get(aci_state_t *aci_stat, hal_aci_evt_t *p_aci_evt_data)
 {
-  bool status = false;
+  bool status;
   
-  if (false == aci_stat->aci_pins.interface_is_interrupt)
-  {
-
-  
-	  /*
-	  Check the RDYN line
-	   When the RDYN line goes low
-	   Run the SPI master
-	   place the returned ACI Event in the p_aci_evt_data
-	  */
-  
-
-	  /*
-	  When the RDYN goes low it means the nRF8001 is ready for the SPI transaction
-	  */
-	  if (0 != digitalRead(aci_stat->aci_pins.rdyn_pin))
-	  {
-		/* RDYN line was not low */
-		/*when there are commands in the Command queue. place the REQN line low, so the RDYN line will go low later*/
-		if ((false == m_aci_q_is_empty(&aci_tx_q)) && 
-			(false == m_aci_q_is_full(&aci_rx_q)))
-		{    
-			digitalWrite(aci_stat->aci_pins.reqn_pin, 0); 
-		}
-	
-		/*
-		Master SPI cannot be run , no event to process
-		*/
-	  }
-	  else
-	  {
-		/*
-		Now process the Master SPI
-		*/
-		m_rdy_line_handle();  
-	  }
-  }
   status = hal_aci_tl_event_get((hal_aci_data_t *)p_aci_evt_data);
   
   /**
-  Update the state of the ACI witn the 
+  Update the state of the ACI with the 
   ACI Events -> Pipe Status, Disconnected, Connected, Bond Status, Pipe Error
   */
   if (true == status)
@@ -648,12 +607,14 @@ bool lib_aci_event_get(aci_state_t *aci_stat, hal_aci_evt_t *p_aci_evt_data)
                 aci_stat->slave_latency       = aci_evt->params.timing.conn_slave_rf_latency;
                 aci_stat->supervision_timeout = aci_evt->params.timing.conn_rf_timeout;
             break;
-        
-        
+
+        default:
+            /* Need default case to avoid compiler warnings about missing enum
+             * values on some platforms.
+             */
+            break;
     }
-    
   }
-  
   return status;
 }
 
@@ -764,4 +725,3 @@ void lib_aci_pin_reset(void)
 {
     hal_aci_pin_reset();
 }
-
