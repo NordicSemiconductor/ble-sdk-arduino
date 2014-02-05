@@ -366,7 +366,6 @@ void aci_loop()
                     Serial.println(F("Already bonded : Advertising started : Waiting to be connected"));
                   }
                 }
-              }
               break;
           }
         }
