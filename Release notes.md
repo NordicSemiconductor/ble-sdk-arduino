@@ -24,3 +24,5 @@ This issue is applicable for all projects that use pairing.
 6. Documentation for using the Nordic adapter shield for nRF8001 with the nRF8001 Development kit and the Bluetooth low energy SDK for Arduino is incomplete.
 
 7. Documentation for the Bluetooth low energy SDK for Arduino is still in progress.
+
+8. Tested with Arduino Uno. There seems to be some issues with the Arduino Leonardo that needs to be investigated.
