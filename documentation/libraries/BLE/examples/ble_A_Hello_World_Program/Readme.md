@@ -3,7 +3,7 @@
 The Hello_World_Program is uses BLE to send a string "Hello World, works" from the Arduino board to the peer Bluetooth low energy device.
 The peer can be the nRF UART app running on iOS or Android or PC (See the Master Emulator -> Examples -> nRFUART, this is installed as part of the Master control panel Windows tool)
 
-The Arduino IDE or equivalent and Arduino board are working. You can use the "Getting Started" pages on arduino.cc to get help and to troubleshoot.
+The Arduino IDE or equivalent and Arduino board are working. You can use the "Getting Started" pages on http://arduino.cc to get help and to troubleshoot.
 Once you have confirmed that the Aduino board and IDE are working.
 
 * Connect the nRF8001 to the Arduino (using either a shield or with direct wiring)
@@ -14,17 +14,18 @@ This will vary depending on the shield that you use.
 	/*
 	Tell the ACI library, the MCU to nRF8001 pin connections.
 	The Active pin is optional and can be marked UNUSED
-	*/	  	
-	aci_state.aci_pins.board_name = //See board.h for details REDBEARLAB_SHIELD_V1_1 or BOARD_DEFAULT
-	aci_state.aci_pins.reqn_pin   = //SS for Nordic adapter shield, 9 for REDBEARLAB_SHIELD_V1_1
-	aci_state.aci_pins.rdyn_pin   = //3 for Nordic adapter shield , 8 for REDBEARLAB_SHIELD_V1_1
+	*/
+    
+	aci_state.aci_pins.board_name = //See board.h for details, Use REDBEARLAB_SHIELD_V1_1 or BOARD_DEFAULT
+	aci_state.aci_pins.reqn_pin   = //SS for Nordic adapter shield , 9 for REDBEARLAB_SHIELD_V1_1 and REDBEARLAB_SHIELD_V2
+	aci_state.aci_pins.rdyn_pin   = // 3 for Nordic adapter shield ,  8 for REDBEARLAB_SHIELD_V1_1 and REDBEARLAB_SHIELD_V2
 	aci_state.aci_pins.mosi_pin   = MOSI;
 	aci_state.aci_pins.miso_pin   = MISO;
 	aci_state.aci_pins.sck_pin    = SCK;
 	
-	aci_state.aci_pins.spi_clock_divider     = SPI_CLOCK_DIV8;
+	aci_state.aci_pins.spi_clock_divider     = SPI_CLOCK_DIV8; //This divides the input clock by 8 to get the SPI clock
 	  
-	aci_state.aci_pins.reset_pin             = //4 for Nordic adapter shield, UNUSED for REDBEARLAB_SHIELD_V1_1
+	aci_state.aci_pins.reset_pin             = //4 for Nordic adapter shield, UNUSED for REDBEARLAB_SHIELD_V1_1, 4 or 7 or UNUSED for REDBEARLAB_SHIELD_V2
 	aci_state.aci_pins.active_pin            = UNUSED;
 	aci_state.aci_pins.optional_chip_sel_pin = UNUSED;
 	  
