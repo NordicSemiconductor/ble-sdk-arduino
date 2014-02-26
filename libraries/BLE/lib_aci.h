@@ -513,6 +513,30 @@ bool lib_aci_event_get(aci_state_t *aci_stat, hal_aci_evt_t * aci_evt);
 */
 void lib_aci_flush(void);
 
+/** @brief Return full status of transmit queue
+ *  @details
+ *
+ */
+ bool lib_aci_rx_q_full(void);
+ 
+ /** @brief Return empty status of receive queue
+ *  @details
+ *
+ */
+ bool lib_aci_rx_q_empty(void);
+
+/** @brief Return full status of receive queue
+ *  @details
+ *
+ */
+ bool lib_aci_tx_q_full(void);
+ 
+ /** @brief Return empty status of transmit queue
+ *  @details
+ *
+ */
+ bool lib_aci_tx_q_empty(void);
+
 //@}
 
 /** @} */
