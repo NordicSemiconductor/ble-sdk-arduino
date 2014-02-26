@@ -426,3 +426,23 @@ void m_aci_pins_set(aci_pins_t *a_pins_ptr)
 {
   a_pins_local_ptr = a_pins_ptr;	
 }
+
+bool hal_aci_tl_rx_q_empty (void)
+{
+  return m_aci_q_is_empty(&aci_rx_q);
+}
+
+bool hal_aci_tl_rx_q_full (void)
+{
+  return m_aci_q_is_full(&aci_rx_q);
+}
+
+bool hal_aci_tl_tx_q_empty (void)
+{
+  return m_aci_q_is_empty(&aci_tx_q);
+}
+
+bool hal_aci_tl_tx_q_full (void)
+{
+  return m_aci_q_is_full(&aci_tx_q);
+}

@@ -176,6 +176,30 @@ void m_aci_pins_set(aci_pins_t *a_pins_ptr);
  */
 void hal_aci_pin_reset(void);
 
+/** @brief Return full status of transmit queue
+ *  @details
+ *
+ */
+ bool hal_aci_tl_rx_q_full(void);
+ 
+ /** @brief Return empty status of receive queue
+ *  @details
+ *
+ */
+ bool hal_aci_tl_rx_q_empty(void);
+
+/** @brief Return full status of receive queue
+ *  @details
+ *
+ */
+ bool hal_aci_tl_tx_q_full(void);
+ 
+ /** @brief Return empty status of transmit queue
+ *  @details
+ *
+ */
+ bool hal_aci_tl_tx_q_empty(void);
+
 #endif // HAL_ACI_TL_H__
 /** @} */
 
