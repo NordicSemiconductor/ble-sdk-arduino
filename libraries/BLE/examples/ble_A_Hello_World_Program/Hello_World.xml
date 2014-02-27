@@ -231,7 +231,7 @@
         <SlaveLatency>0</SlaveLatency>
         <TimeoutMultipler>10</TimeoutMultipler>
         <AddServiceUpdateCharacteristic>true</AddServiceUpdateCharacteristic>
-        <AddServiceUpdateCharacteristicPipe>false</AddServiceUpdateCharacteristicPipe>
+        <AddServiceUpdateCharacteristicPipe>true</AddServiceUpdateCharacteristicPipe>
         <ServiceToAdvertise>
             <Uuid BaseUUID="6E400000B5A3F393E0A9E50E24DCCA9E" BaseUUIDName="Custom UART">0001</Uuid>
         </ServiceToAdvertise>

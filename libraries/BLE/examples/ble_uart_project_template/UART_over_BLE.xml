@@ -4,94 +4,6 @@
     <SetupId>0</SetupId>
     <Device>nRF8001_Dx</Device>
     <Service Type="local" PrimaryService="true">
-        <Name>UART over BTLE</Name>
-        <Uuid BaseUUID="6E400000B5A3F393E0A9E50E24DCCA9E" BaseUUIDName="Custom UART">0001</Uuid>
-        <Characteristic>
-            <Name>UART RX</Name>
-            <Uuid BaseUUID="6E400000B5A3F393E0A9E50E24DCCA9E" BaseUUIDName="Custom UART">0002</Uuid>
-            <DefaultValue></DefaultValue>
-            <UsePresentationFormat>0</UsePresentationFormat>
-            <MaxDataLength>20</MaxDataLength>
-            <AttributeLenType>2</AttributeLenType>
-            <ForceOpen>false</ForceOpen>
-            <Properties>
-                <WriteWithoutResponse>true</WriteWithoutResponse>
-                <Write>false</Write>
-                <Notify>false</Notify>
-                <Indicate>false</Indicate>
-                <Broadcast>false</Broadcast>
-            </Properties>
-            <SetPipe>false</SetPipe>
-            <AckIsAuto>false</AckIsAuto>
-            <PresentationFormatDescriptor Value="0000" Exponent="0" Format="1" NameSpace="01" Unit="0000"/>
-            <PeriodForReadingThisCharacteristic>0</PeriodForReadingThisCharacteristic>
-            <PeriodForProperties/>
-        </Characteristic>
-        <Characteristic>
-            <Name>UART TX</Name>
-            <Uuid BaseUUID="6E400000B5A3F393E0A9E50E24DCCA9E" BaseUUIDName="Custom UART">0003</Uuid>
-            <DefaultValue></DefaultValue>
-            <UsePresentationFormat>0</UsePresentationFormat>
-            <MaxDataLength>20</MaxDataLength>
-            <AttributeLenType>2</AttributeLenType>
-            <ForceOpen>false</ForceOpen>
-            <Properties>
-                <WriteWithoutResponse>false</WriteWithoutResponse>
-                <Write>false</Write>
-                <Notify>true</Notify>
-                <Indicate>false</Indicate>
-                <Broadcast>false</Broadcast>
-            </Properties>
-            <SetPipe>false</SetPipe>
-            <AckIsAuto>false</AckIsAuto>
-            <PresentationFormatDescriptor Value="0000" Exponent="0" Format="1" NameSpace="01" Unit="0000"/>
-            <PeriodForReadingThisCharacteristic>0</PeriodForReadingThisCharacteristic>
-            <PeriodForProperties/>
-        </Characteristic>
-        <Characteristic>
-            <Name>UART Control Point</Name>
-            <Uuid BaseUUID="6e400000b5a3f393e0a9e50e24dcca9e" BaseUUIDName="Custom UART">0004</Uuid>
-            <DefaultValue></DefaultValue>
-            <UsePresentationFormat>0</UsePresentationFormat>
-            <MaxDataLength>9</MaxDataLength>
-            <AttributeLenType>2</AttributeLenType>
-            <ForceOpen>false</ForceOpen>
-            <Properties>
-                <WriteWithoutResponse>true</WriteWithoutResponse>
-                <Write>false</Write>
-                <Notify>true</Notify>
-                <Indicate>false</Indicate>
-                <Broadcast>false</Broadcast>
-            </Properties>
-            <SetPipe>false</SetPipe>
-            <AckIsAuto>false</AckIsAuto>
-            <PresentationFormatDescriptor Value="0000" Exponent="0" Format="1" NameSpace="01" Unit="0000"/>
-            <PeriodForReadingThisCharacteristic>0</PeriodForReadingThisCharacteristic>
-            <PeriodForProperties/>
-        </Characteristic>
-        <Characteristic>
-            <Name>UART Link Timing Current</Name>
-            <Uuid BaseUUID="6e400000b5a3f393e0a9e50e24dcca9e" BaseUUIDName="Custom UART">0005</Uuid>
-            <DefaultValue>FFFFFFFFFFFF</DefaultValue>
-            <UsePresentationFormat>0</UsePresentationFormat>
-            <MaxDataLength>6</MaxDataLength>
-            <AttributeLenType>1</AttributeLenType>
-            <ForceOpen>false</ForceOpen>
-            <Properties>
-                <WriteWithoutResponse>false</WriteWithoutResponse>
-                <Write>false</Write>
-                <Notify>false</Notify>
-                <Indicate>false</Indicate>
-                <Broadcast>false</Broadcast>
-            </Properties>
-            <SetPipe>true</SetPipe>
-            <AckIsAuto>false</AckIsAuto>
-            <PresentationFormatDescriptor Value="0000" Exponent="0" Format="1" NameSpace="01" Unit="0000"/>
-            <PeriodForReadingThisCharacteristic>0</PeriodForReadingThisCharacteristic>
-            <PeriodForProperties/>
-        </Characteristic>
-    </Service>
-    <Service Type="local" PrimaryService="true">
         <Name>Device Information</Name>
         <Uuid>180a</Uuid>
         <Characteristic>
@@ -200,6 +112,94 @@
             <PeriodForProperties/>
         </Characteristic>
     </Service>
+    <Service Type="local" PrimaryService="true">
+        <Name>UART over BTLE</Name>
+        <Uuid BaseUUID="6E400000B5A3F393E0A9E50E24DCCA9E" BaseUUIDName="Custom UART">0001</Uuid>
+        <Characteristic>
+            <Name>UART RX</Name>
+            <Uuid BaseUUID="6E400000B5A3F393E0A9E50E24DCCA9E" BaseUUIDName="Custom UART">0002</Uuid>
+            <DefaultValue></DefaultValue>
+            <UsePresentationFormat>0</UsePresentationFormat>
+            <MaxDataLength>20</MaxDataLength>
+            <AttributeLenType>2</AttributeLenType>
+            <ForceOpen>false</ForceOpen>
+            <Properties>
+                <WriteWithoutResponse>true</WriteWithoutResponse>
+                <Write>false</Write>
+                <Notify>false</Notify>
+                <Indicate>false</Indicate>
+                <Broadcast>false</Broadcast>
+            </Properties>
+            <SetPipe>false</SetPipe>
+            <AckIsAuto>false</AckIsAuto>
+            <PresentationFormatDescriptor Value="0000" Exponent="0" Format="1" NameSpace="01" Unit="0000"/>
+            <PeriodForReadingThisCharacteristic>0</PeriodForReadingThisCharacteristic>
+            <PeriodForProperties/>
+        </Characteristic>
+        <Characteristic>
+            <Name>UART TX</Name>
+            <Uuid BaseUUID="6E400000B5A3F393E0A9E50E24DCCA9E" BaseUUIDName="Custom UART">0003</Uuid>
+            <DefaultValue></DefaultValue>
+            <UsePresentationFormat>0</UsePresentationFormat>
+            <MaxDataLength>20</MaxDataLength>
+            <AttributeLenType>2</AttributeLenType>
+            <ForceOpen>false</ForceOpen>
+            <Properties>
+                <WriteWithoutResponse>false</WriteWithoutResponse>
+                <Write>false</Write>
+                <Notify>true</Notify>
+                <Indicate>false</Indicate>
+                <Broadcast>false</Broadcast>
+            </Properties>
+            <SetPipe>false</SetPipe>
+            <AckIsAuto>false</AckIsAuto>
+            <PresentationFormatDescriptor Value="0000" Exponent="0" Format="1" NameSpace="01" Unit="0000"/>
+            <PeriodForReadingThisCharacteristic>0</PeriodForReadingThisCharacteristic>
+            <PeriodForProperties/>
+        </Characteristic>
+        <Characteristic>
+            <Name>UART Control Point</Name>
+            <Uuid BaseUUID="6e400000b5a3f393e0a9e50e24dcca9e" BaseUUIDName="Custom UART">0004</Uuid>
+            <DefaultValue></DefaultValue>
+            <UsePresentationFormat>0</UsePresentationFormat>
+            <MaxDataLength>9</MaxDataLength>
+            <AttributeLenType>2</AttributeLenType>
+            <ForceOpen>false</ForceOpen>
+            <Properties>
+                <WriteWithoutResponse>true</WriteWithoutResponse>
+                <Write>false</Write>
+                <Notify>true</Notify>
+                <Indicate>false</Indicate>
+                <Broadcast>false</Broadcast>
+            </Properties>
+            <SetPipe>false</SetPipe>
+            <AckIsAuto>false</AckIsAuto>
+            <PresentationFormatDescriptor Value="0000" Exponent="0" Format="1" NameSpace="01" Unit="0000"/>
+            <PeriodForReadingThisCharacteristic>0</PeriodForReadingThisCharacteristic>
+            <PeriodForProperties/>
+        </Characteristic>
+        <Characteristic>
+            <Name>UART Link Timing Current</Name>
+            <Uuid BaseUUID="6e400000b5a3f393e0a9e50e24dcca9e" BaseUUIDName="Custom UART">0005</Uuid>
+            <DefaultValue>FFFFFFFFFFFF</DefaultValue>
+            <UsePresentationFormat>0</UsePresentationFormat>
+            <MaxDataLength>6</MaxDataLength>
+            <AttributeLenType>1</AttributeLenType>
+            <ForceOpen>false</ForceOpen>
+            <Properties>
+                <WriteWithoutResponse>false</WriteWithoutResponse>
+                <Write>false</Write>
+                <Notify>false</Notify>
+                <Indicate>false</Indicate>
+                <Broadcast>false</Broadcast>
+            </Properties>
+            <SetPipe>true</SetPipe>
+            <AckIsAuto>false</AckIsAuto>
+            <PresentationFormatDescriptor Value="0000" Exponent="0" Format="1" NameSpace="01" Unit="0000"/>
+            <PeriodForReadingThisCharacteristic>0</PeriodForReadingThisCharacteristic>
+            <PeriodForProperties/>
+        </Characteristic>
+    </Service>
     <Gapsettings>
         <Name>URT</Name>
         <DeviceNameWriteLength>4</DeviceNameWriteLength>
@@ -231,7 +231,7 @@
         <SlaveLatency>0</SlaveLatency>
         <TimeoutMultipler>10</TimeoutMultipler>
         <AddServiceUpdateCharacteristic>true</AddServiceUpdateCharacteristic>
-        <AddServiceUpdateCharacteristicPipe>false</AddServiceUpdateCharacteristicPipe>
+        <AddServiceUpdateCharacteristicPipe>true</AddServiceUpdateCharacteristicPipe>
         <ServiceToAdvertise>
             <Uuid BaseUUID="6E400000B5A3F393E0A9E50E24DCCA9E" BaseUUIDName="Custom UART">0001</Uuid>
         </ServiceToAdvertise>

@@ -143,6 +143,7 @@ void setup(void)
 	while(!Serial)
 	{}  
 	Serial.println(F("Arduino setup"));
+	Serial.println(F("Set line ending to newline to send data from the serial monitor"));
   
 	/**
 	Point ACI data structures to the the setup data that the nRFgo studio generated for the nRF8001
@@ -180,7 +181,7 @@ void setup(void)
 	aci_state.aci_pins.interrupt_number			  = 1;
 
 	//Turn debug printing on for the ACI Commands and Events to be printed on the Serial
-	lib_aci_debug_print(true);
+	lib_aci_debug_print(false);
 	
 	//We reset the nRF8001 here by toggling the RESET line connected to the nRF8001
 	//If the RESET line is not available we call the ACI Radio Reset to soft reset the nRF8001
