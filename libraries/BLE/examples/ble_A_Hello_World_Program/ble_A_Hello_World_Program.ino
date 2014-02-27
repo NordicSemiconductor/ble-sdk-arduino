@@ -143,6 +143,7 @@ void setup(void)
 	while(!Serial)
 	{}  
 	Serial.println(F("Arduino setup"));
+	Serial.println(F("Set line ending to newline to send data from the serial monitor"));
   
 	/**
 	Point ACI data structures to the the setup data that the nRFgo studio generated for the nRF8001
@@ -185,7 +186,7 @@ void setup(void)
 	lib_aci_init(&aci_state);
 
     //Turn debug printing on for the ACI Commands and Events to be printed on the Serial
-	lib_aci_debug_print(true);
+	lib_aci_debug_print(false);
     
 }
 
