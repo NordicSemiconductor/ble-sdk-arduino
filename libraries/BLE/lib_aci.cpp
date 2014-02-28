@@ -557,6 +557,11 @@ bool lib_aci_bond_request()
   return hal_aci_tl_send(&msg_to_send);
 }
 
+bool lib_aci_event_peek(hal_aci_evt_t *p_aci_evt_data)
+{
+  return hal_aci_tl_event_peek((hal_aci_data_t *)p_aci_evt_data);
+}
+
 bool lib_aci_event_get(aci_state_t *aci_stat, hal_aci_evt_t *p_aci_evt_data)
 {
   bool status;
