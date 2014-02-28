@@ -140,6 +140,13 @@ hal_aci_data_t * hal_aci_tl_poll_get(void);
  */
 bool hal_aci_tl_event_get(hal_aci_data_t *p_aci_data);
 
+/** @brief Peek an ACI event from the event queue
+ *  @details
+ *  Call this function from the main context to peek an event from the ACI event queue.
+ *  This is called by lib_aci_event_peek
+ */
+bool hal_aci_tl_event_peek(hal_aci_data_t *p_aci_data);
+
 /** @brief Flush the ACI command Queue and the ACI Event Queue
  *  @details
  *  Call this function in the main thread

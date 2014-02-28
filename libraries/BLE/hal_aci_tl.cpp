@@ -83,8 +83,13 @@ static bool m_aci_q_dequeue(aci_queue_t *aci_q, hal_aci_data_t *p_data)
     /* empty queue */
     return false;
   }
+
+  /* p_data might be NULL if function calling this wishes to discard the popped message */
+  if (p_data !=NULL )
+  {
+    memcpy((uint8_t *)p_data, (uint8_t *)&(aci_q->aci_data[aci_q->head]), sizeof(hal_aci_data_t));
+  }
   
-  memcpy((uint8_t *)p_data, (uint8_t *)&(aci_q->aci_data[aci_q->head]), sizeof(hal_aci_data_t));
   aci_q->head = (aci_q->head + 1) % ACI_QUEUE_SIZE;
   
   return true;
@@ -206,69 +211,83 @@ static void m_rdy_line_handle(void)
   }
 }
 
+/*
+ Check the RDYN line. When the RDYN line goes low, run the SPI master and place the returned 
+ ACI Event in the p_aci_evt_data
+*/
+static void m_aci_device_query(void)
+{
+  /*
+  When the RDYN goes low it means the nRF8001 is ready for the SPI transaction
+  */
+  if (0 == digitalRead(a_pins_local_ptr->rdyn_pin))
+  {
+    /*
+    Now process the Master SPI
+    */
+    m_rdy_line_handle();
+    return;
+  }
+  
+  /*
+   RDYN line was not low
+   When there are commands in the Command queue and the event queue has space for
+   more events place the REQN line low, so the RDYN line will go low later
+  */
+  if ((false == m_aci_q_is_empty(&aci_tx_q)) &&
+    (false == m_aci_q_is_full(&aci_rx_q)))
+  {
+    digitalWrite(a_pins_local_ptr->reqn_pin, 0);
+  }
+}
+
+bool hal_aci_tl_event_peek(hal_aci_data_t *p_aci_data)
+{
+  if (!a_pins_local_ptr->interface_is_interrupt)
+  {
+    m_aci_device_query ();
+  }
+  
+  if (m_aci_q_peek(&aci_rx_q, p_aci_data))
+  {
+    if (aci_debug_print)
+    {
+      Serial.print(" E");
+      m_print_aci_data(p_aci_data);
+    }
+
+    return true;
+  }
+ 
+  return false;
+}
+
 bool hal_aci_tl_event_get(hal_aci_data_t *p_aci_data)
 {
-  if (false == a_pins_local_ptr->interface_is_interrupt)
+  if (!a_pins_local_ptr->interface_is_interrupt)
   {
-	  /*
-	   Check the RDYN line
-	   When the RDYN line goes low
-	   Run the SPI master
-	   place the returned ACI Event in the p_aci_evt_data
-	  */
-
-	  /*
-	  When the RDYN goes low it means the nRF8001 is ready for the SPI transaction
-	  */
-	  if (0 == digitalRead(a_pins_local_ptr->rdyn_pin))
-	  {
-		/*
-		Now process the Master SPI
-		*/
-		m_rdy_line_handle();
-	  }
-	  else
-	  {
-		/*
-		 RDYN line was not low
-		 When there are commands in the Command queue and the event queue has space for
-		 more events place the REQN line low, so the RDYN line will go low later
-		*/
-		if ((false == m_aci_q_is_empty(&aci_tx_q)) &&
-			(false == m_aci_q_is_full(&aci_rx_q)))
-		{
-			digitalWrite(a_pins_local_ptr->reqn_pin, 0);
-		}
-
-		/*
-		Master SPI cannot be run , no event to process
-		*/
-	  }
+    m_aci_device_query ();
   }
+  
   bool was_full = m_aci_q_is_full(&aci_rx_q);
   
   if (m_aci_q_dequeue(&aci_rx_q, p_aci_data))
   {
-    if (true == aci_debug_print)
+    if (aci_debug_print)
     {
       Serial.print(" E");
       m_print_aci_data(p_aci_data);
     }
     
-    if (was_full)
-    {
-	  if (true == a_pins_local_ptr->interface_is_interrupt)
+    if (was_full && a_pins_local_ptr->interface_is_interrupt)
 	  {
-		/* Enable RDY line interrupt again */
-		EIMSK |= (0x2); /* Make it more portable as this is ATmega specific */
-	  }
+      /* Enable RDY line interrupt again */
+      EIMSK |= (0x2); /* Make it more portable as this is ATmega specific */
     }
     return true;
   }
-  else
-  {
-    return false;
-  }
+
+  return false;
 }
 
 void hal_aci_tl_init(aci_pins_t *a_pins)
