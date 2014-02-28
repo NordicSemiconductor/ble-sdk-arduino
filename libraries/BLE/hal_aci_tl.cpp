@@ -90,6 +90,19 @@ static bool m_aci_q_dequeue(aci_queue_t *aci_q, hal_aci_data_t *p_data)
   return true;
 }
 
+static bool m_aci_q_peek(aci_queue_t *aci_q, hal_aci_data_t *p_data)
+{
+  if (aci_q->head == aci_q->tail)
+  {
+    /* empty queue */
+    return false;
+  }
+
+  memcpy((uint8_t *)p_data, (uint8_t *)&(aci_q->aci_data[aci_q->head]), sizeof(hal_aci_data_t));
+
+  return true;
+}
+
 static bool m_aci_q_is_empty(aci_queue_t *aci_q)
 {
   return (aci_q->head == aci_q->tail);
