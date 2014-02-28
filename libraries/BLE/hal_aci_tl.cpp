@@ -215,7 +215,7 @@ static void m_rdy_line_handle(void)
  Check the RDYN line. When the RDYN line goes low, run the SPI master and place the returned 
  ACI Event in the p_aci_evt_data
 */
-static void m_aci_device_query(void)
+static void m_aci_event_check(void)
 {
   /*
   When the RDYN goes low it means the nRF8001 is ready for the SPI transaction
@@ -245,7 +245,7 @@ bool hal_aci_tl_event_peek(hal_aci_data_t *p_aci_data)
 {
   if (!a_pins_local_ptr->interface_is_interrupt)
   {
-    m_aci_device_query ();
+    m_aci_event_check ();
   }
   
   if (m_aci_q_peek(&aci_rx_q, p_aci_data))
@@ -266,7 +266,7 @@ bool hal_aci_tl_event_get(hal_aci_data_t *p_aci_data)
 {
   if (!a_pins_local_ptr->interface_is_interrupt)
   {
-    m_aci_device_query ();
+    m_aci_event_check ();
   }
   
   bool was_full = m_aci_q_is_full(&aci_rx_q);
