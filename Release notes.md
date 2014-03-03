@@ -1,4 +1,16 @@
-Release notes 0.8.0:
+#Release notes 0.8.1:
+
+##Fixes:
+
+1. Added documentation for ble_A_Hello_World_Program
+
+2. Changed default PIN configuration for all examples
+
+3. Minor changed to ble_A_Hello_World_Program and ble_urat_project_Template
+
+4. Minor documentation changes 
+
+#Release notes 0.8.0:
 
 ##Known issues:
 
