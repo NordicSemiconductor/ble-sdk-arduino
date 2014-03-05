@@ -718,7 +718,7 @@ bool lib_aci_dtm_command(uint8_t dtm_command_msbyte, uint8_t dtm_command_lsbyte)
 
 void lib_aci_flush(void)
 {
-  m_aci_q_flush();
+  hal_aci_tl_q_flush();
 }
 
 void lib_aci_debug_print(bool enable)

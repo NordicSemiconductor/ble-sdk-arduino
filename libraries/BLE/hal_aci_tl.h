@@ -147,12 +147,6 @@ bool hal_aci_tl_event_get(hal_aci_data_t *p_aci_data);
  */
 bool hal_aci_tl_event_peek(hal_aci_data_t *p_aci_data);
 
-/** @brief Flush the ACI command Queue and the ACI Event Queue
- *  @details
- *  Call this function in the main thread
- */
-void m_aci_q_flush(void);
-
 /** @brief Enable debug printing of all ACI commands sent and ACI events received
  *  @details
  *  when the enable parameter is true. The debug printing is enabled on the Serial.
@@ -200,9 +194,11 @@ void hal_aci_pin_reset(void);
  */
  bool hal_aci_tl_tx_q_empty(void);
 
+/** @brief Flush the ACI command Queue and the ACI Event Queue
+ *  @details
+ *  Call this function in the main thread
+ */
+void hal_aci_tl_q_flush(void);
+
 #endif // HAL_ACI_TL_H__
 /** @} */
-
-
-
-

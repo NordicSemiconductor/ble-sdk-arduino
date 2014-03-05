@@ -35,6 +35,7 @@ static void m_aci_q_init(aci_queue_t *aci_q);
 static bool m_aci_q_is_empty(aci_queue_t *aci_q);
 static bool m_aci_q_is_full(aci_queue_t *aci_q);
 static bool m_aci_q_dequeue(aci_queue_t *aci_q, hal_aci_data_t *p_data);
+static void m_aci_q_flush(void);
 
 static uint8_t        spi_readwrite(uint8_t aci_byte);
 
@@ -59,7 +60,7 @@ static void m_aci_q_init(aci_queue_t *aci_q)
   }
 }
 
-void m_aci_q_flush(void)
+static void m_aci_q_flush(void)
 {
   noInterrupts();
   /* re-initialize aci cmd queue and aci event queue to flush them*/
@@ -511,4 +512,9 @@ bool hal_aci_tl_tx_q_empty (void)
 bool hal_aci_tl_tx_q_full (void)
 {
   return m_aci_q_is_full(&aci_tx_q);
+}
+
+void hal_aci_tl_q_flush (void)
+{
+  m_aci_q_flush();
 }
