@@ -23,6 +23,11 @@
 #ifndef H_ACI_SETUP
 #define H_ACI_SETUP
 
+#define SETUP_SUCCESS                        0
+#define SETUP_FAIL_COMMAND_QUEUE_NOT_EMPTY   1
+#define SETUP_FAIL_EVENT_QUEUE_NOT_EMPTY     2
+#define SETUP_FAIL_TIMEOUT                   3
+#define SETUP_FAIL_NOT_SETUP_EVENT           4
 
 /** @brief Setup the nRF8001 device
  *  @details
@@ -31,7 +36,8 @@
  *  Once all messages are sent, the nRF8001 will send a Device Started Event.
  *  The function requires that the Command queue is empty when it is invoked, and will fail
  *  otherwise.
+ *  @returns An integer indicating the reason the function terminated
  */
-bool do_aci_setup(aci_state_t *aci_stat);
+int do_aci_setup(aci_state_t *aci_stat);
 
 #endif

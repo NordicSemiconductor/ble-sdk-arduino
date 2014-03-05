@@ -73,7 +73,7 @@ static bool aci_setup_fill(aci_state_t *aci_stat, uint8_t *num_cmd_offset)
   }
 }
 
-bool do_aci_setup(aci_state_t *aci_stat)
+int do_aci_setup(aci_state_t *aci_stat)
 {
   uint8_t setup_offset         = 0;
   uint16_t i                   = 0x0000;
@@ -92,7 +92,7 @@ bool do_aci_setup(aci_state_t *aci_stat)
    */
   if (!lib_aci_tx_q_empty())
   {
-    return false;
+    return SETUP_FAIL_COMMAND_QUEUE_NOT_EMPTY;
   }
   
   /* If there are events pending from the device that are not relevant to setup, we return false
@@ -101,7 +101,7 @@ bool do_aci_setup(aci_state_t *aci_stat)
    */
   if (lib_aci_event_peek(NULL))
   {
-    return false;
+    return SETUP_FAIL_EVENT_QUEUE_NOT_EMPTY;
   }
   
   /* Fill the ACI command queue with as many Setup messages as it will hold. */
@@ -114,14 +114,14 @@ bool do_aci_setup(aci_state_t *aci_stat)
      */
     if (i++ > 0xFFFE)
     {
-      return false;	
+      return SETUP_FAIL_TIMEOUT;	
     }
 	
     if (lib_aci_event_peek(aci_data))
     {
       aci_evt = &(aci_data->evt);
       
-      if (ACI_EVT_CMD_RSP != aci_evt->evt_opcode )
+      if (ACI_EVT_CMD_RSP != aci_evt->evt_opcode)
       {
         //Got something other than a command response evt -> Error
         return false;
@@ -145,8 +145,8 @@ bool do_aci_setup(aci_state_t *aci_stat)
           break;
         
         default:
-          //Any other status code is an error
-          return false;
+          //An event with any other status code should be handled by the application
+          return SETUP_FAIL_NOT_SETUP_EVENT;
       }
       
       /* If we haven't returned at this point, the event was either ACI_STATUS_TRANSACTION_CONTINUE
@@ -157,7 +157,7 @@ bool do_aci_setup(aci_state_t *aci_stat)
     }
   }
   
-  return true;
+  return SETUP_SUCCESS;
 }
   
 
