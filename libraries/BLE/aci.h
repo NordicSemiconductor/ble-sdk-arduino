@@ -181,7 +181,7 @@ ACI_ASSERT_SIZE(aci_pipe_type_t, 2);
  * @enum aci_bd_addr_type_t
  * @brief Bluetooth Address types
  */
-typedef enum
+typedef enum 
 {
   ACI_BD_ADDR_TYPE_INVALID  = 0x00,
   ACI_BD_ADDR_TYPE_PUBLIC  = 0x01,
@@ -194,7 +194,7 @@ typedef enum
  * @enum aci_device_output_power_t
  * @brief Radio output power levels
  */
-typedef enum
+typedef enum 
 {
   ACI_DEVICE_OUTPUT_POWER_MINUS_18DBM = 0x00, /**< Output power set to -18dBm */
   ACI_DEVICE_OUTPUT_POWER_MINUS_12DBM = 0x01, /**< Output power set to -12dBm */
@@ -206,7 +206,7 @@ typedef enum
  * @enum aci_device_operation_mode_t
  * @brief Device operation modes
  */
-typedef enum
+typedef enum 
 {
   ACI_DEVICE_INVALID   =0x00,
   ACI_DEVICE_TEST      =0x01,
@@ -229,7 +229,7 @@ typedef enum
  * @enum aci_test_mode_change_t
  * @brief Device test mode control
  */
-typedef enum
+typedef enum 
 {
   ACI_TEST_MODE_DTM_UART    = 0x01,
   ACI_TEST_MODE_DTM_ACI     = 0x02,
@@ -243,7 +243,7 @@ ACI_ASSERT_SIZE(aci_test_mode_change_t, 1);
  * @enum aci_permissions_t
  * @brief Data store permissions
  */
-typedef enum
+typedef enum 
 {
   ACI_PERMISSIONS_NONE               =0x00,
   ACI_PERMISSIONS_LINK_AUTHENTICATED =0x01
@@ -432,7 +432,7 @@ typedef enum
 /**
  * @brief GATT Bluetooth namespace
  */
-typedef enum
+typedef enum 
 {
   ACI_GATT_NAMESPACE_INVALID  = 0x00,
   ACI_GATT_NAMESPACE_BTSIG    = 0x01 /**< Bluetooth SIG */

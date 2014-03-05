@@ -56,6 +56,7 @@ and the received ACI event is placed in the tail of the event queue.
 /***********************************************************************    */
 #define ACI_QUEUE_SIZE  4
 
+
 /************************************************************************/
 /* Unused nRF8001 pin                                                    */
 /************************************************************************/
@@ -149,6 +150,7 @@ bool hal_aci_tl_event_get(hal_aci_data_t *p_aci_data);
  */
 bool hal_aci_tl_event_peek(hal_aci_data_t *p_aci_data);
 
+
 /** @brief Enable debug printing of all ACI commands sent and ACI events received
  *  @details
  *  when the enable parameter is true. The debug printing is enabled on the Serial.
@@ -157,10 +159,11 @@ bool hal_aci_tl_event_peek(hal_aci_data_t *p_aci_data);
  */
 void hal_aci_tl_debug_print(bool enable);
 
+
 /** @brief Enqueue an ACI event. Used to workaround boards that do not have access to the Reset pin
  *  @details
  *
- */
+*/
 bool m_aci_q_enqueue(aci_queue_t *aci_q, hal_aci_data_t *p_data);
 
 /** @brief Pin reset the nRF8001

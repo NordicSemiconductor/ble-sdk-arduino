@@ -180,7 +180,7 @@ ACI_ASSERT_SIZE(aci_cmd_opcode_t, 1);
  */
 typedef struct
 {
-  aci_test_mode_change_t test_mode_change;
+  aci_test_mode_change_t test_mode_change; /**< enum aci_test_mode_change_t */
 } _aci_packed_ aci_cmd_params_test_t;
 
 ACI_ASSERT_SIZE(aci_cmd_params_test_t, 1);
@@ -260,14 +260,13 @@ typedef struct
 } _aci_packed_ aci_cmd_params_bond_t;
 
 ACI_ASSERT_SIZE(aci_cmd_params_bond_t, 4);
-
 /**
  * @struct aci_cmd_params_disconnect_t
  * @brief  Structure for the ACI_CMD_DISCONNECT ACI command parameters
  */
 typedef struct
 {
-  aci_disconnect_reason_t         reason;
+  aci_disconnect_reason_t         reason; /**< enum aci_disconnect_reason_t */
 } _aci_packed_ aci_cmd_params_disconnect_t;
 
 ACI_ASSERT_SIZE(aci_cmd_params_disconnect_t, 1);
@@ -278,11 +277,10 @@ ACI_ASSERT_SIZE(aci_cmd_params_disconnect_t, 1);
  */
 typedef struct
 {
-  aci_device_output_power_t   device_power;
+  aci_device_output_power_t   device_power; /**< enum aci_device_output_power_t */
 } _aci_packed_ aci_cmd_params_set_tx_power_t;
 
 ACI_ASSERT_SIZE(aci_cmd_params_set_tx_power_t, 1);
-
 /**
  * @struct aci_cmd_params_change_timing_t
  * @brief  Structure for the ACI_CMD_CHANGE_TIMING ACI command parameters
@@ -353,7 +351,6 @@ typedef struct
 } _aci_packed_ aci_cmd_params_set_app_latency_t;
 
 ACI_ASSERT_SIZE(aci_cmd_params_set_app_latency_t, 3);
-
 /**
  * @define aci_cmd_params_set_key_t
  * @brief  Structure for the ACI_CMD_SET_KEY ACI command parameters
@@ -369,7 +366,6 @@ typedef struct
 } _aci_packed_ aci_cmd_params_set_key_t;
 
 ACI_ASSERT_SIZE(aci_cmd_params_set_key_t, 17);
-
 /**
  * @define aci_cmd_params_open_adv_pipe_t
  * @brief  Structure for the ACI_CMD_OPEN_ADV_PIPE ACI command parameters
@@ -405,7 +401,7 @@ typedef struct
 typedef struct
 {
   uint8_t len;        /**< Length of the ACI command */
-  aci_cmd_opcode_t cmd_opcode; /**< Opcode of the ACI command */
+  aci_cmd_opcode_t cmd_opcode; /**< enum aci_cmd_opcode_t -> Opcode of the ACI command */
   union
   {
     aci_cmd_params_test_t                       test;

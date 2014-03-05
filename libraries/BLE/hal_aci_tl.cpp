@@ -26,7 +26,22 @@
 #include <SPI.h>
 #include "hal_platform.h"
 #include "hal_aci_tl.h"
-#include <avr/sleep.h>
+
+
+/*
+PIC32 supports only MSbit transfer on SPI and the nRF8001 uses LSBit
+Use the REVERSE_BITS macro to convert from MSBit to LSBit
+The outgoing command and the incoming event needs to be converted
+*/
+//Defines dependent on the board that will be used
+#if defined (__AVR__)
+    //For Arduino add nothing
+#elif defined(__PIC32MX__)
+    //For ChipKit as the transmission has to be reversed, the next definitions have to be added
+    #define REVERSE_BITS(byte) (((reverse_lookup[(byte & 0x0F)]) << 4) + reverse_lookup[((byte & 0xF0) >> 4)])
+    static const uint8_t reverse_lookup[] = { 0, 8,  4, 12, 2, 10, 6, 14,1, 9, 5, 13,3, 11, 7, 15 };
+#endif
+
 
 static void m_aci_data_print(hal_aci_data_t *p_data);
 static void m_aci_event_check(void);
@@ -342,7 +357,7 @@ static bool m_aci_q_is_empty_from_isr(aci_queue_t *aci_q)
   return aci_q->head == aci_q->tail;
 }
 
-static bool m_aci_q_is_full(aci_queue_t *aci_q)
+bool m_aci_q_is_full(aci_queue_t *aci_q)
 {
   uint8_t next;
   bool state;
@@ -531,10 +546,17 @@ void hal_aci_tl_init(aci_pins_t *a_pins, bool debug)
   The SPI library assumes that the hardware pins are used
   */
   SPI.begin();
-  SPI.setBitOrder(LSBFIRST);
+  //Defines dependent on the board that will be used
+  #if defined (__AVR__)
+    //For Arduino use the LSB bit first
+    SPI.setBitOrder(LSBFIRST);
+  #elif defined(__PIC32MX__)  
+    //For ChipKit use MSBFIRST and REVERSE the bits on the SPI as LSBFIRST is not supported
+    SPI.setBitOrder(MSBFIRST); 
+  #endif
   SPI.setClockDivider(a_pins->spi_clock_divider);
   SPI.setDataMode(SPI_MODE0);
-  
+
   /* initialize aci cmd queue */
   m_aci_q_init(&aci_tx_q);  
   m_aci_q_init(&aci_rx_q);
@@ -551,7 +573,7 @@ void hal_aci_tl_init(aci_pins_t *a_pins, bool debug)
   /* Pin reset the nRF8001, required when the nRF8001 setup is being changed */
   hal_aci_tl_pin_reset();
 	
-    
+	
   /* Set the nRF8001 to a known state as required by the datasheet*/
   digitalWrite(a_pins->miso_pin, 0);
   digitalWrite(a_pins->mosi_pin, 0);
@@ -599,7 +621,16 @@ bool hal_aci_tl_send(hal_aci_data_t *p_aci_cmd)
 
 static uint8_t spi_readwrite(const uint8_t aci_byte)
 {
-	return SPI.transfer(aci_byte);
+	//Defines dependent on the board that will be used
+#if defined (__AVR__)
+    //For Arduino the transmission does not have to be reversed
+    return SPI.transfer(aci_byte);
+#elif defined(__PIC32MX__)
+    //For ChipKit the transmission has to be reversed
+    uint8_t tmp_bits;    
+    tmp_bits = SPI.transfer(REVERSE_BITS(aci_byte));
+	return REVERSE_BITS(tmp_bits);
+#endif	
 }
 
 bool hal_aci_tl_rx_q_empty (void)
