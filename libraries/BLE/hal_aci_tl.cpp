@@ -364,7 +364,8 @@ void hal_aci_tl_init(aci_pins_t *a_pins)
   /* Attach the interrupt to the RDYN line as requested by the caller */
   if (a_pins->interface_is_interrupt)
   {
-	attachInterrupt(a_pins->interrupt_number, m_rdy_line_handle, LOW); // We use the LOW level of the RDYN line as the atmega328 can wakeup from sleep only on LOW  
+    // We use the LOW level of the RDYN line as the atmega328 can wakeup from sleep only on LOW
+    attachInterrupt(a_pins->interrupt_number, m_aci_event_check, LOW);
   }
 }
 
