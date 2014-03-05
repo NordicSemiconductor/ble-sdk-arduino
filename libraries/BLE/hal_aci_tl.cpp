@@ -170,6 +170,16 @@ void m_print_aci_data(hal_aci_data_t *p_data)
   Serial.println(F(""));
 }
 
+static void m_aci_reqn_enable (void)
+{
+  digitalWrite(a_pins_local_ptr->reqn_pin, 0);
+}
+
+static void m_aci_reqn_disable (void)
+{
+  digitalWrite(a_pins_local_ptr->reqn_pin, 1);
+}
+
 void hal_aci_pin_reset(void)
 {
     if (UNUSED != a_pins_local_ptr->reset_pin)
