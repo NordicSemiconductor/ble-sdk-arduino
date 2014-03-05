@@ -281,13 +281,15 @@ bool hal_aci_tl_event_peek(hal_aci_data_t *p_aci_data)
 
 bool hal_aci_tl_event_get(hal_aci_data_t *p_aci_data)
 {
-  if (!a_pins_local_ptr->interface_is_interrupt)
+  bool was_full;
+
+  if (!a_pins_local_ptr->interface_is_interrupt && !m_aci_q_is_full(&aci_rx_q))
   {
-    m_aci_event_check ();
+    m_aci_event_check();
   }
-  
-  bool was_full = m_aci_q_is_full(&aci_rx_q);
-  
+
+  was_full = m_aci_q_is_full(&aci_rx_q);
+
   if (m_aci_q_dequeue(&aci_rx_q, p_aci_data))
   {
     if (aci_debug_print)
@@ -301,6 +303,13 @@ bool hal_aci_tl_event_get(hal_aci_data_t *p_aci_data)
       /* Enable RDY line interrupt again */
       EIMSK |= (0x2); /* Make it more portable as this is ATmega specific */
     }
+
+    /* Attempt to pull REQN LOW since we've made room for new messages */
+    if (!m_aci_q_is_full(&aci_rx_q) && !m_aci_q_is_empty(&aci_tx_q))
+    {
+      m_aci_reqn_enable();
+    }
+
     return true;
   }
 
