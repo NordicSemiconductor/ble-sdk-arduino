@@ -52,6 +52,20 @@ static void m_aci_q_init(aci_queue_t *aci_q)
   }
 }
 
+void m_aci_q_flush(void)
+{
+  noInterrupts();
+  /* re-initialize aci cmd queue and aci event queue to flush them*/
+  m_aci_q_init(&aci_tx_q);
+  m_aci_q_init(&aci_rx_q);
+  interrupts();
+}
+
+void m_aci_pins_set(aci_pins_t *a_pins_ptr)
+{
+  a_pins_local_ptr = a_pins_ptr;
+}
+
 void hal_aci_debug_print(bool enable)
 {
 	aci_debug_print = enable;
@@ -465,20 +479,6 @@ hal_aci_data_t * hal_aci_tl_poll_get(void)
 static uint8_t spi_readwrite(const uint8_t aci_byte)
 {
 	return SPI.transfer(aci_byte);
-}
-
-void m_aci_q_flush(void)
-{
-  noInterrupts();
-  /* re-initialize aci cmd queue and aci event queue to flush them*/
-  m_aci_q_init(&aci_tx_q);
-  m_aci_q_init(&aci_rx_q);
-  interrupts();
-}
-
-void m_aci_pins_set(aci_pins_t *a_pins_ptr)
-{
-  a_pins_local_ptr = a_pins_ptr;	
 }
 
 bool hal_aci_tl_rx_q_empty (void)
