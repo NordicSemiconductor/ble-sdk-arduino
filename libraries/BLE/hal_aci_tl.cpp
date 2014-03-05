@@ -28,7 +28,8 @@
 #include "hal_aci_tl.h"
 #include <avr/sleep.h>
 
-static void           m_print_aci_data(hal_aci_data_t *p_data);
+static void m_print_aci_data(hal_aci_data_t *p_data);
+
 static uint8_t        spi_readwrite(uint8_t aci_byte);
 
 static hal_aci_data_t received_data;
@@ -61,7 +62,12 @@ void m_aci_q_flush(void)
   interrupts();
 }
 
-void m_aci_pins_set(aci_pins_t *a_pins_ptr)
+/** @brief Point the low level library at the ACI pins specified
+ *  @details
+ *  The ACI pins are specified in the application and a pointer is made available for
+ *  the low level library to use
+ */
+static void m_aci_pins_set(aci_pins_t *a_pins_ptr)
 {
   a_pins_local_ptr = a_pins_ptr;
 }

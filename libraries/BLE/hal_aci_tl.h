@@ -167,13 +167,6 @@ void hal_aci_debug_print(bool enable);
  */
 bool m_aci_q_enqueue(aci_queue_t *aci_q, hal_aci_data_t *p_data);
 
-/** @brief Point the low level library at the ACI pins specified
- *  @details
- *  The ACI pins are specified in the application and a pointer is made available for
- *  the low level library to use
- */
-void m_aci_pins_set(aci_pins_t *a_pins_ptr);
-
 /** @brief Pin reset the nRF8001
  *  @details
  *  The reset line of the nF8001 needs to kept low for 200 ns.
