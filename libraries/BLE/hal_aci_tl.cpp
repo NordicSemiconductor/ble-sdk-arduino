@@ -57,35 +57,76 @@ void hal_aci_debug_print(bool enable)
 	aci_debug_print = enable;
 }
 
-bool m_aci_q_enqueue(aci_queue_t *aci_q, hal_aci_data_t *p_data)
+static bool m_aci_q_is_empty(aci_queue_t *aci_q)
 {
-  const uint8_t next = (aci_q->tail + 1) % ACI_QUEUE_SIZE;
-  const uint8_t length = p_data->buffer[0];
-  
+  return (aci_q->head == aci_q->tail);
+}
+
+static bool m_aci_q_is_full(aci_queue_t *aci_q)
+{
+  uint8_t next;
+  bool state;
+
+  //This should be done in a critical section
+  noInterrupts();
+  next = (aci_q->tail + 1) % ACI_QUEUE_SIZE;
+
   if (next == aci_q->head)
   {
-    /* full queue */
+    state = true;
+  }
+  else
+  {
+    state = false;
+  }
+
+  interrupts();
+  //end
+
+  return state;
+}
+
+bool m_aci_q_enqueue(aci_queue_t *aci_q, hal_aci_data_t *p_data)
+{
+  const uint8_t length = p_data->buffer[0];
+
+  if (NULL == p_data)
+  {
     return false;
   }
+
+  if (NULL == aci_q)
+  {
+    return false;
+  }
+  
+  if (m_aci_q_is_full(aci_q))
+  {
+    return false;
+  }
+
   aci_q->aci_data[aci_q->tail].status_byte = 0;
-  
   memcpy((uint8_t *)&(aci_q->aci_data[aci_q->tail].buffer[0]), (uint8_t *)&p_data->buffer[0], length + 1);
-  aci_q->tail = next;
-  
+  aci_q->tail = (aci_q->tail + 1) % ACI_QUEUE_SIZE;
+
   return true;
 }
 
 //@comment after a port to a new mcu have test for the queue states, esp. the full and the empty states
 static bool m_aci_q_dequeue(aci_queue_t *aci_q, hal_aci_data_t *p_data)
 {
-  if (aci_q->head == aci_q->tail)
+  if (NULL == aci_q)
   {
-    /* empty queue */
+    return false;
+  }
+
+  if (m_aci_q_is_empty(aci_q))
+  {
     return false;
   }
 
   /* p_data might be NULL if function calling this wishes to discard the popped message */
-  if (p_data !=NULL )
+  if (NULL != p_data)
   {
     memcpy((uint8_t *)p_data, (uint8_t *)&(aci_q->aci_data[aci_q->head]), sizeof(hal_aci_data_t));
   }
@@ -97,44 +138,22 @@ static bool m_aci_q_dequeue(aci_queue_t *aci_q, hal_aci_data_t *p_data)
 
 static bool m_aci_q_peek(aci_queue_t *aci_q, hal_aci_data_t *p_data)
 {
-  if (aci_q->head == aci_q->tail)
+  if (NULL == aci_q)
   {
-    /* empty queue */
     return false;
   }
 
-  memcpy((uint8_t *)p_data, (uint8_t *)&(aci_q->aci_data[aci_q->head]), sizeof(hal_aci_data_t));
+  if (m_aci_q_is_empty(aci_q))
+  {
+    return false;
+  }
+
+  if (NULL != p_data)
+  {
+    memcpy((uint8_t *)p_data, (uint8_t *)&(aci_q->aci_data[aci_q->head]), sizeof(hal_aci_data_t));
+  }
 
   return true;
-}
-
-static bool m_aci_q_is_empty(aci_queue_t *aci_q)
-{
-  return (aci_q->head == aci_q->tail);
-}
-
-static bool m_aci_q_is_full(aci_queue_t *aci_q)
-{
-  uint8_t next;
-  bool state;
-  
-  //This should be done in a critical section
-  noInterrupts();
-  next = (aci_q->tail + 1) % ACI_QUEUE_SIZE;  
-  
-  if (next == aci_q->head)
-  {
-    state = true;
-  }
-  else
-  {
-    state = false;
-  }
-  
-  interrupts();
-  //end
-  
-  return state;
 }
 
 void m_print_aci_data(hal_aci_data_t *p_data)
