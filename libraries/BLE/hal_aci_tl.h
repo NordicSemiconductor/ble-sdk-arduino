@@ -105,11 +105,6 @@ typedef struct aci_pins_t
 	uint8_t	interrupt_number;		//Required when using interrupts, otherwise ignored
 } aci_pins_t;
 
-/** ACI Transport Layer configures inputs/outputs.
- */
-void hal_aci_tl_io_config(void);
-
-
 /** ACI Transport Layer initialization.
  */
 void hal_aci_tl_init(aci_pins_t *a_pins);
