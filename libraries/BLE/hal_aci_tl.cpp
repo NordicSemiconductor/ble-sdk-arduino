@@ -28,13 +28,13 @@
 #include "hal_aci_tl.h"
 #include <avr/sleep.h>
 
+static void m_aci_data_print(hal_aci_data_t *p_data);
 static void m_aci_event_check(void);
 static void m_aci_pins_set(aci_pins_t *a_pins_ptr);
 static void m_aci_q_init(aci_queue_t *aci_q);
 static bool m_aci_q_is_empty(aci_queue_t *aci_q);
 static bool m_aci_q_is_full(aci_queue_t *aci_q);
 static bool m_aci_q_dequeue(aci_queue_t *aci_q, hal_aci_data_t *p_data);
-static void m_print_aci_data(hal_aci_data_t *p_data);
 
 static uint8_t        spi_readwrite(uint8_t aci_byte);
 
@@ -182,7 +182,7 @@ static bool m_aci_q_peek(aci_queue_t *aci_q, hal_aci_data_t *p_data)
   return true;
 }
 
-void m_print_aci_data(hal_aci_data_t *p_data)
+void m_aci_data_print(hal_aci_data_t *p_data)
 {
   const uint8_t length = p_data->buffer[0];
   uint8_t i;
@@ -296,7 +296,7 @@ bool hal_aci_tl_event_peek(hal_aci_data_t *p_aci_data)
     if (aci_debug_print)
     {
       Serial.print(" E");
-      m_print_aci_data(p_aci_data);
+      m_aci_data_print(p_aci_data);
     }
 
     return true;
@@ -321,7 +321,7 @@ bool hal_aci_tl_event_get(hal_aci_data_t *p_aci_data)
     if (aci_debug_print)
     {
       Serial.print(" E");
-      m_print_aci_data(p_aci_data);
+      m_aci_data_print(p_aci_data);
     }
 
     if (was_full && a_pins_local_ptr->interface_is_interrupt)
@@ -415,7 +415,7 @@ bool hal_aci_tl_send(hal_aci_data_t *p_aci_cmd)
       if (aci_debug_print)
       {
         Serial.print("C"); //ACI Command
-        m_print_aci_data(p_aci_cmd);
+        m_aci_data_print(p_aci_cmd);
       }
     }
   }
