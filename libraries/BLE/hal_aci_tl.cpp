@@ -31,11 +31,14 @@
 static void m_aci_data_print(hal_aci_data_t *p_data);
 static void m_aci_event_check(void);
 static void m_aci_pins_set(aci_pins_t *a_pins_ptr);
+static void m_aci_reqn_disable (void);
+static void m_aci_reqn_enable (void);
+static bool m_aci_q_dequeue(aci_queue_t *aci_q, hal_aci_data_t *p_data);
+static void m_aci_q_flush(void);
 static void m_aci_q_init(aci_queue_t *aci_q);
 static bool m_aci_q_is_empty(aci_queue_t *aci_q);
 static bool m_aci_q_is_full(aci_queue_t *aci_q);
-static bool m_aci_q_dequeue(aci_queue_t *aci_q, hal_aci_data_t *p_data);
-static void m_aci_q_flush(void);
+static bool m_aci_q_peek(aci_queue_t *aci_q, hal_aci_data_t *p_data);
 
 static uint8_t        spi_readwrite(uint8_t aci_byte);
 
@@ -46,142 +49,6 @@ aci_queue_t    aci_tx_q;
 aci_queue_t    aci_rx_q;
 
 static aci_pins_t	 *a_pins_local_ptr;
-
-static void m_aci_q_init(aci_queue_t *aci_q)
-{
-  uint8_t loop;
-  
-  aci_q->head = 0;
-  aci_q->tail = 0;
-  for(loop=0; loop<ACI_QUEUE_SIZE; loop++)
-  {
-    aci_q->aci_data[loop].buffer[0] = 0x00;
-    aci_q->aci_data[loop].buffer[1] = 0x00;
-  }
-}
-
-static void m_aci_q_flush(void)
-{
-  noInterrupts();
-  /* re-initialize aci cmd queue and aci event queue to flush them*/
-  m_aci_q_init(&aci_tx_q);
-  m_aci_q_init(&aci_rx_q);
-  interrupts();
-}
-
-/** @brief Point the low level library at the ACI pins specified
- *  @details
- *  The ACI pins are specified in the application and a pointer is made available for
- *  the low level library to use
- */
-static void m_aci_pins_set(aci_pins_t *a_pins_ptr)
-{
-  a_pins_local_ptr = a_pins_ptr;
-}
-
-void hal_aci_debug_print(bool enable)
-{
-	aci_debug_print = enable;
-}
-
-static bool m_aci_q_is_empty(aci_queue_t *aci_q)
-{
-  return (aci_q->head == aci_q->tail);
-}
-
-static bool m_aci_q_is_full(aci_queue_t *aci_q)
-{
-  uint8_t next;
-  bool state;
-
-  //This should be done in a critical section
-  noInterrupts();
-  next = (aci_q->tail + 1) % ACI_QUEUE_SIZE;
-
-  if (next == aci_q->head)
-  {
-    state = true;
-  }
-  else
-  {
-    state = false;
-  }
-
-  interrupts();
-  //end
-
-  return state;
-}
-
-bool m_aci_q_enqueue(aci_queue_t *aci_q, hal_aci_data_t *p_data)
-{
-  const uint8_t length = p_data->buffer[0];
-
-  if (NULL == p_data)
-  {
-    return false;
-  }
-
-  if (NULL == aci_q)
-  {
-    return false;
-  }
-  
-  if (m_aci_q_is_full(aci_q))
-  {
-    return false;
-  }
-
-  aci_q->aci_data[aci_q->tail].status_byte = 0;
-  memcpy((uint8_t *)&(aci_q->aci_data[aci_q->tail].buffer[0]), (uint8_t *)&p_data->buffer[0], length + 1);
-  aci_q->tail = (aci_q->tail + 1) % ACI_QUEUE_SIZE;
-
-  return true;
-}
-
-//@comment after a port to a new mcu have test for the queue states, esp. the full and the empty states
-static bool m_aci_q_dequeue(aci_queue_t *aci_q, hal_aci_data_t *p_data)
-{
-  if (NULL == aci_q)
-  {
-    return false;
-  }
-
-  if (m_aci_q_is_empty(aci_q))
-  {
-    return false;
-  }
-
-  /* p_data might be NULL if function calling this wishes to discard the popped message */
-  if (NULL != p_data)
-  {
-    memcpy((uint8_t *)p_data, (uint8_t *)&(aci_q->aci_data[aci_q->head]), sizeof(hal_aci_data_t));
-  }
-  
-  aci_q->head = (aci_q->head + 1) % ACI_QUEUE_SIZE;
-  
-  return true;
-}
-
-static bool m_aci_q_peek(aci_queue_t *aci_q, hal_aci_data_t *p_data)
-{
-  if (NULL == aci_q)
-  {
-    return false;
-  }
-
-  if (m_aci_q_is_empty(aci_q))
-  {
-    return false;
-  }
-
-  if (NULL != p_data)
-  {
-    memcpy((uint8_t *)p_data, (uint8_t *)&(aci_q->aci_data[aci_q->head]), sizeof(hal_aci_data_t));
-  }
-
-  return true;
-}
 
 void m_aci_data_print(hal_aci_data_t *p_data)
 {
@@ -195,40 +62,6 @@ void m_aci_data_print(hal_aci_data_t *p_data)
     Serial.print(F(", "));
   }
   Serial.println(F(""));
-}
-
-static void m_aci_reqn_enable (void)
-{
-  digitalWrite(a_pins_local_ptr->reqn_pin, 0);
-}
-
-static void m_aci_reqn_disable (void)
-{
-  digitalWrite(a_pins_local_ptr->reqn_pin, 1);
-}
-
-void hal_aci_pin_reset(void)
-{
-    if (UNUSED != a_pins_local_ptr->reset_pin)
-    {
-        pinMode(a_pins_local_ptr->reset_pin, OUTPUT);
-
-        if ((REDBEARLAB_SHIELD_V1_1     == a_pins_local_ptr->board_name) ||
-            (REDBEARLAB_SHIELD_V2012_07 == a_pins_local_ptr->board_name))
-        {
-            //The reset for the Redbearlab v1.1 and v2012.07 boards are inverted and has a Power On Reset
-            //circuit that takes about 100ms to trigger the reset
-            digitalWrite(a_pins_local_ptr->reset_pin, 1);
-            delay(100);
-            digitalWrite(a_pins_local_ptr->reset_pin, 0);		
-        }
-        else
-        {
-            digitalWrite(a_pins_local_ptr->reset_pin, 1);
-            digitalWrite(a_pins_local_ptr->reset_pin, 0);		
-            digitalWrite(a_pins_local_ptr->reset_pin, 1);
-        }
-    }
 }
 
 /*
@@ -283,6 +116,176 @@ static void m_aci_event_check(void)
   }
 
   return;
+}
+
+/** @brief Point the low level library at the ACI pins specified
+ *  @details
+ *  The ACI pins are specified in the application and a pointer is made available for
+ *  the low level library to use
+ */
+static void m_aci_pins_set(aci_pins_t *a_pins_ptr)
+{
+  a_pins_local_ptr = a_pins_ptr;
+}
+
+static void m_aci_reqn_disable (void)
+{
+  digitalWrite(a_pins_local_ptr->reqn_pin, 1);
+}
+
+static void m_aci_reqn_enable (void)
+{
+  digitalWrite(a_pins_local_ptr->reqn_pin, 0);
+}
+
+//@comment after a port to a new mcu have test for the queue states, esp. the full and the empty states
+static bool m_aci_q_dequeue(aci_queue_t *aci_q, hal_aci_data_t *p_data)
+{
+  if (NULL == aci_q)
+  {
+    return false;
+  }
+
+  if (m_aci_q_is_empty(aci_q))
+  {
+    return false;
+  }
+
+  /* p_data might be NULL if function calling this wishes to discard the popped message */
+  if (NULL != p_data)
+  {
+    memcpy((uint8_t *)p_data, (uint8_t *)&(aci_q->aci_data[aci_q->head]), sizeof(hal_aci_data_t));
+  }
+  
+  aci_q->head = (aci_q->head + 1) % ACI_QUEUE_SIZE;
+  
+  return true;
+}
+
+bool m_aci_q_enqueue(aci_queue_t *aci_q, hal_aci_data_t *p_data)
+{
+  const uint8_t length = p_data->buffer[0];
+
+  if (NULL == p_data)
+  {
+    return false;
+  }
+
+  if (NULL == aci_q)
+  {
+    return false;
+  }
+  
+  if (m_aci_q_is_full(aci_q))
+  {
+    return false;
+  }
+
+  aci_q->aci_data[aci_q->tail].status_byte = 0;
+  memcpy((uint8_t *)&(aci_q->aci_data[aci_q->tail].buffer[0]), (uint8_t *)&p_data->buffer[0], length + 1);
+  aci_q->tail = (aci_q->tail + 1) % ACI_QUEUE_SIZE;
+
+  return true;
+}
+
+static void m_aci_q_flush(void)
+{
+  noInterrupts();
+  /* re-initialize aci cmd queue and aci event queue to flush them*/
+  m_aci_q_init(&aci_tx_q);
+  m_aci_q_init(&aci_rx_q);
+  interrupts();
+}
+
+static void m_aci_q_init(aci_queue_t *aci_q)
+{
+  uint8_t loop;
+  
+  aci_q->head = 0;
+  aci_q->tail = 0;
+  for(loop=0; loop<ACI_QUEUE_SIZE; loop++)
+  {
+    aci_q->aci_data[loop].buffer[0] = 0x00;
+    aci_q->aci_data[loop].buffer[1] = 0x00;
+  }
+}
+
+static bool m_aci_q_is_empty(aci_queue_t *aci_q)
+{
+  return (aci_q->head == aci_q->tail);
+}
+
+static bool m_aci_q_is_full(aci_queue_t *aci_q)
+{
+  uint8_t next;
+  bool state;
+
+  //This should be done in a critical section
+  noInterrupts();
+  next = (aci_q->tail + 1) % ACI_QUEUE_SIZE;
+
+  if (next == aci_q->head)
+  {
+    state = true;
+  }
+  else
+  {
+    state = false;
+  }
+
+  interrupts();
+  //end
+
+  return state;
+}
+
+static bool m_aci_q_peek(aci_queue_t *aci_q, hal_aci_data_t *p_data)
+{
+  if (NULL == aci_q)
+  {
+    return false;
+  }
+
+  if (m_aci_q_is_empty(aci_q))
+  {
+    return false;
+  }
+
+  if (NULL != p_data)
+  {
+    memcpy((uint8_t *)p_data, (uint8_t *)&(aci_q->aci_data[aci_q->head]), sizeof(hal_aci_data_t));
+  }
+
+  return true;
+}
+
+void hal_aci_debug_print(bool enable)
+{
+	aci_debug_print = enable;
+}
+
+void hal_aci_pin_reset(void)
+{
+    if (UNUSED != a_pins_local_ptr->reset_pin)
+    {
+        pinMode(a_pins_local_ptr->reset_pin, OUTPUT);
+
+        if ((REDBEARLAB_SHIELD_V1_1     == a_pins_local_ptr->board_name) ||
+            (REDBEARLAB_SHIELD_V2012_07 == a_pins_local_ptr->board_name))
+        {
+            //The reset for the Redbearlab v1.1 and v2012.07 boards are inverted and has a Power On Reset
+            //circuit that takes about 100ms to trigger the reset
+            digitalWrite(a_pins_local_ptr->reset_pin, 1);
+            delay(100);
+            digitalWrite(a_pins_local_ptr->reset_pin, 0);		
+        }
+        else
+        {
+            digitalWrite(a_pins_local_ptr->reset_pin, 1);
+            digitalWrite(a_pins_local_ptr->reset_pin, 0);		
+            digitalWrite(a_pins_local_ptr->reset_pin, 1);
+        }
+    }
 }
 
 bool hal_aci_tl_event_peek(hal_aci_data_t *p_aci_data)
