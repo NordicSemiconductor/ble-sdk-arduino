@@ -438,7 +438,7 @@ void hal_aci_tl_debug_print(bool enable)
 	aci_debug_print = enable;
 }
 
-void hal_aci_pin_reset(void)
+void hal_aci_tl_pin_reset(void)
 {
     if (UNUSED != a_pins_local_ptr->reset_pin)
     {
@@ -546,8 +546,8 @@ void hal_aci_tl_init(aci_pins_t *a_pins)
 	pinMode(a_pins->active_pin,	INPUT);  
   }
   
-  /* Pin reset the nRF8001 , required when the nRF8001 setup is being changed */
-  hal_aci_pin_reset();
+  /* Pin reset the nRF8001, required when the nRF8001 setup is being changed */
+  hal_aci_tl_pin_reset();
 	
     
   /* Set the nRF8001 to a known state as required by the datasheet*/

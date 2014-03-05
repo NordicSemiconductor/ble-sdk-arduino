@@ -163,7 +163,7 @@ bool m_aci_q_enqueue(aci_queue_t *aci_q, hal_aci_data_t *p_data);
  *  have a Power ON Reset circuit that works differently.
  *  The function handles the exceptions based on the board_name in aci_pins_t
  */
-void hal_aci_pin_reset(void);
+void hal_aci_tl_pin_reset(void);
 
 /** @brief Return full status of transmit queue
  *  @details

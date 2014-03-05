@@ -728,7 +728,7 @@ void lib_aci_debug_print(bool enable)
 
 void lib_aci_pin_reset(void)
 {
-    hal_aci_pin_reset();
+    hal_aci_tl_pin_reset();
 }
 
 bool lib_aci_rx_q_empty(void)
