@@ -28,6 +28,12 @@
 #include "hal_aci_tl.h"
 #include <avr/sleep.h>
 
+static void m_aci_event_check(void);
+static void m_aci_pins_set(aci_pins_t *a_pins_ptr);
+static void m_aci_q_init(aci_queue_t *aci_q);
+static bool m_aci_q_is_empty(aci_queue_t *aci_q);
+static bool m_aci_q_is_full(aci_queue_t *aci_q);
+static bool m_aci_q_dequeue(aci_queue_t *aci_q, hal_aci_data_t *p_data);
 static void m_print_aci_data(hal_aci_data_t *p_data);
 
 static uint8_t        spi_readwrite(uint8_t aci_byte);
