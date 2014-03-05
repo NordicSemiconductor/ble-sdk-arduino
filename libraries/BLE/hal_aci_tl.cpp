@@ -404,10 +404,13 @@ hal_aci_data_t * hal_aci_tl_poll_get(void)
   uint8_t max_bytes;
   hal_aci_data_t data_to_send;
 
-  digitalWrite(a_pins_local_ptr->reqn_pin, 0);
-  
+  if (!m_aci_q_is_full(&aci_rx_q))
+  {
+    m_aci_reqn_enable();
+  }
+
   // Receive from queue
-  if (m_aci_q_dequeue(&aci_tx_q, &data_to_send) == false)
+  if (!m_aci_q_dequeue(&aci_tx_q, &data_to_send))
   {
     /* queue was empty, nothing to send */
     data_to_send.status_byte = 0;
@@ -443,20 +446,16 @@ hal_aci_data_t * hal_aci_tl_poll_get(void)
     received_data.buffer[byte_cnt+1] =  spi_readwrite(data_to_send.buffer[byte_sent_cnt++]);
   }
 
-  digitalWrite(a_pins_local_ptr->reqn_pin, 1);
+  m_aci_reqn_disable();
 
-  //RDYN should follow the REQN line in approx 100ns
-  
-  sleep_enable();
   if (a_pins_local_ptr->interface_is_interrupt)
   {
-	attachInterrupt(a_pins_local_ptr->interrupt_number, m_rdy_line_handle, LOW);	  
+    attachInterrupt(a_pins_local_ptr->interrupt_number, m_aci_event_check, LOW);
   }
 
-  if (false == m_aci_q_is_empty(&aci_tx_q))
+  if (!m_aci_q_is_full(&aci_rx_q) && !m_aci_q_is_empty(&aci_tx_q))
   {
-    //Lower the REQN line to start a new ACI transaction         
-    digitalWrite(a_pins_local_ptr->reqn_pin, 0); 
+    m_aci_reqn_enable();
   }
 
   /* valid Rx available or transmit finished*/
