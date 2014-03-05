@@ -66,7 +66,7 @@ static bool aci_setup_fill(aci_state_t *aci_stat, uint8_t *num_cmd_offset)
       // *num_cmd_offset is now pointing to the index of the Setup command that did not get sent
       return ret_val;
     }
-    
+   
     ret_val = true;
     
     (*num_cmd_offset)++;
@@ -106,7 +106,7 @@ int do_aci_setup(aci_state_t *aci_stat)
   
   /* Fill the ACI command queue with as many Setup messages as it will hold. */
   aci_setup_fill(aci_stat, &setup_offset);
- 
+  
   while (cmd_status != ACI_STATUS_TRANSACTION_COMPLETE)
   {
     /* This counter is used to ensure that this function does not loop forever. When the device
@@ -116,14 +116,14 @@ int do_aci_setup(aci_state_t *aci_stat)
     {
       return SETUP_FAIL_TIMEOUT;	
     }
-	
+    
     if (lib_aci_event_peek(aci_data))
     {
       aci_evt = &(aci_data->evt);
       
       if (ACI_EVT_CMD_RSP != aci_evt->evt_opcode)
       {
-        //Got something other than a command response evt -> Error
+        //Receiving something other than a Command Response Event is an error.
         return false;
       }
       
@@ -153,7 +153,7 @@ int do_aci_setup(aci_state_t *aci_stat)
        * or ACI_STATUS_TRANSACTION_COMPLETE. We don't need the event itself, so we simply
        * remove it from the queue.
        */
-       lib_aci_event_get (NULL, NULL);
+       lib_aci_event_get (aci_stat, aci_data);
     }
   }
   
