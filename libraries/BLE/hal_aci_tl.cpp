@@ -35,9 +35,12 @@ static void m_aci_reqn_disable (void);
 static void m_aci_reqn_enable (void);
 static bool m_aci_q_dequeue(aci_queue_t *aci_q, hal_aci_data_t *p_data);
 static void m_aci_q_flush(void);
+static void m_aci_q_flush_from_isr(void);
 static void m_aci_q_init(aci_queue_t *aci_q);
 static bool m_aci_q_is_empty(aci_queue_t *aci_q);
+static bool m_aci_q_is_empty_from_isr(aci_queue_t *aci_q);
 static bool m_aci_q_is_full(aci_queue_t *aci_q);
+static bool m_aci_q_is_full_from_isr(aci_queue_t *aci_q);
 static bool m_aci_q_peek(aci_queue_t *aci_q, hal_aci_data_t *p_data);
 static void m_aci_spi_transfer(hal_aci_data_t * data_to_send, hal_aci_data_t * received_data);
 
@@ -197,6 +200,13 @@ static void m_aci_q_flush(void)
   interrupts();
 }
 
+static void m_aci_q_flush_from_isr(void)
+{
+  /* re-initialize aci cmd queue and aci event queue to flush them*/
+  m_aci_q_init(&aci_tx_q);
+  m_aci_q_init(&aci_rx_q);
+}
+
 static void m_aci_q_init(aci_queue_t *aci_q)
 {
   uint8_t loop;
@@ -212,7 +222,22 @@ static void m_aci_q_init(aci_queue_t *aci_q)
 
 static bool m_aci_q_is_empty(aci_queue_t *aci_q)
 {
-  return (aci_q->head == aci_q->tail);
+  bool state = false;
+
+  //Critical section
+  noInterrupts();
+  if (aci_q->head == aci_q->tail)
+  {
+    state = true;
+  }
+  interrupts();
+
+  return state;
+}
+
+static bool m_aci_q_is_empty_from_isr(aci_queue_t *aci_q)
+{
+  return aci_q->head == aci_q->tail;
 }
 
 static bool m_aci_q_is_full(aci_queue_t *aci_q)
@@ -237,6 +262,13 @@ static bool m_aci_q_is_full(aci_queue_t *aci_q)
   //end
 
   return state;
+}
+
+static bool m_aci_q_is_full_from_isr(aci_queue_t *aci_q)
+{
+  const uint8_t next = (aci_q->tail + 1) % ACI_QUEUE_SIZE;
+
+  return next == aci_q->head;
 }
 
 static bool m_aci_q_peek(aci_queue_t *aci_q, hal_aci_data_t *p_data)
