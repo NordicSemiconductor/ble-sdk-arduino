@@ -264,7 +264,7 @@ bool hal_aci_tl_event_peek(hal_aci_data_t *p_aci_data)
   {
     m_aci_event_check ();
   }
-  
+
   if (m_aci_q_peek(&aci_rx_q, p_aci_data))
   {
     if (aci_debug_print)
@@ -275,7 +275,7 @@ bool hal_aci_tl_event_peek(hal_aci_data_t *p_aci_data)
 
     return true;
   }
- 
+
   return false;
 }
 
@@ -295,7 +295,7 @@ bool hal_aci_tl_event_get(hal_aci_data_t *p_aci_data)
       Serial.print(" E");
       m_print_aci_data(p_aci_data);
     }
-    
+
     if (was_full && a_pins_local_ptr->interface_is_interrupt)
 	  {
       /* Enable RDY line interrupt again */
@@ -389,8 +389,6 @@ bool hal_aci_tl_send(hal_aci_data_t *p_aci_cmd)
   return ret_val;
 }
 
-
-
 hal_aci_data_t * hal_aci_tl_poll_get(void)
 {
   uint8_t byte_cnt;
@@ -407,9 +405,9 @@ hal_aci_data_t * hal_aci_tl_poll_get(void)
     data_to_send.status_byte = 0;
     data_to_send.buffer[0] = 0;
   }
-  
+
   //Change this if your mcu has DMA for the master SPI
-  
+
   // Send length, receive header
   byte_sent_cnt = 0;
   received_data.status_byte = spi_readwrite(data_to_send.buffer[byte_sent_cnt++]);
@@ -452,7 +450,7 @@ hal_aci_data_t * hal_aci_tl_poll_get(void)
     //Lower the REQN line to start a new ACI transaction         
     digitalWrite(a_pins_local_ptr->reqn_pin, 0); 
   }
-  
+
   /* valid Rx available or transmit finished*/
   return (&received_data);
 }
