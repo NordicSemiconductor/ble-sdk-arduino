@@ -408,19 +408,20 @@ bool hal_aci_tl_send(hal_aci_data_t *p_aci_cmd)
   {
     return false;
   }
-  else
+
+  ret_val = m_aci_q_enqueue(&aci_tx_q, p_aci_cmd);
+  if (ret_val)
   {
-    ret_val = m_aci_q_enqueue(&aci_tx_q, p_aci_cmd);
-    if (ret_val && !m_aci_q_is_full(&aci_rx_q))
+    if(!m_aci_q_is_full(&aci_rx_q))
     {
       // Lower the REQN only when successfully enqueued
       m_aci_reqn_enable();
+    }
 
-      if (aci_debug_print)
-      {
-        Serial.print("C"); //ACI Command
-        m_aci_data_print(p_aci_cmd);
-      }
+    if (aci_debug_print)
+    {
+      Serial.print("C"); //ACI Command
+      m_aci_data_print(p_aci_cmd);
     }
   }
   
