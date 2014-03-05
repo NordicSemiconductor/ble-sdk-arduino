@@ -204,18 +204,36 @@ void hal_aci_pin_reset(void)
     }
 }
 
-static void m_rdy_line_handle(void)
+/*
+ Check the RDYN line. When the RDYN line goes low, run the SPI master and place the returned 
+ ACI Event in the p_aci_evt_data
+*/
+static void m_aci_event_check(void)
 {
   hal_aci_data_t *p_aci_data;
   
+  /* This function is used both in polling and interrupt mode.
+     If the RDYN line is HIGH and we have pending messages outgoing
+     we pull the REQ line LOW so that the RDYN line will go LOW later.
+  */
+  if (HIGH == digitalRead(a_pins_local_ptr->rdyn_pin))
+  {
+    if (!m_aci_q_is_full(&aci_rx_q) && !m_aci_q_is_empty(&aci_tx_q))
+    {
+      m_aci_reqn_enable();
+    }
+
+    return;
+  }
+
   if (a_pins_local_ptr->interface_is_interrupt)
   {
     detachInterrupt(a_pins_local_ptr->interrupt_number);
   }
-  
+
   // Receive or transmit data
   p_aci_data = hal_aci_tl_poll_get();
-  
+
   // Check if we received data
   if (p_aci_data->buffer[0] > 0)
   {
@@ -224,50 +242,20 @@ static void m_rdy_line_handle(void)
       /* Receive Buffer full.
          Should never happen.
          Spin in a while loop.
-         */	  
-       while(1);
+      */
+      while(1);
     }
-    if (m_aci_q_is_full(&aci_rx_q))
+
+    /* Disable RDY line interrupt.
+       Will latch any pending RDY lines, so when enabled again the interrupt will fire immediately
+    */
+    if (a_pins_local_ptr->interface_is_interrupt && m_aci_q_is_full(&aci_rx_q))
     {
-      /* Disable RDY line interrupt.
-         Will latch any pending RDY lines, so when enabled it again this
-         routine should be taken again */
-	  if (true == a_pins_local_ptr->interface_is_interrupt)
-	  {
-		EIMSK &= ~(0x2);
-	  }
+      EIMSK &= ~(0x2);
     }    
   }
-}
 
-/*
- Check the RDYN line. When the RDYN line goes low, run the SPI master and place the returned 
- ACI Event in the p_aci_evt_data
-*/
-static void m_aci_event_check(void)
-{
-  /*
-  When the RDYN goes low it means the nRF8001 is ready for the SPI transaction
-  */
-  if (0 == digitalRead(a_pins_local_ptr->rdyn_pin))
-  {
-    /*
-    Now process the Master SPI
-    */
-    m_rdy_line_handle();
-    return;
-  }
-  
-  /*
-   RDYN line was not low
-   When there are commands in the Command queue and the event queue has space for
-   more events place the REQN line low, so the RDYN line will go low later
-  */
-  if ((false == m_aci_q_is_empty(&aci_tx_q)) &&
-    (false == m_aci_q_is_full(&aci_rx_q)))
-  {
-    digitalWrite(a_pins_local_ptr->reqn_pin, 0);
-  }
+  return;
 }
 
 bool hal_aci_tl_event_peek(hal_aci_data_t *p_aci_data)
