@@ -152,7 +152,7 @@ void lib_aci_board_init(aci_state_t *aci_stat)
 				}
 				else if (ACI_STATUS_ERROR_CMD_UNKNOWN == aci_evt->params.cmd_rsp.cmd_status) //We are now in TEST
 				{
-					//Inject a Device Started Event Standby to the ACI Event Queue
+					//Inject a Device Started Event Test to the ACI Event Queue
 					msg_to_send.buffer[0] = 4;    //Length
 					msg_to_send.buffer[1] = 0x81; //Device Started Event
 					msg_to_send.buffer[2] = 0x01; //Test

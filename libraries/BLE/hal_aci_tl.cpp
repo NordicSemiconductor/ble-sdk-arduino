@@ -357,7 +357,7 @@ static bool m_aci_q_is_empty_from_isr(aci_queue_t *aci_q)
   return aci_q->head == aci_q->tail;
 }
 
-bool m_aci_q_is_full(aci_queue_t *aci_q)
+static bool m_aci_q_is_full(aci_queue_t *aci_q)
 {
   uint8_t next;
   bool state;
@@ -569,7 +569,6 @@ void hal_aci_tl_init(aci_pins_t *a_pins, bool debug)
   {
 	pinMode(a_pins->active_pin,	INPUT);  
   }
-  
   /* Pin reset the nRF8001, required when the nRF8001 setup is being changed */
   hal_aci_tl_pin_reset();
 	
