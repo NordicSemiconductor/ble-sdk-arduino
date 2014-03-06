@@ -39,6 +39,7 @@ static void m_aci_q_init(aci_queue_t *aci_q);
 static bool m_aci_q_is_empty(aci_queue_t *aci_q);
 static bool m_aci_q_is_full(aci_queue_t *aci_q);
 static bool m_aci_q_peek(aci_queue_t *aci_q, hal_aci_data_t *p_data);
+static void m_aci_spi_transfer(hal_aci_data_t * data_to_send, hal_aci_data_t * received_data);
 
 static uint8_t        spi_readwrite(uint8_t aci_byte);
 
@@ -258,6 +259,41 @@ static bool m_aci_q_peek(aci_queue_t *aci_q, hal_aci_data_t *p_data)
   return true;
 }
 
+static void m_aci_spi_transfer(hal_aci_data_t * data_to_send, hal_aci_data_t * received_data)
+{
+  uint8_t byte_cnt;
+  uint8_t byte_sent_cnt;
+  uint8_t max_bytes;
+  
+  // Send length, receive header
+  byte_sent_cnt = 0;
+  received_data->status_byte = spi_readwrite(data_to_send->buffer[byte_sent_cnt++]);
+  // Send first byte, receive length from slave
+  received_data->buffer[0] = spi_readwrite(data_to_send->buffer[byte_sent_cnt++]);
+  if (0 == data_to_send->buffer[0])
+  {
+    max_bytes = received_data->buffer[0];
+  }
+  else
+  {
+    // Set the maximum to the biggest size. One command byte is already sent
+    max_bytes = (received_data->buffer[0] > (data_to_send->buffer[0] - 1))
+                                          ? received_data->buffer[0]
+                                          : (data_to_send->buffer[0] - 1);
+  }
+
+  if (max_bytes > HAL_ACI_MAX_LENGTH)
+  {
+    max_bytes = HAL_ACI_MAX_LENGTH;
+  }
+
+  // Transmit/receive the rest of the packet 
+  for (byte_cnt = 0; byte_cnt < max_bytes; byte_cnt++)
+  {
+    received_data->buffer[byte_cnt+1] =  spi_readwrite(data_to_send->buffer[byte_sent_cnt++]);
+  }
+}
+
 void hal_aci_debug_print(bool enable)
 {
 	aci_debug_print = enable;
@@ -428,10 +464,6 @@ bool hal_aci_tl_send(hal_aci_data_t *p_aci_cmd)
 
 hal_aci_data_t * hal_aci_tl_poll_get(void)
 {
-  uint8_t byte_cnt;
-  uint8_t byte_sent_cnt;
-  uint8_t max_bytes;
-  
   hal_aci_data_t data_to_send;
   hal_aci_data_t received_data;
 
@@ -448,35 +480,7 @@ hal_aci_data_t * hal_aci_tl_poll_get(void)
     data_to_send.buffer[0] = 0;
   }
 
-  //Change this if your mcu has DMA for the master SPI
-
-  // Send length, receive header
-  byte_sent_cnt = 0;
-  received_data.status_byte = spi_readwrite(data_to_send.buffer[byte_sent_cnt++]);
-  // Send first byte, receive length from slave
-  received_data.buffer[0] = spi_readwrite(data_to_send.buffer[byte_sent_cnt++]);
-  if (0 == data_to_send.buffer[0])
-  {
-    max_bytes = received_data.buffer[0];
-  }
-  else
-  {
-    // Set the maximum to the biggest size. One command byte is already sent
-    max_bytes = (received_data.buffer[0] > (data_to_send.buffer[0] - 1)) 
-      ? received_data.buffer[0] : (data_to_send.buffer[0] - 1);
-  }
-
-  if (max_bytes > HAL_ACI_MAX_LENGTH)
-  {
-    max_bytes = HAL_ACI_MAX_LENGTH;
-  }
-
-  // Transmit/receive the rest of the packet 
-  for (byte_cnt = 0; byte_cnt < max_bytes; byte_cnt++)
-  {
-    received_data.buffer[byte_cnt+1] =  spi_readwrite(data_to_send.buffer[byte_sent_cnt++]);
-  }
-
+  m_aci_spi_transfer(&data_to_send, &received_data);
   m_aci_reqn_disable();
 
   if (a_pins_local_ptr->interface_is_interrupt)
