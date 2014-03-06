@@ -723,7 +723,7 @@ void lib_aci_flush(void)
 
 void lib_aci_debug_print(bool enable)
 {
-  hal_aci_debug_print(enable);
+  hal_aci_tl_debug_print(enable);
 }
 
 void lib_aci_pin_reset(void)

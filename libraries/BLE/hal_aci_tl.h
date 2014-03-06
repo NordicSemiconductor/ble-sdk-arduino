@@ -148,7 +148,7 @@ bool hal_aci_tl_event_peek(hal_aci_data_t *p_aci_data);
  *  When the enable parameter is false. The debug printing is disabled on the Serial.
  *  By default the debug printing is disabled.
  */
-void hal_aci_debug_print(bool enable);
+void hal_aci_tl_debug_print(bool enable);
 
 /** @brief Enqueue an ACI event. Used to workaround boards that do not have access to the Reset pin
  *  @details

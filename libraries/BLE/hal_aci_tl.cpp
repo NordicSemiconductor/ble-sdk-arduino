@@ -433,7 +433,7 @@ static void m_aci_spi_transfer(hal_aci_data_t * data_to_send, hal_aci_data_t * r
   m_aci_reqn_disable();
 }
 
-void hal_aci_debug_print(bool enable)
+void hal_aci_tl_debug_print(bool enable)
 {
 	aci_debug_print = enable;
 }
