@@ -73,7 +73,44 @@ void m_aci_data_print(hal_aci_data_t *p_data)
 */
 static void m_aci_event_check(void)
 {
-  hal_aci_data_t *p_aci_data;
+  hal_aci_data_t *received_data;
+
+  detachInterrupt(a_pins_local_ptr->interrupt_number);
+
+  // Receive or transmit data
+  received_data = hal_aci_tl_poll_get();
+
+  // Check if we received data
+  if (received_data->buffer[0] > 0)
+  {
+    if (!m_aci_q_enqueue(&aci_rx_q, received_data))
+    {
+      /* Receive Buffer full.
+         Should never happen.
+         Spin in a while loop.
+      */
+      while(1);
+    }
+
+    /* Disable RDY line interrupt.
+       Will latch any pending RDY lines, so when enabled again the interrupt will fire immediately
+    */
+    if (m_aci_q_is_full(&aci_rx_q))
+    {
+      EIMSK &= ~(0x2);
+    }
+  }
+
+  return;
+}
+
+/*
+ Check the RDYN line. When the RDYN line goes low, run the SPI master and place the returned 
+ ACI Event in the p_aci_evt_data
+*/
+static void m_aci_event_check_polling(void)
+{
+  hal_aci_data_t *received_data;
   
   /* This function is used both in polling and interrupt mode.
      If the RDYN line is HIGH and we have pending messages outgoing
@@ -89,18 +126,13 @@ static void m_aci_event_check(void)
     return;
   }
 
-  if (a_pins_local_ptr->interface_is_interrupt)
-  {
-    detachInterrupt(a_pins_local_ptr->interrupt_number);
-  }
-
   // Receive or transmit data
-  p_aci_data = hal_aci_tl_poll_get();
+  received_data = hal_aci_tl_poll_get();
 
   // Check if we received data
-  if (p_aci_data->buffer[0] > 0)
+  if (received_data->buffer[0] > 0)
   {
-    if (!m_aci_q_enqueue(&aci_rx_q, p_aci_data))
+    if (!m_aci_q_enqueue(&aci_rx_q, received_data))
     {
       /* Receive Buffer full.
          Should never happen.
@@ -108,14 +140,6 @@ static void m_aci_event_check(void)
       */
       while(1);
     }
-
-    /* Disable RDY line interrupt.
-       Will latch any pending RDY lines, so when enabled again the interrupt will fire immediately
-    */
-    if (a_pins_local_ptr->interface_is_interrupt && m_aci_q_is_full(&aci_rx_q))
-    {
-      EIMSK &= ~(0x2);
-    }    
   }
 
   return;
@@ -359,7 +383,7 @@ bool hal_aci_tl_event_peek(hal_aci_data_t *p_aci_data)
 {
   if (!a_pins_local_ptr->interface_is_interrupt)
   {
-    m_aci_event_check ();
+    m_aci_event_check_polling();
   }
 
   if (m_aci_q_peek(&aci_rx_q, p_aci_data))
@@ -382,7 +406,7 @@ bool hal_aci_tl_event_get(hal_aci_data_t *p_aci_data)
 
   if (!a_pins_local_ptr->interface_is_interrupt && !m_aci_q_is_full(&aci_rx_q))
   {
-    m_aci_event_check();
+    m_aci_event_check_polling();
   }
 
   was_full = m_aci_q_is_full(&aci_rx_q);
