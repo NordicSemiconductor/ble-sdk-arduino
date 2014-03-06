@@ -31,9 +31,13 @@
 static void m_aci_data_print(hal_aci_data_t *p_data);
 static void m_aci_event_check(void);
 static void m_aci_pins_set(aci_pins_t *a_pins_ptr);
+static hal_aci_data_t * m_aci_poll_get(void);
+static hal_aci_data_t * m_aci_poll_get_from_isr(void);
 static void m_aci_reqn_disable (void);
 static void m_aci_reqn_enable (void);
 static bool m_aci_q_dequeue(aci_queue_t *aci_q, hal_aci_data_t *p_data);
+static bool m_aci_q_dequeue_from_isr(aci_queue_t *aci_q, hal_aci_data_t *p_data);
+static bool m_aci_q_enqueue_from_isr(aci_queue_t *aci_q, hal_aci_data_t *p_data);
 static void m_aci_q_flush(void);
 static void m_aci_q_flush_from_isr(void);
 static void m_aci_q_init(aci_queue_t *aci_q);
@@ -78,12 +82,12 @@ static void m_aci_event_check(void)
   detachInterrupt(a_pins_local_ptr->interrupt_number);
 
   // Receive or transmit data
-  received_data = hal_aci_tl_poll_get();
+  received_data = m_aci_poll_get_from_isr();
 
   // Check if we received data
   if (received_data->buffer[0] > 0)
   {
-    if (!m_aci_q_enqueue(&aci_rx_q, received_data))
+    if (!m_aci_q_enqueue_from_isr(&aci_rx_q, received_data))
     {
       /* Receive Buffer full.
          Should never happen.
@@ -95,7 +99,7 @@ static void m_aci_event_check(void)
     /* Disable RDY line interrupt.
        Will latch any pending RDY lines, so when enabled again the interrupt will fire immediately
     */
-    if (m_aci_q_is_full(&aci_rx_q))
+    if (m_aci_q_is_full_from_isr(&aci_rx_q))
     {
       EIMSK &= ~(0x2);
     }
@@ -127,7 +131,7 @@ static void m_aci_event_check_polling(void)
   }
 
   // Receive or transmit data
-  received_data = hal_aci_tl_poll_get();
+  received_data = m_aci_poll_get();
 
   // Check if we received data
   if (received_data->buffer[0] > 0)
@@ -189,6 +193,29 @@ static bool m_aci_q_dequeue(aci_queue_t *aci_q, hal_aci_data_t *p_data)
   return true;
 }
 
+static bool m_aci_q_dequeue_from_isr(aci_queue_t *aci_q, hal_aci_data_t *p_data)
+{
+  if (NULL == aci_q)
+  {
+    return false;
+  }
+
+  if (m_aci_q_is_empty_from_isr(aci_q))
+  {
+    return false;
+  }
+
+  /* p_data might be NULL if function calling this wishes to discard the popped message */
+  if (NULL != p_data)
+  {
+    memcpy((uint8_t *)p_data, (uint8_t *)&(aci_q->aci_data[aci_q->head]), sizeof(hal_aci_data_t));
+  }
+
+  aci_q->head = (aci_q->head + 1) % ACI_QUEUE_SIZE;
+
+  return true;
+}
+
 bool m_aci_q_enqueue(aci_queue_t *aci_q, hal_aci_data_t *p_data)
 {
   const uint8_t length = p_data->buffer[0];
@@ -204,6 +231,32 @@ bool m_aci_q_enqueue(aci_queue_t *aci_q, hal_aci_data_t *p_data)
   }
   
   if (m_aci_q_is_full(aci_q))
+  {
+    return false;
+  }
+
+  aci_q->aci_data[aci_q->tail].status_byte = 0;
+  memcpy((uint8_t *)&(aci_q->aci_data[aci_q->tail].buffer[0]), (uint8_t *)&p_data->buffer[0], length + 1);
+  aci_q->tail = (aci_q->tail + 1) % ACI_QUEUE_SIZE;
+
+  return true;
+}
+
+static bool m_aci_q_enqueue_from_isr(aci_queue_t *aci_q, hal_aci_data_t *p_data)
+{
+  const uint8_t length = p_data->buffer[0];
+
+  if (NULL == p_data)
+  {
+    return false;
+  }
+
+  if (NULL == aci_q)
+  {
+    return false;
+  }
+
+  if (m_aci_q_is_full_from_isr(aci_q))
   {
     return false;
   }
@@ -518,7 +571,7 @@ bool hal_aci_tl_send(hal_aci_data_t *p_aci_cmd)
   return ret_val;
 }
 
-hal_aci_data_t * hal_aci_tl_poll_get(void)
+static hal_aci_data_t * m_aci_poll_get(void)
 {
   hal_aci_data_t data_to_send;
   hal_aci_data_t received_data;
@@ -545,6 +598,41 @@ hal_aci_data_t * hal_aci_tl_poll_get(void)
   }
 
   if (!m_aci_q_is_full(&aci_rx_q) && !m_aci_q_is_empty(&aci_tx_q))
+  {
+    m_aci_reqn_enable();
+  }
+
+  /* valid Rx available or transmit finished*/
+  return (&received_data);
+}
+
+static hal_aci_data_t * m_aci_poll_get_from_isr(void)
+{
+  hal_aci_data_t data_to_send;
+  hal_aci_data_t received_data;
+
+  if (!m_aci_q_is_full_from_isr(&aci_rx_q))
+  {
+    m_aci_reqn_enable();
+  }
+
+  // Receive from queue
+  if (!m_aci_q_dequeue_from_isr(&aci_tx_q, &data_to_send))
+  {
+    /* queue was empty, nothing to send */
+    data_to_send.status_byte = 0;
+    data_to_send.buffer[0] = 0;
+  }
+
+  m_aci_spi_transfer(&data_to_send, &received_data);
+  m_aci_reqn_disable();
+
+  if (a_pins_local_ptr->interface_is_interrupt)
+  {
+    attachInterrupt(a_pins_local_ptr->interrupt_number, m_aci_event_check, LOW);
+  }
+
+  if (!m_aci_q_is_full_from_isr(&aci_rx_q) && !m_aci_q_is_empty_from_isr(&aci_tx_q))
   {
     m_aci_reqn_enable();
   }
