@@ -471,12 +471,6 @@ bool hal_aci_tl_event_peek(hal_aci_data_t *p_aci_data)
 
   if (m_aci_q_peek(&aci_rx_q, p_aci_data))
   {
-    if (aci_debug_print)
-    {
-      Serial.print(" E");
-      m_aci_data_print(p_aci_data);
-    }
-
     return true;
   }
 
