@@ -79,8 +79,6 @@ static void m_aci_event_check(void)
 {
   hal_aci_data_t *received_data;
 
-  detachInterrupt(a_pins_local_ptr->interrupt_number);
-
   // Receive or transmit data
   received_data = m_aci_poll_get_from_isr();
 
@@ -101,7 +99,7 @@ static void m_aci_event_check(void)
     */
     if (m_aci_q_is_full_from_isr(&aci_rx_q))
     {
-      EIMSK &= ~(0x2);
+      detachInterrupt(a_pins_local_ptr->interrupt_number);
     }
   }
 
@@ -475,7 +473,7 @@ bool hal_aci_tl_event_get(hal_aci_data_t *p_aci_data)
     if (was_full && a_pins_local_ptr->interface_is_interrupt)
 	  {
       /* Enable RDY line interrupt again */
-      EIMSK |= (0x2); /* Make it more portable as this is ATmega specific */
+      attachInterrupt(a_pins_local_ptr->interrupt_number, m_aci_event_check, LOW);
     }
 
     /* Attempt to pull REQN LOW since we've made room for new messages */
@@ -592,11 +590,6 @@ static hal_aci_data_t * m_aci_poll_get(void)
   m_aci_spi_transfer(&data_to_send, &received_data);
   m_aci_reqn_disable();
 
-  if (a_pins_local_ptr->interface_is_interrupt)
-  {
-    attachInterrupt(a_pins_local_ptr->interrupt_number, m_aci_event_check, LOW);
-  }
-
   if (!m_aci_q_is_full(&aci_rx_q) && !m_aci_q_is_empty(&aci_tx_q))
   {
     m_aci_reqn_enable();
@@ -626,11 +619,6 @@ static hal_aci_data_t * m_aci_poll_get_from_isr(void)
 
   m_aci_spi_transfer(&data_to_send, &received_data);
   m_aci_reqn_disable();
-
-  if (a_pins_local_ptr->interface_is_interrupt)
-  {
-    attachInterrupt(a_pins_local_ptr->interrupt_number, m_aci_event_check, LOW);
-  }
 
   if (!m_aci_q_is_full_from_isr(&aci_rx_q) && !m_aci_q_is_empty_from_isr(&aci_tx_q))
   {
