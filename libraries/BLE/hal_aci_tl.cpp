@@ -42,7 +42,6 @@ static bool m_aci_q_peek(aci_queue_t *aci_q, hal_aci_data_t *p_data);
 
 static uint8_t        spi_readwrite(uint8_t aci_byte);
 
-static hal_aci_data_t received_data;
 static bool           aci_debug_print = false;
 
 aci_queue_t    aci_tx_q;
@@ -348,7 +347,6 @@ bool hal_aci_tl_event_get(hal_aci_data_t *p_aci_data)
 
 void hal_aci_tl_init(aci_pins_t *a_pins)
 {
-  received_data.buffer[0] = 0;
   aci_debug_print         = false;
   
   /* Needs to be called as the first thing for proper intialization*/
@@ -433,7 +431,9 @@ hal_aci_data_t * hal_aci_tl_poll_get(void)
   uint8_t byte_cnt;
   uint8_t byte_sent_cnt;
   uint8_t max_bytes;
+  
   hal_aci_data_t data_to_send;
+  hal_aci_data_t received_data;
 
   if (!m_aci_q_is_full(&aci_rx_q))
   {
