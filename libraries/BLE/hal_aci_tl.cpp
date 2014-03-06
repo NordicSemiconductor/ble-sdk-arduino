@@ -31,8 +31,6 @@
 static void m_aci_data_print(hal_aci_data_t *p_data);
 static void m_aci_event_check(void);
 static void m_aci_pins_set(aci_pins_t *a_pins_ptr);
-static hal_aci_data_t * m_aci_poll_get(void);
-static hal_aci_data_t * m_aci_poll_get_from_isr(void);
 static void m_aci_reqn_disable (void);
 static void m_aci_reqn_enable (void);
 static bool m_aci_q_dequeue(aci_queue_t *aci_q, hal_aci_data_t *p_data);
@@ -77,15 +75,29 @@ void m_aci_data_print(hal_aci_data_t *p_data)
 */
 static void m_aci_event_check(void)
 {
-  hal_aci_data_t *received_data;
+  hal_aci_data_t data_to_send;
+  hal_aci_data_t received_data;
 
-  // Receive or transmit data
-  received_data = m_aci_poll_get_from_isr();
+  // Receive from queue
+  if (!m_aci_q_dequeue_from_isr(&aci_tx_q, &data_to_send))
+  {
+    /* queue was empty, nothing to send */
+    data_to_send.status_byte = 0;
+    data_to_send.buffer[0] = 0;
+  }
+
+  // Receive and/or transmit data
+  m_aci_spi_transfer(&data_to_send, &received_data);
+
+  if (!m_aci_q_is_full_from_isr(&aci_rx_q) && !m_aci_q_is_empty_from_isr(&aci_tx_q))
+  {
+    m_aci_reqn_enable();
+  }
 
   // Check if we received data
-  if (received_data->buffer[0] > 0)
+  if (received_data.buffer[0] > 0)
   {
-    if (!m_aci_q_enqueue_from_isr(&aci_rx_q, received_data))
+    if (!m_aci_q_enqueue_from_isr(&aci_rx_q, &received_data))
     {
       /* Receive Buffer full.
          Should never happen.
@@ -94,9 +106,7 @@ static void m_aci_event_check(void)
       while(1);
     }
 
-    /* Disable RDY line interrupt.
-       Will latch any pending RDY lines, so when enabled again the interrupt will fire immediately
-    */
+    // Disable ready line interrupt until we have room to store incoming messages
     if (m_aci_q_is_full_from_isr(&aci_rx_q))
     {
       detachInterrupt(a_pins_local_ptr->interrupt_number);
@@ -112,15 +122,19 @@ static void m_aci_event_check(void)
 */
 static void m_aci_event_check_polling(void)
 {
-  hal_aci_data_t *received_data;
-  
-  /* This function is used both in polling and interrupt mode.
-     If the RDYN line is HIGH and we have pending messages outgoing
-     we pull the REQ line LOW so that the RDYN line will go LOW later.
-  */
+  hal_aci_data_t data_to_send;
+  hal_aci_data_t received_data;
+
+  // No room to store incoming messages
+  if (m_aci_q_is_full(&aci_rx_q))
+  {
+    return;
+  }
+
+  // If the ready line is disabled and we have pending messages outgoing we enable the request line
   if (HIGH == digitalRead(a_pins_local_ptr->rdyn_pin))
   {
-    if (!m_aci_q_is_full(&aci_rx_q) && !m_aci_q_is_empty(&aci_tx_q))
+    if (!m_aci_q_is_empty(&aci_tx_q))
     {
       m_aci_reqn_enable();
     }
@@ -128,13 +142,27 @@ static void m_aci_event_check_polling(void)
     return;
   }
 
-  // Receive or transmit data
-  received_data = m_aci_poll_get();
+  // Receive from queue
+  if (!m_aci_q_dequeue(&aci_tx_q, &data_to_send))
+  {
+    /* queue was empty, nothing to send */
+    data_to_send.status_byte = 0;
+    data_to_send.buffer[0] = 0;
+  }
+
+  // Receive and/or transmit data
+  m_aci_spi_transfer(&data_to_send, &received_data);
+
+  /* If there are messages to transmit, and we can store the reply, we request a new transfer */
+  if (!m_aci_q_is_full(&aci_rx_q) && !m_aci_q_is_empty(&aci_tx_q))
+  {
+    m_aci_reqn_enable();
+  }
 
   // Check if we received data
-  if (received_data->buffer[0] > 0)
+  if (received_data.buffer[0] > 0)
   {
-    if (!m_aci_q_enqueue(&aci_rx_q, received_data))
+    if (!m_aci_q_enqueue(&aci_rx_q, &received_data))
     {
       /* Receive Buffer full.
          Should never happen.
@@ -371,7 +399,9 @@ static void m_aci_spi_transfer(hal_aci_data_t * data_to_send, hal_aci_data_t * r
   uint8_t byte_cnt;
   uint8_t byte_sent_cnt;
   uint8_t max_bytes;
-  
+
+  m_aci_reqn_enable();
+
   // Send length, receive header
   byte_sent_cnt = 0;
   received_data->status_byte = spi_readwrite(data_to_send->buffer[byte_sent_cnt++]);
@@ -399,6 +429,8 @@ static void m_aci_spi_transfer(hal_aci_data_t * data_to_send, hal_aci_data_t * r
   {
     received_data->buffer[byte_cnt+1] =  spi_readwrite(data_to_send->buffer[byte_sent_cnt++]);
   }
+
+  m_aci_reqn_disable();
 }
 
 void hal_aci_debug_print(bool enable)
@@ -567,66 +599,6 @@ bool hal_aci_tl_send(hal_aci_data_t *p_aci_cmd)
   }
   
   return ret_val;
-}
-
-static hal_aci_data_t * m_aci_poll_get(void)
-{
-  hal_aci_data_t data_to_send;
-  hal_aci_data_t received_data;
-
-  if (!m_aci_q_is_full(&aci_rx_q))
-  {
-    m_aci_reqn_enable();
-  }
-
-  // Receive from queue
-  if (!m_aci_q_dequeue(&aci_tx_q, &data_to_send))
-  {
-    /* queue was empty, nothing to send */
-    data_to_send.status_byte = 0;
-    data_to_send.buffer[0] = 0;
-  }
-
-  m_aci_spi_transfer(&data_to_send, &received_data);
-  m_aci_reqn_disable();
-
-  if (!m_aci_q_is_full(&aci_rx_q) && !m_aci_q_is_empty(&aci_tx_q))
-  {
-    m_aci_reqn_enable();
-  }
-
-  /* valid Rx available or transmit finished*/
-  return (&received_data);
-}
-
-static hal_aci_data_t * m_aci_poll_get_from_isr(void)
-{
-  hal_aci_data_t data_to_send;
-  hal_aci_data_t received_data;
-
-  if (!m_aci_q_is_full_from_isr(&aci_rx_q))
-  {
-    m_aci_reqn_enable();
-  }
-
-  // Receive from queue
-  if (!m_aci_q_dequeue_from_isr(&aci_tx_q, &data_to_send))
-  {
-    /* queue was empty, nothing to send */
-    data_to_send.status_byte = 0;
-    data_to_send.buffer[0] = 0;
-  }
-
-  m_aci_spi_transfer(&data_to_send, &received_data);
-  m_aci_reqn_disable();
-
-  if (!m_aci_q_is_full_from_isr(&aci_rx_q) && !m_aci_q_is_empty_from_isr(&aci_tx_q))
-  {
-    m_aci_reqn_enable();
-  }
-
-  /* valid Rx available or transmit finished*/
-  return (&received_data);
 }
 
 static uint8_t spi_readwrite(const uint8_t aci_byte)
