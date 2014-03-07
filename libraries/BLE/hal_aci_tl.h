@@ -59,7 +59,7 @@ and the received ACI event is placed in the tail of the event queue.
 /************************************************************************/
 /* Unused nRF8001 pin                                                    */
 /************************************************************************/
-#define UNUSED		    255 
+#define UNUSED		    255
 
 /** Data type for ACI commands and events */
 typedef struct {
@@ -105,21 +105,23 @@ typedef struct aci_pins_t
 	uint8_t	interrupt_number;		//Required when using interrupts, otherwise ignored
 } aci_pins_t;
 
-/** ACI Transport Layer configures inputs/outputs.
+/** @brief ACI Transport Layer initialization.
+ *  @details
+ *  This function initializes the transport layer, including configuring the SPI, creating
+ *  message queues for Commands and Events and setting up interrupt if required.
+ *  @param a_pins Pins on the MCU used to connect to the nRF8001
+ *  @param bool True if debug printing should be enabled on the Serial.
  */
-void hal_aci_tl_io_config(void);
-
-
-/** ACI Transport Layer initialization.
- */
-void hal_aci_tl_init(aci_pins_t *a_pins);
+void hal_aci_tl_init(aci_pins_t *a_pins, bool debug);
 
 /** @brief Sends an ACI command to the radio.
  *  @details
  *  This function sends an ACI command to the radio. This queue up the message to send and 
- *  lower the request line. When the device lowers the ready line, @ref hal_aci_tl_poll_get() will send the data.
+ *  lower the request line. When the device lowers the ready line, @ref m_aci_spi_transfer()
+ *  will send the data.
  *  @param aci_buffer Pointer to the message to send.
- *  @return True if the data was successfully queued for sending, false if there is no more space to store messages to send.
+ *  @return True if the data was successfully queued for sending, 
+ *  false if there is no more space to store messages to send.
  */
 bool hal_aci_tl_send(hal_aci_data_t *aci_buffer);
 
@@ -140,11 +142,12 @@ hal_aci_data_t * hal_aci_tl_poll_get(void);
  */
 bool hal_aci_tl_event_get(hal_aci_data_t *p_aci_data);
 
-/** @brief Flush the ACI command Queue and the ACI Event Queue
+/** @brief Peek an ACI event from the event queue
  *  @details
- *  Call this function in the main thread
+ *  Call this function from the main context to peek an event from the ACI event queue.
+ *  This is called by lib_aci_event_peek
  */
-void m_aci_q_flush(void);
+bool hal_aci_tl_event_peek(hal_aci_data_t *p_aci_data);
 
 /** @brief Enable debug printing of all ACI commands sent and ACI events received
  *  @details
@@ -152,20 +155,13 @@ void m_aci_q_flush(void);
  *  When the enable parameter is false. The debug printing is disabled on the Serial.
  *  By default the debug printing is disabled.
  */
-void hal_aci_debug_print(bool enable);
+void hal_aci_tl_debug_print(bool enable);
 
 /** @brief Enqueue an ACI event. Used to workaround boards that do not have access to the Reset pin
  *  @details
  *
  */
 bool m_aci_q_enqueue(aci_queue_t *aci_q, hal_aci_data_t *p_data);
-
-/** @brief Point the low level library at the ACI pins specified
- *  @details
- *  The ACI pins are specified in the application and a pointer is made available for
- *  the low level library to use
- */
-void m_aci_pins_set(aci_pins_t *a_pins_ptr);
 
 /** @brief Pin reset the nRF8001
  *  @details
@@ -174,11 +170,37 @@ void m_aci_pins_set(aci_pins_t *a_pins_ptr);
  *  have a Power ON Reset circuit that works differently.
  *  The function handles the exceptions based on the board_name in aci_pins_t
  */
-void hal_aci_pin_reset(void);
+void hal_aci_tl_pin_reset(void);
+
+/** @brief Return full status of transmit queue
+ *  @details
+ *
+ */
+ bool hal_aci_tl_rx_q_full(void);
+ 
+ /** @brief Return empty status of receive queue
+ *  @details
+ *
+ */
+ bool hal_aci_tl_rx_q_empty(void);
+
+/** @brief Return full status of receive queue
+ *  @details
+ *
+ */
+ bool hal_aci_tl_tx_q_full(void);
+ 
+ /** @brief Return empty status of transmit queue
+ *  @details
+ *
+ */
+ bool hal_aci_tl_tx_q_empty(void);
+
+/** @brief Flush the ACI command Queue and the ACI Event Queue
+ *  @details
+ *  Call this function in the main thread
+ */
+void hal_aci_tl_q_flush(void);
 
 #endif // HAL_ACI_TL_H__
 /** @} */
-
-
-
-

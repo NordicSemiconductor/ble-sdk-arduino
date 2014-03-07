@@ -177,7 +177,7 @@ void lib_aci_board_init(aci_state_t *aci_stat)
 }
 
 
-void lib_aci_init(aci_state_t *aci_stat)
+void lib_aci_init(aci_state_t *aci_stat, bool debug)
 {
   uint8_t i;
 
@@ -210,7 +210,7 @@ void lib_aci_init(aci_state_t *aci_stat)
   p_setup_msgs             = aci_stat->aci_setup_info.setup_msgs;
   
   
-  hal_aci_tl_init(&aci_stat->aci_pins);
+  hal_aci_tl_init(&aci_stat->aci_pins, debug);
   
   lib_aci_board_init(aci_stat);
 }
@@ -557,6 +557,11 @@ bool lib_aci_bond_request()
   return hal_aci_tl_send(&msg_to_send);
 }
 
+bool lib_aci_event_peek(hal_aci_evt_t *p_aci_evt_data)
+{
+  return hal_aci_tl_event_peek((hal_aci_data_t *)p_aci_evt_data);
+}
+
 bool lib_aci_event_get(aci_state_t *aci_stat, hal_aci_evt_t *p_aci_evt_data)
 {
   bool status;
@@ -713,15 +718,35 @@ bool lib_aci_dtm_command(uint8_t dtm_command_msbyte, uint8_t dtm_command_lsbyte)
 
 void lib_aci_flush(void)
 {
-  m_aci_q_flush();
+  hal_aci_tl_q_flush();
 }
 
 void lib_aci_debug_print(bool enable)
 {
-  hal_aci_debug_print(enable);
+  hal_aci_tl_debug_print(enable);
 }
 
 void lib_aci_pin_reset(void)
 {
-    hal_aci_pin_reset();
+    hal_aci_tl_pin_reset();
+}
+
+bool lib_aci_event_queue_empty(void)
+{
+  return hal_aci_tl_rx_q_empty();
+}
+
+bool lib_aci_event_queue_full(void)
+{
+  return hal_aci_tl_rx_q_full();
+}
+
+bool lib_aci_command_queue_empty(void)
+{
+  return hal_aci_tl_tx_q_empty();
+}
+
+bool lib_aci_command_queue_full(void)
+{
+  return hal_aci_tl_tx_q_full();
 }

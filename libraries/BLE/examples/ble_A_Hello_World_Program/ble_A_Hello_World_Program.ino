@@ -177,17 +177,13 @@ void setup(void)
 	aci_state.aci_pins.active_pin            = UNUSED;
 	aci_state.aci_pins.optional_chip_sel_pin = UNUSED;
 	  
-	aci_state.aci_pins.interface_is_interrupt	  = false;
+	aci_state.aci_pins.interface_is_interrupt	  = true;
 	aci_state.aci_pins.interrupt_number			  = 1;
 	
 	//We reset the nRF8001 here by toggling the RESET line connected to the nRF8001
 	//If the RESET line is not available we call the ACI Radio Reset to soft reset the nRF8001
 	//then we initialize the data structures required to setup the nRF8001
-	lib_aci_init(&aci_state);
-
-    //Turn debug printing on for the ACI Commands and Events to be printed on the Serial
-	lib_aci_debug_print(false);
-    
+	lib_aci_init(&aci_state, true);
 }
 
 void uart_over_ble_init(void)
@@ -290,6 +286,8 @@ bool uart_process_control_point_rx(uint8_t *byte, uint8_t length)
 
 void aci_loop()
 {
+  static bool setup_required = false;
+
   // We enter the if statement only when there is a ACI event available to be processed
   if (lib_aci_event_get(&aci_state, &aci_data))
   {
@@ -302,20 +300,17 @@ void aci_loop()
         As soon as you reset the nRF8001 you will get an ACI Device Started Event
         */
         case ACI_EVT_DEVICE_STARTED:
-        { 
+        {
           aci_state.data_credit_total = aci_evt->params.device_started.credit_available;
           switch(aci_evt->params.device_started.device_mode)
           {
             case ACI_DEVICE_SETUP:
-            /**
-            When the device is in the setup mode
-            */
-            Serial.println(F("Evt Device Started: Setup"));
-            if (ACI_STATUS_TRANSACTION_COMPLETE != do_aci_setup(&aci_state))
-            {
-              Serial.println(F("Error in ACI Setup"));
-            }
-            break;
+              /**
+              When the device is in the setup mode
+              */
+              Serial.println(F("Evt Device Started: Setup"));
+              setup_required = true;
+              break;
             
             case ACI_DEVICE_STANDBY:
               Serial.println(F("Evt Device Started: Standby"));
@@ -480,6 +475,18 @@ void aci_loop()
     // No event in the ACI Event queue and if there is no event in the ACI command queue the arduino can go to sleep
     // Arduino can go to sleep now
     // Wakeup from sleep from the RDYN line
+  }
+
+  /* setup_required is set to true when the device starts up and enters setup mode.
+   * It indicates that do_aci_setup() should be called. The flag should be cleared if
+   * do_aci_setup() returns ACI_STATUS_TRANSACTION_COMPLETE.
+   */
+  if(setup_required)
+  {
+    if (SETUP_SUCCESS == do_aci_setup(&aci_state))
+    {
+      setup_required = false;
+    }
   }
 }
 

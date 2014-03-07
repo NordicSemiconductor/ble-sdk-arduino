@@ -126,10 +126,13 @@ void lib_aci_debug_print(bool enable);
 void lib_aci_pin_reset(void);
 
 /** @brief Initialization function.
- *  @details This function shall be used to initialize/reset ACI Library and also Resets the nRF8001 by togging the reset pin of the nRF8001. This function will reset 
+ *  @details This function shall be used to initialize/reset ACI Library and also Resets the 
+ *           nRF8001 by togging the reset pin of the nRF8001. This function will reset 
  *           all the variables locally used by ACI library to their respective default values.
+ *  @param bool True if the data was successfully queued for sending, 
+ *  false if there is no more space to store messages to send.
  */
-void lib_aci_init(aci_state_t *aci_stat);
+void lib_aci_init(aci_state_t *aci_stat, bool debug);
 
 
 /** @brief Gets the number of currently available ACI credits.
@@ -508,10 +511,43 @@ bool lib_aci_dtm_command(uint8_t dtm_command_msbyte, uint8_t dtm_command_lsbyte)
 */
 bool lib_aci_event_get(aci_state_t *aci_stat, hal_aci_evt_t * aci_evt);
 
+/** @brief Peeks an ACI event from the ACI Event Queue
+ * @details This function peeks at the top event in the ACI event queue.
+ * In polling mode, this function will query the nRF8001 for pending events, but unlike
+ * lib_aci_event_get() it will not dequeue the event from the local queue, but will instead
+ * only peek at it.
+ * @return True if an ACI Event was copied to the pointer.
+*/
+bool lib_aci_event_peek(hal_aci_evt_t *p_aci_evt_data);
+
 /** @brief Flushes the events in the ACI command queues and ACI Event queue
  *
 */
 void lib_aci_flush(void);
+
+/** @brief Return full status of the Event queue
+ *  @details
+ *
+ */
+ bool lib_aci_event_queue_full(void);
+ 
+ /** @brief Return empty status of the Event queue
+ *  @details
+ *
+ */
+ bool lib_aci_event_queue_empty(void);
+
+/** @brief Return full status of Command queue
+ *  @details
+ *
+ */
+ bool lib_aci_command_queue_full(void);
+ 
+ /** @brief Return empty status of Command queue
+ *  @details
+ *
+ */
+ bool lib_aci_command_queue_empty(void);
 
 //@}
 

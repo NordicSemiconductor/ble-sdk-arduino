@@ -28,16 +28,286 @@
 #include "hal_aci_tl.h"
 #include <avr/sleep.h>
 
-static void           m_print_aci_data(hal_aci_data_t *p_data);
+static void m_aci_data_print(hal_aci_data_t *p_data);
+static void m_aci_event_check(void);
+static void m_aci_isr(void);
+static void m_aci_pins_set(aci_pins_t *a_pins_ptr);
+static inline void m_aci_reqn_disable (void);
+static inline void m_aci_reqn_enable (void);
+static bool m_aci_q_dequeue(aci_queue_t *aci_q, hal_aci_data_t *p_data);
+static bool m_aci_q_dequeue_from_isr(aci_queue_t *aci_q, hal_aci_data_t *p_data);
+static bool m_aci_q_enqueue_from_isr(aci_queue_t *aci_q, hal_aci_data_t *p_data);
+static void m_aci_q_flush(void);
+static void m_aci_q_flush_from_isr(void);
+static void m_aci_q_init(aci_queue_t *aci_q);
+static bool m_aci_q_is_empty(aci_queue_t *aci_q);
+static bool m_aci_q_is_empty_from_isr(aci_queue_t *aci_q);
+static bool m_aci_q_is_full(aci_queue_t *aci_q);
+static bool m_aci_q_is_full_from_isr(aci_queue_t *aci_q);
+static bool m_aci_q_peek(aci_queue_t *aci_q, hal_aci_data_t *p_data);
+static bool m_aci_spi_transfer(hal_aci_data_t * data_to_send, hal_aci_data_t * received_data);
+
 static uint8_t        spi_readwrite(uint8_t aci_byte);
 
-static hal_aci_data_t received_data;
 static bool           aci_debug_print = false;
 
 aci_queue_t    aci_tx_q;
 aci_queue_t    aci_rx_q;
 
 static aci_pins_t	 *a_pins_local_ptr;
+
+void m_aci_data_print(hal_aci_data_t *p_data)
+{
+  const uint8_t length = p_data->buffer[0];
+  uint8_t i;
+  Serial.print(length, DEC);
+  Serial.print(" :");
+  for (i=0; i<=length; i++)
+  {
+    Serial.print(p_data->buffer[i], HEX);
+    Serial.print(F(", "));
+  }
+  Serial.println(F(""));
+}
+
+/*
+  Interrupt service routine called when the RDYN line goes low. Runs the SPI transfer.
+*/
+static void m_aci_isr(void)
+{
+  hal_aci_data_t data_to_send;
+  hal_aci_data_t received_data;
+
+  // Receive from queue
+  if (!m_aci_q_dequeue_from_isr(&aci_tx_q, &data_to_send))
+  {
+    /* queue was empty, nothing to send */
+    data_to_send.status_byte = 0;
+    data_to_send.buffer[0] = 0;
+  }
+
+  // Receive and/or transmit data
+  m_aci_spi_transfer(&data_to_send, &received_data);
+
+  if (!m_aci_q_is_full_from_isr(&aci_rx_q) && !m_aci_q_is_empty_from_isr(&aci_tx_q))
+  {
+    m_aci_reqn_enable();
+  }
+
+  // Check if we received data
+  if (received_data.buffer[0] > 0)
+  {
+    if (!m_aci_q_enqueue_from_isr(&aci_rx_q, &received_data))
+    {
+      /* Receive Buffer full.
+         Should never happen.
+         Spin in a while loop.
+      */
+      while(1);
+    }
+
+    // Disable ready line interrupt until we have room to store incoming messages
+    if (m_aci_q_is_full_from_isr(&aci_rx_q))
+    {
+      detachInterrupt(a_pins_local_ptr->interrupt_number);
+    }
+  }
+
+  return;
+}
+
+/*
+  Checks the RDYN line and runs the SPI transfer if required.
+*/
+static void m_aci_event_check(void)
+{
+  hal_aci_data_t data_to_send;
+  hal_aci_data_t received_data;
+
+  // No room to store incoming messages
+  if (m_aci_q_is_full(&aci_rx_q))
+  {
+    return;
+  }
+
+  // If the ready line is disabled and we have pending messages outgoing we enable the request line
+  if (HIGH == digitalRead(a_pins_local_ptr->rdyn_pin))
+  {
+    if (!m_aci_q_is_empty(&aci_tx_q))
+    {
+      m_aci_reqn_enable();
+    }
+
+    return;
+  }
+
+  // Receive from queue
+  if (!m_aci_q_dequeue(&aci_tx_q, &data_to_send))
+  {
+    /* queue was empty, nothing to send */
+    data_to_send.status_byte = 0;
+    data_to_send.buffer[0] = 0;
+  }
+
+  // Receive and/or transmit data
+  m_aci_spi_transfer(&data_to_send, &received_data);
+
+  /* If there are messages to transmit, and we can store the reply, we request a new transfer */
+  if (!m_aci_q_is_full(&aci_rx_q) && !m_aci_q_is_empty(&aci_tx_q))
+  {
+    m_aci_reqn_enable();
+  }
+
+  // Check if we received data
+  if (received_data.buffer[0] > 0)
+  {
+    if (!m_aci_q_enqueue(&aci_rx_q, &received_data))
+    {
+      /* Receive Buffer full.
+         Should never happen.
+         Spin in a while loop.
+      */
+      while(1);
+    }
+  }
+
+  return;
+}
+
+/** @brief Point the low level library at the ACI pins specified
+ *  @details
+ *  The ACI pins are specified in the application and a pointer is made available for
+ *  the low level library to use
+ */
+static void m_aci_pins_set(aci_pins_t *a_pins_ptr)
+{
+  a_pins_local_ptr = a_pins_ptr;
+}
+
+static inline void m_aci_reqn_disable (void)
+{
+  digitalWrite(a_pins_local_ptr->reqn_pin, 1);
+}
+
+static inline void m_aci_reqn_enable (void)
+{
+  digitalWrite(a_pins_local_ptr->reqn_pin, 0);
+}
+
+//@comment after a port to a new mcu have test for the queue states, esp. the full and the empty states
+static bool m_aci_q_dequeue(aci_queue_t *aci_q, hal_aci_data_t *p_data)
+{
+  if (NULL == aci_q)
+  {
+    return false;
+  }
+
+  if (m_aci_q_is_empty(aci_q))
+  {
+    return false;
+  }
+
+  /* p_data might be NULL if function calling this wishes to discard the popped message */
+  if (NULL != p_data)
+  {
+    memcpy((uint8_t *)p_data, (uint8_t *)&(aci_q->aci_data[aci_q->head]), sizeof(hal_aci_data_t));
+  }
+  
+  aci_q->head = (aci_q->head + 1) % ACI_QUEUE_SIZE;
+  
+  return true;
+}
+
+static bool m_aci_q_dequeue_from_isr(aci_queue_t *aci_q, hal_aci_data_t *p_data)
+{
+  if (NULL == aci_q)
+  {
+    return false;
+  }
+
+  if (m_aci_q_is_empty_from_isr(aci_q))
+  {
+    return false;
+  }
+
+  /* p_data might be NULL if function calling this wishes to discard the popped message */
+  if (NULL != p_data)
+  {
+    memcpy((uint8_t *)p_data, (uint8_t *)&(aci_q->aci_data[aci_q->head]), sizeof(hal_aci_data_t));
+  }
+
+  aci_q->head = (aci_q->head + 1) % ACI_QUEUE_SIZE;
+
+  return true;
+}
+
+bool m_aci_q_enqueue(aci_queue_t *aci_q, hal_aci_data_t *p_data)
+{
+  const uint8_t length = p_data->buffer[0];
+
+  if (NULL == p_data)
+  {
+    return false;
+  }
+
+  if (NULL == aci_q)
+  {
+    return false;
+  }
+  
+  if (m_aci_q_is_full(aci_q))
+  {
+    return false;
+  }
+
+  aci_q->aci_data[aci_q->tail].status_byte = 0;
+  memcpy((uint8_t *)&(aci_q->aci_data[aci_q->tail].buffer[0]), (uint8_t *)&p_data->buffer[0], length + 1);
+  aci_q->tail = (aci_q->tail + 1) % ACI_QUEUE_SIZE;
+
+  return true;
+}
+
+static bool m_aci_q_enqueue_from_isr(aci_queue_t *aci_q, hal_aci_data_t *p_data)
+{
+  const uint8_t length = p_data->buffer[0];
+
+  if (NULL == p_data)
+  {
+    return false;
+  }
+
+  if (NULL == aci_q)
+  {
+    return false;
+  }
+
+  if (m_aci_q_is_full_from_isr(aci_q))
+  {
+    return false;
+  }
+
+  aci_q->aci_data[aci_q->tail].status_byte = 0;
+  memcpy((uint8_t *)&(aci_q->aci_data[aci_q->tail].buffer[0]), (uint8_t *)&p_data->buffer[0], length + 1);
+  aci_q->tail = (aci_q->tail + 1) % ACI_QUEUE_SIZE;
+
+  return true;
+}
+
+static void m_aci_q_flush(void)
+{
+  noInterrupts();
+  /* re-initialize aci cmd queue and aci event queue to flush them*/
+  m_aci_q_init(&aci_tx_q);
+  m_aci_q_init(&aci_rx_q);
+  interrupts();
+}
+
+static void m_aci_q_flush_from_isr(void)
+{
+  /* re-initialize aci cmd queue and aci event queue to flush them*/
+  m_aci_q_init(&aci_tx_q);
+  m_aci_q_init(&aci_rx_q);
+}
 
 static void m_aci_q_init(aci_queue_t *aci_q)
 {
@@ -52,58 +322,35 @@ static void m_aci_q_init(aci_queue_t *aci_q)
   }
 }
 
-void hal_aci_debug_print(bool enable)
-{
-	aci_debug_print = enable;
-}
-
-bool m_aci_q_enqueue(aci_queue_t *aci_q, hal_aci_data_t *p_data)
-{
-  const uint8_t next = (aci_q->tail + 1) % ACI_QUEUE_SIZE;
-  const uint8_t length = p_data->buffer[0];
-  
-  if (next == aci_q->head)
-  {
-    /* full queue */
-    return false;
-  }
-  aci_q->aci_data[aci_q->tail].status_byte = 0;
-  
-  memcpy((uint8_t *)&(aci_q->aci_data[aci_q->tail].buffer[0]), (uint8_t *)&p_data->buffer[0], length + 1);
-  aci_q->tail = next;
-  
-  return true;
-}
-
-//@comment after a port to a new mcu have test for the queue states, esp. the full and the empty states
-static bool m_aci_q_dequeue(aci_queue_t *aci_q, hal_aci_data_t *p_data)
-{
-  if (aci_q->head == aci_q->tail)
-  {
-    /* empty queue */
-    return false;
-  }
-  
-  memcpy((uint8_t *)p_data, (uint8_t *)&(aci_q->aci_data[aci_q->head]), sizeof(hal_aci_data_t));
-  aci_q->head = (aci_q->head + 1) % ACI_QUEUE_SIZE;
-  
-  return true;
-}
-
 static bool m_aci_q_is_empty(aci_queue_t *aci_q)
 {
-  return (aci_q->head == aci_q->tail);
+  bool state = false;
+
+  //Critical section
+  noInterrupts();
+  if (aci_q->head == aci_q->tail)
+  {
+    state = true;
+  }
+  interrupts();
+
+  return state;
+}
+
+static bool m_aci_q_is_empty_from_isr(aci_queue_t *aci_q)
+{
+  return aci_q->head == aci_q->tail;
 }
 
 static bool m_aci_q_is_full(aci_queue_t *aci_q)
 {
   uint8_t next;
   bool state;
-  
+
   //This should be done in a critical section
   noInterrupts();
-  next = (aci_q->tail + 1) % ACI_QUEUE_SIZE;  
-  
+  next = (aci_q->tail + 1) % ACI_QUEUE_SIZE;
+
   if (next == aci_q->head)
   {
     state = true;
@@ -112,28 +359,88 @@ static bool m_aci_q_is_full(aci_queue_t *aci_q)
   {
     state = false;
   }
-  
+
   interrupts();
   //end
-  
+
   return state;
 }
 
-void m_print_aci_data(hal_aci_data_t *p_data)
+static bool m_aci_q_is_full_from_isr(aci_queue_t *aci_q)
 {
-  const uint8_t length = p_data->buffer[0];
-  uint8_t i;
-  Serial.print(length, DEC);
-  Serial.print(" :");
-  for (i=0; i<=length; i++)
-  {
-    Serial.print(p_data->buffer[i], HEX);
-    Serial.print(F(", "));
-  }
-  Serial.println(F(""));
+  const uint8_t next = (aci_q->tail + 1) % ACI_QUEUE_SIZE;
+
+  return next == aci_q->head;
 }
 
-void hal_aci_pin_reset(void)
+static bool m_aci_q_peek(aci_queue_t *aci_q, hal_aci_data_t *p_data)
+{
+  if (NULL == aci_q)
+  {
+    return false;
+  }
+
+  if (m_aci_q_is_empty(aci_q))
+  {
+    return false;
+  }
+
+  if (NULL != p_data)
+  {
+    memcpy((uint8_t *)p_data, (uint8_t *)&(aci_q->aci_data[aci_q->head]), sizeof(hal_aci_data_t));
+  }
+
+  return true;
+}
+
+static bool m_aci_spi_transfer(hal_aci_data_t * data_to_send, hal_aci_data_t * received_data)
+{
+  uint8_t byte_cnt;
+  uint8_t byte_sent_cnt;
+  uint8_t max_bytes;
+
+  m_aci_reqn_enable();
+
+  // Send length, receive header
+  byte_sent_cnt = 0;
+  received_data->status_byte = spi_readwrite(data_to_send->buffer[byte_sent_cnt++]);
+  // Send first byte, receive length from slave
+  received_data->buffer[0] = spi_readwrite(data_to_send->buffer[byte_sent_cnt++]);
+  if (0 == data_to_send->buffer[0])
+  {
+    max_bytes = received_data->buffer[0];
+  }
+  else
+  {
+    // Set the maximum to the biggest size. One command byte is already sent
+    max_bytes = (received_data->buffer[0] > (data_to_send->buffer[0] - 1))
+                                          ? received_data->buffer[0]
+                                          : (data_to_send->buffer[0] - 1);
+  }
+
+  if (max_bytes > HAL_ACI_MAX_LENGTH)
+  {
+    max_bytes = HAL_ACI_MAX_LENGTH;
+  }
+
+  // Transmit/receive the rest of the packet 
+  for (byte_cnt = 0; byte_cnt < max_bytes; byte_cnt++)
+  {
+    received_data->buffer[byte_cnt+1] =  spi_readwrite(data_to_send->buffer[byte_sent_cnt++]);
+  }
+
+  // RDYN should follow the REQN line in approx 100ns
+  m_aci_reqn_disable();
+
+  return (max_bytes > 0);
+}
+
+void hal_aci_tl_debug_print(bool enable)
+{
+	aci_debug_print = enable;
+}
+
+void hal_aci_tl_pin_reset(void)
 {
     if (UNUSED != a_pins_local_ptr->reset_pin)
     {
@@ -157,111 +464,61 @@ void hal_aci_pin_reset(void)
     }
 }
 
-static void m_rdy_line_handle(void)
+bool hal_aci_tl_event_peek(hal_aci_data_t *p_aci_data)
 {
-  hal_aci_data_t *p_aci_data;
-  
-  if (a_pins_local_ptr->interface_is_interrupt)
+  if (!a_pins_local_ptr->interface_is_interrupt)
   {
-    detachInterrupt(a_pins_local_ptr->interrupt_number);
+    m_aci_event_check();
   }
-  
-  // Receive or transmit data
-  p_aci_data = hal_aci_tl_poll_get();
-  
-  // Check if we received data
-  if (p_aci_data->buffer[0] > 0)
+
+  if (m_aci_q_peek(&aci_rx_q, p_aci_data))
   {
-    if (!m_aci_q_enqueue(&aci_rx_q, p_aci_data))
-    {
-      /* Receive Buffer full.
-         Should never happen.
-         Spin in a while loop.
-         */	  
-       while(1);
-    }
-    if (m_aci_q_is_full(&aci_rx_q))
-    {
-      /* Disable RDY line interrupt.
-         Will latch any pending RDY lines, so when enabled it again this
-         routine should be taken again */
-	  if (true == a_pins_local_ptr->interface_is_interrupt)
-	  {
-		EIMSK &= ~(0x2);
-	  }
-    }    
+    return true;
   }
+
+  return false;
 }
 
 bool hal_aci_tl_event_get(hal_aci_data_t *p_aci_data)
 {
-  if (false == a_pins_local_ptr->interface_is_interrupt)
+  bool was_full;
+
+  if (!a_pins_local_ptr->interface_is_interrupt && !m_aci_q_is_full(&aci_rx_q))
   {
-	  /*
-	   Check the RDYN line
-	   When the RDYN line goes low
-	   Run the SPI master
-	   place the returned ACI Event in the p_aci_evt_data
-	  */
-
-	  /*
-	  When the RDYN goes low it means the nRF8001 is ready for the SPI transaction
-	  */
-	  if (0 == digitalRead(a_pins_local_ptr->rdyn_pin))
-	  {
-		/*
-		Now process the Master SPI
-		*/
-		m_rdy_line_handle();
-	  }
-	  else
-	  {
-		/*
-		 RDYN line was not low
-		 When there are commands in the Command queue and the event queue has space for
-		 more events place the REQN line low, so the RDYN line will go low later
-		*/
-		if ((false == m_aci_q_is_empty(&aci_tx_q)) &&
-			(false == m_aci_q_is_full(&aci_rx_q)))
-		{
-			digitalWrite(a_pins_local_ptr->reqn_pin, 0);
-		}
-
-		/*
-		Master SPI cannot be run , no event to process
-		*/
-	  }
+    m_aci_event_check();
   }
-  bool was_full = m_aci_q_is_full(&aci_rx_q);
-  
+
+  was_full = m_aci_q_is_full(&aci_rx_q);
+
   if (m_aci_q_dequeue(&aci_rx_q, p_aci_data))
   {
-    if (true == aci_debug_print)
+    if (aci_debug_print)
     {
       Serial.print(" E");
-      m_print_aci_data(p_aci_data);
+      m_aci_data_print(p_aci_data);
     }
-    
-    if (was_full)
-    {
-	  if (true == a_pins_local_ptr->interface_is_interrupt)
+
+    if (was_full && a_pins_local_ptr->interface_is_interrupt)
 	  {
-		/* Enable RDY line interrupt again */
-		EIMSK |= (0x2); /* Make it more portable as this is ATmega specific */
-	  }
+      /* Enable RDY line interrupt again */
+      attachInterrupt(a_pins_local_ptr->interrupt_number, m_aci_isr, LOW);
     }
+
+    /* Attempt to pull REQN LOW since we've made room for new messages */
+    if (!m_aci_q_is_full(&aci_rx_q) && !m_aci_q_is_empty(&aci_tx_q))
+    {
+      m_aci_reqn_enable();
+    }
+
     return true;
   }
-  else
-  {
-    return false;
-  }
+
+  return false;
 }
 
-void hal_aci_tl_init(aci_pins_t *a_pins)
+void hal_aci_tl_init(aci_pins_t *a_pins, bool debug)
 {
-  received_data.buffer[0] = 0;
-  aci_debug_print         = false;
+  aci_debug_print = debug;
   
   /* Needs to be called as the first thing for proper intialization*/
   m_aci_pins_set(a_pins);
@@ -291,8 +548,8 @@ void hal_aci_tl_init(aci_pins_t *a_pins)
 	pinMode(a_pins->active_pin,	INPUT);  
   }
   
-  /* Pin reset the nRF8001 , required when the nRF8001 setup is being changed */
-  hal_aci_pin_reset();
+  /* Pin reset the nRF8001, required when the nRF8001 setup is being changed */
+  hal_aci_tl_pin_reset();
 	
     
   /* Set the nRF8001 to a known state as required by the datasheet*/
@@ -306,7 +563,8 @@ void hal_aci_tl_init(aci_pins_t *a_pins)
   /* Attach the interrupt to the RDYN line as requested by the caller */
   if (a_pins->interface_is_interrupt)
   {
-	attachInterrupt(a_pins->interrupt_number, m_rdy_line_handle, LOW); // We use the LOW level of the RDYN line as the atmega328 can wakeup from sleep only on LOW  
+    // We use the LOW level of the RDYN line as the atmega328 can wakeup from sleep only on LOW
+    attachInterrupt(a_pins->interrupt_number, m_aci_isr, LOW);
   }
 }
 
@@ -319,93 +577,24 @@ bool hal_aci_tl_send(hal_aci_data_t *p_aci_cmd)
   {
     return false;
   }
-  else
-  {
-    if (m_aci_q_enqueue(&aci_tx_q, p_aci_cmd))
-    {
-      ret_val = true;
-      /*
-      Lower the REQN only when successfully enqueued
-      */
-      digitalWrite(a_pins_local_ptr->reqn_pin, 0);
-    }
-  }
 
-  if ((true == aci_debug_print) && (true == ret_val))
+  ret_val = m_aci_q_enqueue(&aci_tx_q, p_aci_cmd);
+  if (ret_val)
   {
-    Serial.print("C"); //ACI Command
-    m_print_aci_data(p_aci_cmd);
+    if(!m_aci_q_is_full(&aci_rx_q))
+    {
+      // Lower the REQN only when successfully enqueued
+      m_aci_reqn_enable();
+    }
+
+    if (aci_debug_print)
+    {
+      Serial.print("C"); //ACI Command
+      m_aci_data_print(p_aci_cmd);
+    }
   }
   
   return ret_val;
-}
-
-
-
-hal_aci_data_t * hal_aci_tl_poll_get(void)
-{
-  uint8_t byte_cnt;
-  uint8_t byte_sent_cnt;
-  uint8_t max_bytes;
-  hal_aci_data_t data_to_send;
-
-  digitalWrite(a_pins_local_ptr->reqn_pin, 0);
-  
-  // Receive from queue
-  if (m_aci_q_dequeue(&aci_tx_q, &data_to_send) == false)
-  {
-    /* queue was empty, nothing to send */
-    data_to_send.status_byte = 0;
-    data_to_send.buffer[0] = 0;
-  }
-  
-  //Change this if your mcu has DMA for the master SPI
-  
-  // Send length, receive header
-  byte_sent_cnt = 0;
-  received_data.status_byte = spi_readwrite(data_to_send.buffer[byte_sent_cnt++]);
-  // Send first byte, receive length from slave
-  received_data.buffer[0] = spi_readwrite(data_to_send.buffer[byte_sent_cnt++]);
-  if (0 == data_to_send.buffer[0])
-  {
-    max_bytes = received_data.buffer[0];
-  }
-  else
-  {
-    // Set the maximum to the biggest size. One command byte is already sent
-    max_bytes = (received_data.buffer[0] > (data_to_send.buffer[0] - 1)) 
-      ? received_data.buffer[0] : (data_to_send.buffer[0] - 1);
-  }
-
-  if (max_bytes > HAL_ACI_MAX_LENGTH)
-  {
-    max_bytes = HAL_ACI_MAX_LENGTH;
-  }
-
-  // Transmit/receive the rest of the packet 
-  for (byte_cnt = 0; byte_cnt < max_bytes; byte_cnt++)
-  {
-    received_data.buffer[byte_cnt+1] =  spi_readwrite(data_to_send.buffer[byte_sent_cnt++]);
-  }
-
-  digitalWrite(a_pins_local_ptr->reqn_pin, 1);
-
-  //RDYN should follow the REQN line in approx 100ns
-  
-  sleep_enable();
-  if (a_pins_local_ptr->interface_is_interrupt)
-  {
-	attachInterrupt(a_pins_local_ptr->interrupt_number, m_rdy_line_handle, LOW);	  
-  }
-
-  if (false == m_aci_q_is_empty(&aci_tx_q))
-  {
-    //Lower the REQN line to start a new ACI transaction         
-    digitalWrite(a_pins_local_ptr->reqn_pin, 0); 
-  }
-  
-  /* valid Rx available or transmit finished*/
-  return (&received_data);
 }
 
 static uint8_t spi_readwrite(const uint8_t aci_byte)
@@ -413,16 +602,27 @@ static uint8_t spi_readwrite(const uint8_t aci_byte)
 	return SPI.transfer(aci_byte);
 }
 
-void m_aci_q_flush(void)
+bool hal_aci_tl_rx_q_empty (void)
 {
-  noInterrupts();
-  /* re-initialize aci cmd queue and aci event queue to flush them*/
-  m_aci_q_init(&aci_tx_q);
-  m_aci_q_init(&aci_rx_q);
-  interrupts();
+  return m_aci_q_is_empty(&aci_rx_q);
 }
 
-void m_aci_pins_set(aci_pins_t *a_pins_ptr)
+bool hal_aci_tl_rx_q_full (void)
 {
-  a_pins_local_ptr = a_pins_ptr;	
+  return m_aci_q_is_full(&aci_rx_q);
+}
+
+bool hal_aci_tl_tx_q_empty (void)
+{
+  return m_aci_q_is_empty(&aci_tx_q);
+}
+
+bool hal_aci_tl_tx_q_full (void)
+{
+  return m_aci_q_is_full(&aci_tx_q);
+}
+
+void hal_aci_tl_q_flush (void)
+{
+  m_aci_q_flush();
 }
