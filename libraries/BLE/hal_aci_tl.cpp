@@ -45,7 +45,7 @@ static bool m_aci_q_is_empty_from_isr(aci_queue_t *aci_q);
 static bool m_aci_q_is_full(aci_queue_t *aci_q);
 static bool m_aci_q_is_full_from_isr(aci_queue_t *aci_q);
 static bool m_aci_q_peek(aci_queue_t *aci_q, hal_aci_data_t *p_data);
-static void m_aci_spi_transfer(hal_aci_data_t * data_to_send, hal_aci_data_t * received_data);
+static bool m_aci_spi_transfer(hal_aci_data_t * data_to_send, hal_aci_data_t * received_data);
 
 static uint8_t        spi_readwrite(uint8_t aci_byte);
 
@@ -393,7 +393,7 @@ static bool m_aci_q_peek(aci_queue_t *aci_q, hal_aci_data_t *p_data)
   return true;
 }
 
-static void m_aci_spi_transfer(hal_aci_data_t * data_to_send, hal_aci_data_t * received_data)
+static bool m_aci_spi_transfer(hal_aci_data_t * data_to_send, hal_aci_data_t * received_data)
 {
   uint8_t byte_cnt;
   uint8_t byte_sent_cnt;
@@ -430,6 +430,8 @@ static void m_aci_spi_transfer(hal_aci_data_t * data_to_send, hal_aci_data_t * r
   }
 
   m_aci_reqn_disable();
+
+  return (max_bytes > 0);
 }
 
 void hal_aci_tl_debug_print(bool enable)
