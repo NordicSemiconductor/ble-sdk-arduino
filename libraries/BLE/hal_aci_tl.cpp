@@ -429,6 +429,7 @@ static bool m_aci_spi_transfer(hal_aci_data_t * data_to_send, hal_aci_data_t * r
     received_data->buffer[byte_cnt+1] =  spi_readwrite(data_to_send->buffer[byte_sent_cnt++]);
   }
 
+  // RDYN should follow the REQN line in approx 100ns
   m_aci_reqn_disable();
 
   return (max_bytes > 0);
