@@ -32,8 +32,8 @@ static void m_aci_data_print(hal_aci_data_t *p_data);
 static void m_aci_event_check(void);
 static void m_aci_isr(void);
 static void m_aci_pins_set(aci_pins_t *a_pins_ptr);
-static void m_aci_reqn_disable (void);
-static void m_aci_reqn_enable (void);
+static inline void m_aci_reqn_disable (void);
+static inline void m_aci_reqn_enable (void);
 static bool m_aci_q_dequeue(aci_queue_t *aci_q, hal_aci_data_t *p_data);
 static bool m_aci_q_dequeue_from_isr(aci_queue_t *aci_q, hal_aci_data_t *p_data);
 static bool m_aci_q_enqueue_from_isr(aci_queue_t *aci_q, hal_aci_data_t *p_data);
@@ -184,12 +184,12 @@ static void m_aci_pins_set(aci_pins_t *a_pins_ptr)
   a_pins_local_ptr = a_pins_ptr;
 }
 
-static void m_aci_reqn_disable (void)
+static inline void m_aci_reqn_disable (void)
 {
   digitalWrite(a_pins_local_ptr->reqn_pin, 1);
 }
 
-static void m_aci_reqn_enable (void)
+static inline void m_aci_reqn_enable (void)
 {
   digitalWrite(a_pins_local_ptr->reqn_pin, 0);
 }
