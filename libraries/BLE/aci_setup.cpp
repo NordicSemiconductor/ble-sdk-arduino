@@ -75,7 +75,7 @@ static bool aci_setup_fill(aci_state_t *aci_stat, uint8_t *num_cmd_offset)
   return ret_val;
 }
 
-int do_aci_setup(aci_state_t *aci_stat)
+uint8_t do_aci_setup(aci_state_t *aci_stat)
 {
   uint8_t setup_offset         = 0;
   uint16_t i                   = 0x0000;
@@ -126,7 +126,7 @@ int do_aci_setup(aci_state_t *aci_stat)
       if (ACI_EVT_CMD_RSP != aci_evt->evt_opcode)
       {
         //Receiving something other than a Command Response Event is an error.
-        return false;
+        return SETUP_FAIL_NOT_COMMAND_RESPONSE;
       }
       
       cmd_status = (aci_status_code_t) aci_evt->params.cmd_rsp.cmd_status;

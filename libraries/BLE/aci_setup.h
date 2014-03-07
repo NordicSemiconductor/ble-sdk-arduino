@@ -28,6 +28,7 @@
 #define SETUP_FAIL_EVENT_QUEUE_NOT_EMPTY     2
 #define SETUP_FAIL_TIMEOUT                   3
 #define SETUP_FAIL_NOT_SETUP_EVENT           4
+#define SETUP_FAIL_NOT_COMMAND_RESPONSE      5
 
 /** @brief Setup the nRF8001 device
  *  @details
@@ -38,6 +39,6 @@
  *  otherwise.
  *  @returns An integer indicating the reason the function terminated
  */
-int do_aci_setup(aci_state_t *aci_stat);
+uint8_t do_aci_setup(aci_state_t *aci_stat);
 
 #endif
