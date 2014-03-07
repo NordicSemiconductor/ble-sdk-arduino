@@ -147,6 +147,17 @@ uint8_t data_input[] =           {  0x61,/*20 byte packet for testing*/
 unsigned long time1;
 unsigned long time2;
 
+/* Define how assert should function in the BLE library */
+void __ble_assert(const char *file, uint16_t line)
+{
+  Serial.print("ERROR ");
+  Serial.print(file);
+  Serial.print(": ");
+  Serial.print(line);
+  Serial.print("\n");
+  while(1);
+}
+
 /*
 Description:
 

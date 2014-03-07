@@ -184,7 +184,16 @@ ISR(TIMER1_OVF_vect)
     TIFR1  = 0x00;    // timer1 int flag reg: clear timer overflow flag
 };
 
-
+/* Define how assert should function in the BLE library */
+void __ble_assert(const char *file, uint16_t line)
+{
+  Serial.print("ERROR ");
+  Serial.print(file);
+  Serial.print(": ");
+  Serial.print(line);
+  Serial.print("\n");
+  while(1);
+}
 
 /*************NOTE**********
 Scroll to the end of the file and read the loop() and setup() functions.

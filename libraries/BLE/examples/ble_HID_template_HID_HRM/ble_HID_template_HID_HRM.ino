@@ -99,6 +99,17 @@ Joystick
 static uint16_t x_initial;
 static uint16_t y_initial;
 
+/* Define how assert should function in the BLE library */
+void __ble_assert(const char *file, uint16_t line)
+{
+  Serial.print("ERROR ");
+  Serial.print(file);
+  Serial.print(": ");
+  Serial.print(line);
+  Serial.print("\n");
+  while(1);
+}
+
 /*************NOTE**********
 Scroll to the end of the file and read the loop() and setup() functions.
 The loop/setup functions is the equivalent of the main() function

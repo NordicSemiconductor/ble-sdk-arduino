@@ -63,6 +63,17 @@ static uint8_t aci_echo_cmd = 0;
 
 #define NUM_ECHO_CMDS 3
 
+/* Define how assert should function in the BLE library */
+void __ble_assert(const char *file, uint16_t line)
+{
+  Serial.print("ERROR ");
+  Serial.print(file);
+  Serial.print(": ");
+  Serial.print(line);
+  Serial.print("\n");
+  while(1);
+}
+
 void setup(void)
 { 
   Serial.begin(115200);
