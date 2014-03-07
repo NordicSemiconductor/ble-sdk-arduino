@@ -30,6 +30,7 @@
 
 static void m_aci_data_print(hal_aci_data_t *p_data);
 static void m_aci_event_check(void);
+static void m_aci_isr(void);
 static void m_aci_pins_set(aci_pins_t *a_pins_ptr);
 static void m_aci_reqn_disable (void);
 static void m_aci_reqn_enable (void);
@@ -70,10 +71,9 @@ void m_aci_data_print(hal_aci_data_t *p_data)
 }
 
 /*
- Check the RDYN line. When the RDYN line goes low, run the SPI master and place the returned 
- ACI Event in the p_aci_evt_data
+  Interrupt service routine called when the RDYN line goes low. Runs the SPI transfer.
 */
-static void m_aci_event_check(void)
+static void m_aci_isr(void)
 {
   hal_aci_data_t data_to_send;
   hal_aci_data_t received_data;
@@ -117,10 +117,9 @@ static void m_aci_event_check(void)
 }
 
 /*
- Check the RDYN line. When the RDYN line goes low, run the SPI master and place the returned 
- ACI Event in the p_aci_evt_data
+  Checks the RDYN line and runs the SPI transfer if required.
 */
-static void m_aci_event_check_polling(void)
+static void m_aci_event_check(void)
 {
   hal_aci_data_t data_to_send;
   hal_aci_data_t received_data;
@@ -466,7 +465,7 @@ bool hal_aci_tl_event_peek(hal_aci_data_t *p_aci_data)
 {
   if (!a_pins_local_ptr->interface_is_interrupt)
   {
-    m_aci_event_check_polling();
+    m_aci_event_check();
   }
 
   if (m_aci_q_peek(&aci_rx_q, p_aci_data))
@@ -483,7 +482,7 @@ bool hal_aci_tl_event_get(hal_aci_data_t *p_aci_data)
 
   if (!a_pins_local_ptr->interface_is_interrupt && !m_aci_q_is_full(&aci_rx_q))
   {
-    m_aci_event_check_polling();
+    m_aci_event_check();
   }
 
   was_full = m_aci_q_is_full(&aci_rx_q);
@@ -499,7 +498,7 @@ bool hal_aci_tl_event_get(hal_aci_data_t *p_aci_data)
     if (was_full && a_pins_local_ptr->interface_is_interrupt)
 	  {
       /* Enable RDY line interrupt again */
-      attachInterrupt(a_pins_local_ptr->interrupt_number, m_aci_event_check, LOW);
+      attachInterrupt(a_pins_local_ptr->interrupt_number, m_aci_isr, LOW);
     }
 
     /* Attempt to pull REQN LOW since we've made room for new messages */
@@ -562,7 +561,7 @@ void hal_aci_tl_init(aci_pins_t *a_pins)
   if (a_pins->interface_is_interrupt)
   {
     // We use the LOW level of the RDYN line as the atmega328 can wakeup from sleep only on LOW
-    attachInterrupt(a_pins->interrupt_number, m_aci_event_check, LOW);
+    attachInterrupt(a_pins->interrupt_number, m_aci_isr, LOW);
   }
 }
 
