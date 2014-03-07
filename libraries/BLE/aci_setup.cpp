@@ -71,6 +71,8 @@ static bool aci_setup_fill(aci_state_t *aci_stat, uint8_t *num_cmd_offset)
     
     (*num_cmd_offset)++;
   }
+  
+  return ret_val;
 }
 
 int do_aci_setup(aci_state_t *aci_stat)
