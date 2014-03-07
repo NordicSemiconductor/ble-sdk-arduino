@@ -126,10 +126,13 @@ void lib_aci_debug_print(bool enable);
 void lib_aci_pin_reset(void);
 
 /** @brief Initialization function.
- *  @details This function shall be used to initialize/reset ACI Library and also Resets the nRF8001 by togging the reset pin of the nRF8001. This function will reset 
+ *  @details This function shall be used to initialize/reset ACI Library and also Resets the 
+ *           nRF8001 by togging the reset pin of the nRF8001. This function will reset 
  *           all the variables locally used by ACI library to their respective default values.
+ *  @param bool True if the data was successfully queued for sending, 
+ *  false if there is no more space to store messages to send.
  */
-void lib_aci_init(aci_state_t *aci_stat);
+void lib_aci_init(aci_state_t *aci_stat, bool debug);
 
 
 /** @brief Gets the number of currently available ACI credits.

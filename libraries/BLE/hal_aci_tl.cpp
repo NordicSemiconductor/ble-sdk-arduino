@@ -516,9 +516,9 @@ bool hal_aci_tl_event_get(hal_aci_data_t *p_aci_data)
   return false;
 }
 
-void hal_aci_tl_init(aci_pins_t *a_pins)
+void hal_aci_tl_init(aci_pins_t *a_pins, bool debug)
 {
-  aci_debug_print         = false;
+  aci_debug_print = debug;
   
   /* Needs to be called as the first thing for proper intialization*/
   m_aci_pins_set(a_pins);

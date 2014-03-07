@@ -177,7 +177,7 @@ void lib_aci_board_init(aci_state_t *aci_stat)
 }
 
 
-void lib_aci_init(aci_state_t *aci_stat)
+void lib_aci_init(aci_state_t *aci_stat, bool debug)
 {
   uint8_t i;
 
@@ -210,7 +210,7 @@ void lib_aci_init(aci_state_t *aci_stat)
   p_setup_msgs             = aci_stat->aci_setup_info.setup_msgs;
   
   
-  hal_aci_tl_init(&aci_stat->aci_pins);
+  hal_aci_tl_init(&aci_stat->aci_pins, debug);
   
   lib_aci_board_init(aci_stat);
 }

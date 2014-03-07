@@ -105,16 +105,23 @@ typedef struct aci_pins_t
 	uint8_t	interrupt_number;		//Required when using interrupts, otherwise ignored
 } aci_pins_t;
 
-/** ACI Transport Layer initialization.
+/** @brief ACI Transport Layer initialization.
+ *  @details
+ *  This function initializes the transport layer, including configuring the SPI, creating
+ *  message queues for Commands and Events and setting up interrupt if required.
+ *  @param a_pins Pins on the MCU used to connect to the nRF8001
+ *  @param bool True if debug printing should be enabled on the Serial.
  */
-void hal_aci_tl_init(aci_pins_t *a_pins);
+void hal_aci_tl_init(aci_pins_t *a_pins, bool debug);
 
 /** @brief Sends an ACI command to the radio.
  *  @details
  *  This function sends an ACI command to the radio. This queue up the message to send and 
- *  lower the request line. When the device lowers the ready line, @ref hal_aci_tl_poll_get() will send the data.
+ *  lower the request line. When the device lowers the ready line, @ref m_aci_spi_transfer()
+ *  will send the data.
  *  @param aci_buffer Pointer to the message to send.
- *  @return True if the data was successfully queued for sending, false if there is no more space to store messages to send.
+ *  @return True if the data was successfully queued for sending, 
+ *  false if there is no more space to store messages to send.
  */
 bool hal_aci_tl_send(hal_aci_data_t *aci_buffer);
 

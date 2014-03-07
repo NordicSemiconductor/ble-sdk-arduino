@@ -177,17 +177,13 @@ void setup(void)
 	aci_state.aci_pins.active_pin            = UNUSED;
 	aci_state.aci_pins.optional_chip_sel_pin = UNUSED;
 	  
-	aci_state.aci_pins.interface_is_interrupt	  = false;
+	aci_state.aci_pins.interface_is_interrupt	  = true;
 	aci_state.aci_pins.interrupt_number			  = 1;
 	
 	//We reset the nRF8001 here by toggling the RESET line connected to the nRF8001
 	//If the RESET line is not available we call the ACI Radio Reset to soft reset the nRF8001
 	//then we initialize the data structures required to setup the nRF8001
-	lib_aci_init(&aci_state);
-
-    //Turn debug printing on for the ACI Commands and Events to be printed on the Serial
-	lib_aci_debug_print(false);
-    
+	lib_aci_init(&aci_state, true);
 }
 
 void uart_over_ble_init(void)
