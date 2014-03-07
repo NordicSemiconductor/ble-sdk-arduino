@@ -731,22 +731,22 @@ void lib_aci_pin_reset(void)
     hal_aci_tl_pin_reset();
 }
 
-bool lib_aci_rx_q_empty(void)
+bool lib_aci_event_queue_empty(void)
 {
   return hal_aci_tl_rx_q_empty();
 }
 
-bool lib_aci_rx_q_full(void)
+bool lib_aci_event_queue_full(void)
 {
   return hal_aci_tl_rx_q_full();
 }
 
-bool lib_aci_tx_q_empty(void)
+bool lib_aci_command_queue_empty(void)
 {
   return hal_aci_tl_tx_q_empty();
 }
 
-bool lib_aci_tx_q_full(void)
+bool lib_aci_command_queue_full(void)
 {
   return hal_aci_tl_tx_q_full();
 }

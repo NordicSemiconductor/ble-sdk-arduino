@@ -92,7 +92,7 @@ uint8_t do_aci_setup(aci_state_t *aci_stat)
    * If it is non-empty we return. The user should then process the messages before calling
    * do_aci_setup() again.
    */
-  if (!lib_aci_tx_q_empty())
+  if (!lib_aci_command_queue_empty())
   {
     return SETUP_FAIL_COMMAND_QUEUE_NOT_EMPTY;
   }

@@ -525,29 +525,29 @@ bool lib_aci_event_peek(hal_aci_evt_t *p_aci_evt_data);
 */
 void lib_aci_flush(void);
 
-/** @brief Return full status of transmit queue
+/** @brief Return full status of the Event queue
  *  @details
  *
  */
- bool lib_aci_rx_q_full(void);
+ bool lib_aci_event_queue_full(void);
  
- /** @brief Return empty status of receive queue
+ /** @brief Return empty status of the Event queue
  *  @details
  *
  */
- bool lib_aci_rx_q_empty(void);
+ bool lib_aci_event_queue_empty(void);
 
-/** @brief Return full status of receive queue
+/** @brief Return full status of Command queue
  *  @details
  *
  */
- bool lib_aci_tx_q_full(void);
+ bool lib_aci_command_queue_full(void);
  
- /** @brief Return empty status of transmit queue
+ /** @brief Return empty status of Command queue
  *  @details
  *
  */
- bool lib_aci_tx_q_empty(void);
+ bool lib_aci_command_queue_empty(void);
 
 //@}
 
