@@ -119,6 +119,17 @@ static uint8_t uart_buffer[20];
 static uint8_t uart_buffer_len = 0;
 static bool    bonded = false;
 
+/* Define how assert should function in the BLE library */
+void __ble_assert(const char *file, uint16_t line)
+{
+  Serial.print("ERROR ");
+  Serial.print(file);
+  Serial.print(": ");
+  Serial.print(line);
+  Serial.print("\n");
+  while(1);
+}
+
 /*
 Initialize the radio_ack. This is the ack received for every transmitted packet.
 */

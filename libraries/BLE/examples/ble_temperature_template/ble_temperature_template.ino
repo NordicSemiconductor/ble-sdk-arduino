@@ -100,6 +100,16 @@ Variables used for the timer on the AVR
 */
 volatile uint8_t timer1_f = 0;
 
+/* Define how assert should function in the BLE library */
+void __ble_assert(const char *file, uint16_t line)
+{
+  Serial.print("ERROR ");
+  Serial.print(file);
+  Serial.print(": ");
+  Serial.print(line);
+  Serial.print("\n");
+  while(1);
+}
 
 void aci_loop()
 {

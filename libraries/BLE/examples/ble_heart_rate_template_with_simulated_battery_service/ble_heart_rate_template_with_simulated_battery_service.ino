@@ -163,6 +163,16 @@ void perform_heart_rate_simulation(void)
   }
 }
 
+/* Define how assert should function in the BLE library */
+void __ble_assert(const char *file, uint16_t line)
+{
+  Serial.print("ERROR ");
+  Serial.print(file);
+  Serial.print(": ");
+  Serial.print(line);
+  Serial.print("\n");
+  while(1);
+}
 
 void setup(void)
 { 
