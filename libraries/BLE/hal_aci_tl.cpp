@@ -33,7 +33,7 @@ PIC32 supports only MSbit transfer on SPI and the nRF8001 uses LSBit
 Use the REVERSE_BITS macro to convert from MSBit to LSBit
 The outgoing command and the incoming event needs to be converted
 */
-//Defines dependent on the board that will be used
+//Board dependent defines
 #if defined (__AVR__)
     //For Arduino add nothing
 #elif defined(__PIC32MX__)
@@ -546,9 +546,9 @@ void hal_aci_tl_init(aci_pins_t *a_pins, bool debug)
   The SPI library assumes that the hardware pins are used
   */
   SPI.begin();
-  //Defines dependent on the board that will be used
+  //Board dependent defines
   #if defined (__AVR__)
-    //For Arduino use the LSB bit first
+    //For Arduino use the LSB first
     SPI.setBitOrder(LSBFIRST);
   #elif defined(__PIC32MX__)  
     //For ChipKit use MSBFIRST and REVERSE the bits on the SPI as LSBFIRST is not supported
@@ -620,7 +620,7 @@ bool hal_aci_tl_send(hal_aci_data_t *p_aci_cmd)
 
 static uint8_t spi_readwrite(const uint8_t aci_byte)
 {
-	//Defines dependent on the board that will be used
+	//Board dependent defines
 #if defined (__AVR__)
     //For Arduino the transmission does not have to be reversed
     return SPI.transfer(aci_byte);

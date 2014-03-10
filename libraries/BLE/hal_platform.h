@@ -26,7 +26,7 @@
 * @brief 
 */
 
-//Defines dependent on the board that will be used
+//Board dependent defines
 #if defined (__AVR__)
     //For Arduino this AVR specific library has to be used for reading from Flash memory
     #include <avr/pgmspace.h>
@@ -36,7 +36,7 @@
         #define PROGMEM __attribute__(( section(".progmem.data") ))
 	    #endif
 #elif defined(__PIC32MX__)
-    //For Chipkit add the next libraries.
+    //For Chipkit add the following libraries.
     #include <stdint.h>
     #include <stdbool.h>
     #include <string.h>

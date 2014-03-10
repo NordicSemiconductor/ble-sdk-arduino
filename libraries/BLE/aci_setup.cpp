@@ -53,7 +53,7 @@ static bool aci_setup_fill(aci_state_t *aci_stat, uint8_t *num_cmd_offset)
   
   while (*num_cmd_offset < aci_stat->aci_setup_info.num_setup_msgs)
   {
-	//Defines dependent on the board that will be used  
+	//Board dependent defines
 	#if defined (__AVR__)
 		//For Arduino copy the setup ACI message from Flash to RAM.
 		memcpy_P(&msg_to_send, &(aci_stat->aci_setup_info.setup_msgs[*num_cmd_offset]), 
