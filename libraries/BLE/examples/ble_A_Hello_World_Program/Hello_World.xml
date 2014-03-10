@@ -114,10 +114,10 @@
     </Service>
     <Service Type="local" PrimaryService="true">
         <Name>UART over BTLE</Name>
-        <Uuid BaseUUID="6E400000B5A3F393E0A9E50E24DCCA9E" BaseUUIDName="Custom UART">0001</Uuid>
+        <Uuid BaseUUID="6E400000B5A3F393E0A9E50E24DCCA9E" BaseUUIDName="UART Base UUID">0001</Uuid>
         <Characteristic>
             <Name>UART RX</Name>
-            <Uuid BaseUUID="6E400000B5A3F393E0A9E50E24DCCA9E" BaseUUIDName="Custom UART">0002</Uuid>
+            <Uuid BaseUUID="6E400000B5A3F393E0A9E50E24DCCA9E" BaseUUIDName="UART Base UUID">0002</Uuid>
             <DefaultValue></DefaultValue>
             <UsePresentationFormat>0</UsePresentationFormat>
             <MaxDataLength>20</MaxDataLength>
@@ -138,7 +138,7 @@
         </Characteristic>
         <Characteristic>
             <Name>UART TX</Name>
-            <Uuid BaseUUID="6E400000B5A3F393E0A9E50E24DCCA9E" BaseUUIDName="Custom UART">0003</Uuid>
+            <Uuid BaseUUID="6E400000B5A3F393E0A9E50E24DCCA9E" BaseUUIDName="UART Base UUID">0003</Uuid>
             <DefaultValue></DefaultValue>
             <UsePresentationFormat>0</UsePresentationFormat>
             <MaxDataLength>20</MaxDataLength>
@@ -159,7 +159,7 @@
         </Characteristic>
         <Characteristic>
             <Name>UART Control Point</Name>
-            <Uuid BaseUUID="6e400000b5a3f393e0a9e50e24dcca9e" BaseUUIDName="Custom UART">0004</Uuid>
+            <Uuid BaseUUID="6E400000B5A3F393E0A9E50E24DCCA9E" BaseUUIDName="UART Base UUID">0004</Uuid>
             <DefaultValue></DefaultValue>
             <UsePresentationFormat>0</UsePresentationFormat>
             <MaxDataLength>9</MaxDataLength>
@@ -180,7 +180,7 @@
         </Characteristic>
         <Characteristic>
             <Name>UART Link Timing Current</Name>
-            <Uuid BaseUUID="6e400000b5a3f393e0a9e50e24dcca9e" BaseUUIDName="Custom UART">0005</Uuid>
+            <Uuid BaseUUID="6E400000B5A3F393E0A9E50E24DCCA9E" BaseUUIDName="UART Base UUID">0005</Uuid>
             <DefaultValue>FFFFFFFFFFFF</DefaultValue>
             <UsePresentationFormat>0</UsePresentationFormat>
             <MaxDataLength>6</MaxDataLength>
@@ -233,7 +233,7 @@
         <AddServiceUpdateCharacteristic>true</AddServiceUpdateCharacteristic>
         <AddServiceUpdateCharacteristicPipe>true</AddServiceUpdateCharacteristicPipe>
         <ServiceToAdvertise>
-            <Uuid BaseUUID="6E400000B5A3F393E0A9E50E24DCCA9E" BaseUUIDName="Custom UART">0001</Uuid>
+            <Uuid BaseUUID="6E400000B5A3F393E0A9E50E24DCCA9E" BaseUUIDName="UART Base UUID">0001</Uuid>
         </ServiceToAdvertise>
         <CustomAdTypes>
             <AdType index="1">
