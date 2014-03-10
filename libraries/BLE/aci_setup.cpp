@@ -55,11 +55,11 @@ static bool aci_setup_fill(aci_state_t *aci_stat, uint8_t *num_cmd_offset)
   {
 	//Defines dependent on the board that will be used  
 	#if defined (__AVR__)
-		//For Arduino copy the setup ACI message from Flash to RAM. For this is required this AVR specific function
+		//For Arduino copy the setup ACI message from Flash to RAM.
 		memcpy_P(&msg_to_send, &(aci_stat->aci_setup_info.setup_msgs[*num_cmd_offset]), 
 				  pgm_read_byte_near(&(aci_stat->aci_setup_info.setup_msgs[*num_cmd_offset].buffer[0]))+2); 
 	#elif defined(__PIC32MX__)
-		//Copy the setup ACI message, in ChipKit it is not required any specific function
+		//In ChipKit we store the setup messages in RAM
 		//Add 2 bytes to the length byte for status byte, length for the total number of bytes
 		memcpy(&msg_to_send, &(aci_stat->aci_setup_info.setup_msgs[*num_cmd_offset]), 
 				  (aci_stat->aci_setup_info.setup_msgs[*num_cmd_offset].buffer[0]+2)); 
