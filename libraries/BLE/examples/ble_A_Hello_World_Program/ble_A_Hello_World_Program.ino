@@ -3,7 +3,7 @@
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * to use, copy, modify, merge, publish, distribute, sub-license, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
  *
@@ -29,7 +29,7 @@
 This project is a firmware template for new projects.
 The project will run correctly in its current state.
 It can send data on the UART TX characteristic
-It can receive data on the UART RX characterisitc.
+It can receive data on the UART RX characteristic.
 With this project you have a starting point for adding your own application functionality.
 
 The following instructions describe the steps to be made on the Windows PC:
@@ -60,7 +60,6 @@ The following instructions describe the steps to be made on the Windows PC:
  *
  */
 #include <SPI.h>
-#include <avr/pgmspace.h>
 #include <lib_aci.h>
 #include <aci_setup.h>
 #include "uart_over_ble.h"
@@ -117,6 +116,7 @@ Used to test the UART TX characteristic notification
 static uart_over_ble_t uart_over_ble;
 static uint8_t         uart_buffer[20];
 static uint8_t         uart_buffer_len = 0;
+static uint8_t         dummychar = 0;
 
 /*
 Initialize the radio_ack. This is the ack received for every transmitted packet.
@@ -133,7 +133,6 @@ void __ble_assert(const char *file, uint16_t line)
   Serial.print("\n");
   while(1);
 }
-
 /*
 Description:
 
@@ -150,10 +149,15 @@ The ACI Evt Data Credit provides the radio level ack of a transmitted packet.
 void setup(void)
 {
 	Serial.begin(115200);
-	//Wait until the serial port is available (useful only for the leonardo)
-	while(!Serial)
-	{}
-	Serial.println(F("Arduino setup"));
+	//Wait until the serial port is available (useful only for the Leonardo)
+	#if defined (__AVR_ATmega32U4__)
+		while(!Serial)
+		{}
+	#elif defined(__PIC32MX__)
+		delay(1000);
+	#endif
+
+    Serial.println(F("Arduino setup"));
 	Serial.println(F("Set line ending to newline to send data from the serial monitor"));
 
 	/**
@@ -161,11 +165,11 @@ void setup(void)
 	*/
 	if (NULL != services_pipe_type_mapping)
 	{
-	aci_state.aci_setup_info.services_pipe_type_mapping = &services_pipe_type_mapping[0];
+	  aci_state.aci_setup_info.services_pipe_type_mapping = &services_pipe_type_mapping[0];
 	}
 	else
 	{
-	aci_state.aci_setup_info.services_pipe_type_mapping = NULL;
+      aci_state.aci_setup_info.services_pipe_type_mapping = NULL;
 	}
 	aci_state.aci_setup_info.number_of_pipes    = NUMBER_OF_PIPES;
 	aci_state.aci_setup_info.setup_msgs         = setup_msgs;
@@ -182,19 +186,26 @@ void setup(void)
 	aci_state.aci_pins.miso_pin   = MISO;
 	aci_state.aci_pins.sck_pin    = SCK;
 
-	aci_state.aci_pins.spi_clock_divider          = SPI_CLOCK_DIV8;
+	#if defined (__AVR__)
+      aci_state.aci_pins.spi_clock_divider          = SPI_CLOCK_DIV8;
+    #elif defined(__PIC32MX__)
+      aci_state.aci_pins.spi_clock_divider          = 80; //Clock divider for ChipKit
+    #endif
 
 	aci_state.aci_pins.reset_pin             = 4; //4 for Nordic board, UNUSED for REDBEARLAB_SHIELD_V1_1
 	aci_state.aci_pins.active_pin            = UNUSED;
 	aci_state.aci_pins.optional_chip_sel_pin = UNUSED;
 
-	aci_state.aci_pins.interface_is_interrupt	  = true;
+	aci_state.aci_pins.interface_is_interrupt	  = false; //Interrupts still not available in Chipkit
 	aci_state.aci_pins.interrupt_number			  = 1;
 
-	//We reset the nRF8001 here by toggling the RESET line connected to the nRF8001
+    //We reset the nRF8001 here by toggling the RESET line connected to the nRF8001
 	//If the RESET line is not available we call the ACI Radio Reset to soft reset the nRF8001
 	//then we initialize the data structures required to setup the nRF8001
 	lib_aci_init(&aci_state, true);
+    Serial.println(F("Set up done"));
+    //Turn debug printing on for the ACI Commands and Events to be printed on the Serial
+	lib_aci_debug_print(true);
 }
 
 void uart_over_ble_init(void)
@@ -303,7 +314,6 @@ void aci_loop()
   if (lib_aci_event_get(&aci_state, &aci_data))
   {
     aci_evt_t * aci_evt;
-
     aci_evt = &aci_data.evt;
     switch(aci_evt->evt_opcode)
     {
@@ -360,14 +370,6 @@ void aci_loop()
           lib_aci_set_local_data(&aci_state, PIPE_DEVICE_INFORMATION_HARDWARE_REVISION_STRING_SET,
             (uint8_t *)&(aci_evt->params.cmd_rsp.params.get_device_version), sizeof(aci_evt_cmd_rsp_params_get_device_version_t));
         }
-
-        if (ACI_CMD_SET_LOCAL_DATA == aci_evt->params.cmd_rsp.cmd_opcode)
-        {
-           char hello[]="Hello World, works";
-           uart_tx((uint8_t *)&hello[0], strlen(hello));
-           Serial.print(F("Sending :"));
-           Serial.println(hello);
-        }
         break;
 
       case ACI_EVT_CONNECTED:
@@ -389,6 +391,11 @@ void aci_loop()
           lib_aci_change_timing_GAP_PPCP(); // change the timing on the link as specified in the nRFgo studio -> nRF8001 conf. -> GAP.
                                             // Used to increase or decrease bandwidth
           timing_change_done = true;
+
+          char hello[]="Hello World, works";
+          uart_tx((uint8_t *)&hello[0], strlen(hello));
+          Serial.print(F("Sending :"));
+          Serial.println(hello);
         }
         break;
 
@@ -425,8 +432,7 @@ void aci_loop()
 			  if (lib_aci_is_pipe_available(&aci_state, PIPE_UART_OVER_BTLE_UART_TX_TX))
 			  {
 
-					/*Do this to test the loopback otherwise comment it out
-					*/
+					/*Do this to test the loopback otherwise comment it out*/
 					/*
 					if (!uart_tx(&uart_buffer[0], aci_evt->len - 2))
 					{
@@ -501,8 +507,8 @@ void aci_loop()
   }
 }
 
-String inputString     = "";     // a string to hold incoming data
 bool stringComplete = false;  // whether the string is complete
+uint8_t stringIndex = 0;      //Initialize the index to store incoming chars
 
 void loop() {
 
@@ -512,47 +518,63 @@ void loop() {
   // print the string when a newline arrives:
   if (stringComplete) {
     Serial.print(F("Sending: "));
-    Serial.println(inputString);
-    inputString.toCharArray((char*)uart_buffer,20);
+    Serial.println((char *)&uart_buffer[0]);
 
-    if (inputString.length() > 20)
-    {
-        uart_buffer_len = 20;
-        uart_buffer[19] = '\n';
-        Serial.println(F("Serial input truncted"));
-    }
-    else
-    {
-        uart_buffer_len = inputString.length();
-    }
+    uart_buffer_len = stringIndex + 1;
 
     if (!lib_aci_send_data(PIPE_UART_OVER_BTLE_UART_TX_TX, uart_buffer, uart_buffer_len))
       {
         Serial.println(F("Serial input dropped"));
       }
-    // clear the string:
-    inputString = "";
+
+    // clear the uart_buffer:
+    for (stringIndex = 0; stringIndex < 20; stringIndex++){
+      uart_buffer[stringIndex] = ' ';
+    }
+
+    // reset the flag and the index in order to receive more data
+    stringIndex    = 0;
     stringComplete = false;
   }
+  //For ChipKit you have to call the function that reads from Serial
+  #if defined (__PIC32MX__)
+    if (Serial.available())
+    {
+      serialEvent();
+    }
+  #endif
 }
 
 /*
-  SerialEvent occurs whenever a new data comes in the
+ COMMENT ONLY FOR ARDUINO
+ SerialEvent occurs whenever a new data comes in the
  hardware serial RX.  This routine is run between each
  time loop() runs, so using delay inside loop can delay
  response.  Multiple bytes of data may be available.
  Serial Event is NOT compatible with Leonardo, Micro, Esplora
  */
 void serialEvent() {
-  while (Serial.available()) {
+
+  while(Serial.available() > 0){
     // get the new byte:
-    char inChar = (char)Serial.read();
-    // add it to the inputString:
-    inputString += inChar;
-    // if the incoming character is a newline, set a flag
-    // so the main loop can do something about it:
-    if (inChar == '\n') {
-      stringComplete = true;
+    dummychar = (uint8_t)Serial.read();
+    if(!stringComplete){
+      if (dummychar == '\n'){
+        // if the incoming character is a newline, set a flag
+        // so the main loop can do something about it
+        stringIndex--;
+        stringComplete = true;
+      }else{
+        if(stringIndex > 19){
+          Serial.println("Serial input truncated");
+          stringIndex--;
+          stringComplete = true;
+        }else{
+          // add it to the uart_buffer
+          uart_buffer[stringIndex] = dummychar;
+          stringIndex++;
+        }
+      }
     }
   }
 }
