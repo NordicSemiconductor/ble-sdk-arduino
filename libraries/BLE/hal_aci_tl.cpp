@@ -49,18 +49,7 @@ static void m_aci_isr(void);
 static void m_aci_pins_set(aci_pins_t *a_pins_ptr);
 static inline void m_aci_reqn_disable (void);
 static inline void m_aci_reqn_enable (void);
-static bool m_aci_q_dequeue(aci_queue_t *aci_q, hal_aci_data_t *p_data);
-static bool m_aci_q_dequeue_from_isr(aci_queue_t *aci_q, hal_aci_data_t *p_data);
-static bool m_aci_q_enqueue(aci_queue_t *aci_q, hal_aci_data_t *p_data);
-static bool m_aci_q_enqueue_from_isr(aci_queue_t *aci_q, hal_aci_data_t *p_data);
 static void m_aci_q_flush(void);
-static void m_aci_q_flush_from_isr(void);
-static void m_aci_q_init(aci_queue_t *aci_q);
-static bool m_aci_q_is_empty(aci_queue_t *aci_q);
-static bool m_aci_q_is_empty_from_isr(aci_queue_t *aci_q);
-static bool m_aci_q_is_full(aci_queue_t *aci_q);
-static bool m_aci_q_is_full_from_isr(aci_queue_t *aci_q);
-static bool m_aci_q_peek(aci_queue_t *aci_q, hal_aci_data_t *p_data);
 static bool m_aci_spi_transfer(hal_aci_data_t * data_to_send, hal_aci_data_t * received_data);
 
 static uint8_t        spi_readwrite(uint8_t aci_byte);
@@ -95,7 +84,7 @@ static void m_aci_isr(void)
   hal_aci_data_t received_data;
 
   // Receive from queue
-  if (!m_aci_q_dequeue_from_isr(&aci_tx_q, &data_to_send))
+  if (!aci_queue_dequeue_from_isr(&aci_tx_q, &data_to_send))
   {
     /* queue was empty, nothing to send */
     data_to_send.status_byte = 0;
@@ -105,7 +94,7 @@ static void m_aci_isr(void)
   // Receive and/or transmit data
   m_aci_spi_transfer(&data_to_send, &received_data);
 
-  if (!m_aci_q_is_full_from_isr(&aci_rx_q) && !m_aci_q_is_empty_from_isr(&aci_tx_q))
+  if (!aci_queue_is_full_from_isr(&aci_rx_q) && !aci_queue_is_empty_from_isr(&aci_tx_q))
   {
     m_aci_reqn_enable();
   }
@@ -113,7 +102,7 @@ static void m_aci_isr(void)
   // Check if we received data
   if (received_data.buffer[0] > 0)
   {
-    if (!m_aci_q_enqueue_from_isr(&aci_rx_q, &received_data))
+    if (!aci_queue_enqueue_from_isr(&aci_rx_q, &received_data))
     {
       /* Receive Buffer full.
          Should never happen.
@@ -123,7 +112,7 @@ static void m_aci_isr(void)
     }
 
     // Disable ready line interrupt until we have room to store incoming messages
-    if (m_aci_q_is_full_from_isr(&aci_rx_q))
+    if (aci_queue_is_full_from_isr(&aci_rx_q))
     {
       detachInterrupt(a_pins_local_ptr->interrupt_number);
     }
@@ -141,7 +130,7 @@ static void m_aci_event_check(void)
   hal_aci_data_t received_data;
 
   // No room to store incoming messages
-  if (m_aci_q_is_full(&aci_rx_q))
+  if (aci_queue_is_full(&aci_rx_q))
   {
     return;
   }
@@ -149,7 +138,7 @@ static void m_aci_event_check(void)
   // If the ready line is disabled and we have pending messages outgoing we enable the request line
   if (HIGH == digitalRead(a_pins_local_ptr->rdyn_pin))
   {
-    if (!m_aci_q_is_empty(&aci_tx_q))
+    if (!aci_queue_is_empty(&aci_tx_q))
     {
       m_aci_reqn_enable();
     }
@@ -158,7 +147,7 @@ static void m_aci_event_check(void)
   }
 
   // Receive from queue
-  if (!m_aci_q_dequeue(&aci_tx_q, &data_to_send))
+  if (!aci_queue_dequeue(&aci_tx_q, &data_to_send))
   {
     /* queue was empty, nothing to send */
     data_to_send.status_byte = 0;
@@ -169,7 +158,7 @@ static void m_aci_event_check(void)
   m_aci_spi_transfer(&data_to_send, &received_data);
 
   /* If there are messages to transmit, and we can store the reply, we request a new transfer */
-  if (!m_aci_q_is_full(&aci_rx_q) && !m_aci_q_is_empty(&aci_tx_q))
+  if (!aci_queue_is_full(&aci_rx_q) && !aci_queue_is_empty(&aci_tx_q))
   {
     m_aci_reqn_enable();
   }
@@ -177,7 +166,7 @@ static void m_aci_event_check(void)
   // Check if we received data
   if (received_data.buffer[0] > 0)
   {
-    if (!m_aci_q_enqueue(&aci_rx_q, &received_data))
+    if (!aci_queue_enqueue(&aci_rx_q, &received_data))
     {
       /* Receive Buffer full.
          Should never happen.
@@ -210,203 +199,13 @@ static inline void m_aci_reqn_enable (void)
   digitalWrite(a_pins_local_ptr->reqn_pin, 0);
 }
 
-//@comment after a port to a new mcu have test for the queue states, esp. the full and the empty states
-static bool m_aci_q_dequeue(aci_queue_t *aci_q, hal_aci_data_t *p_data)
-{
-  if (NULL == aci_q)
-  {
-    return false;
-  }
-
-  if (m_aci_q_is_empty(aci_q))
-  {
-    return false;
-  }
-
-  /* p_data might be NULL if function calling this wishes to discard the popped message */
-  if (NULL != p_data)
-  {
-    memcpy((uint8_t *)p_data, (uint8_t *)&(aci_q->aci_data[aci_q->head]), sizeof(hal_aci_data_t));
-  }
-
-  aci_q->head = (aci_q->head + 1) % ACI_QUEUE_SIZE;
-
-  return true;
-}
-
-static bool m_aci_q_dequeue_from_isr(aci_queue_t *aci_q, hal_aci_data_t *p_data)
-{
-  if (NULL == aci_q)
-  {
-    return false;
-  }
-
-  if (m_aci_q_is_empty_from_isr(aci_q))
-  {
-    return false;
-  }
-
-  /* p_data might be NULL if function calling this wishes to discard the popped message */
-  if (NULL != p_data)
-  {
-    memcpy((uint8_t *)p_data, (uint8_t *)&(aci_q->aci_data[aci_q->head]), sizeof(hal_aci_data_t));
-  }
-
-  aci_q->head = (aci_q->head + 1) % ACI_QUEUE_SIZE;
-
-  return true;
-}
-
-bool m_aci_q_enqueue(aci_queue_t *aci_q, hal_aci_data_t *p_data)
-{
-  const uint8_t length = p_data->buffer[0];
-
-  if (NULL == p_data)
-  {
-    return false;
-  }
-
-  if (NULL == aci_q)
-  {
-    return false;
-  }
-
-  if (m_aci_q_is_full(aci_q))
-  {
-    return false;
-  }
-
-  aci_q->aci_data[aci_q->tail].status_byte = 0;
-  memcpy((uint8_t *)&(aci_q->aci_data[aci_q->tail].buffer[0]), (uint8_t *)&p_data->buffer[0], length + 1);
-  aci_q->tail = (aci_q->tail + 1) % ACI_QUEUE_SIZE;
-
-  return true;
-}
-
-static bool m_aci_q_enqueue_from_isr(aci_queue_t *aci_q, hal_aci_data_t *p_data)
-{
-  const uint8_t length = p_data->buffer[0];
-
-  if (NULL == p_data)
-  {
-    return false;
-  }
-
-  if (NULL == aci_q)
-  {
-    return false;
-  }
-
-  if (m_aci_q_is_full_from_isr(aci_q))
-  {
-    return false;
-  }
-
-  aci_q->aci_data[aci_q->tail].status_byte = 0;
-  memcpy((uint8_t *)&(aci_q->aci_data[aci_q->tail].buffer[0]), (uint8_t *)&p_data->buffer[0], length + 1);
-  aci_q->tail = (aci_q->tail + 1) % ACI_QUEUE_SIZE;
-
-  return true;
-}
-
 static void m_aci_q_flush(void)
 {
   noInterrupts();
   /* re-initialize aci cmd queue and aci event queue to flush them*/
-  m_aci_q_init(&aci_tx_q);
-  m_aci_q_init(&aci_rx_q);
+  aci_queue_init(&aci_tx_q);
+  aci_queue_init(&aci_rx_q);
   interrupts();
-}
-
-static void m_aci_q_flush_from_isr(void)
-{
-  /* re-initialize aci cmd queue and aci event queue to flush them*/
-  m_aci_q_init(&aci_tx_q);
-  m_aci_q_init(&aci_rx_q);
-}
-
-static void m_aci_q_init(aci_queue_t *aci_q)
-{
-  uint8_t loop;
-
-  aci_q->head = 0;
-  aci_q->tail = 0;
-  for(loop=0; loop<ACI_QUEUE_SIZE; loop++)
-  {
-    aci_q->aci_data[loop].buffer[0] = 0x00;
-    aci_q->aci_data[loop].buffer[1] = 0x00;
-  }
-}
-
-static bool m_aci_q_is_empty(aci_queue_t *aci_q)
-{
-  bool state = false;
-
-  //Critical section
-  noInterrupts();
-  if (aci_q->head == aci_q->tail)
-  {
-    state = true;
-  }
-  interrupts();
-
-  return state;
-}
-
-static bool m_aci_q_is_empty_from_isr(aci_queue_t *aci_q)
-{
-  return aci_q->head == aci_q->tail;
-}
-
-static bool m_aci_q_is_full(aci_queue_t *aci_q)
-{
-  uint8_t next;
-  bool state;
-
-  //This should be done in a critical section
-  noInterrupts();
-  next = (aci_q->tail + 1) % ACI_QUEUE_SIZE;
-
-  if (next == aci_q->head)
-  {
-    state = true;
-  }
-  else
-  {
-    state = false;
-  }
-
-  interrupts();
-  //end
-
-  return state;
-}
-
-static bool m_aci_q_is_full_from_isr(aci_queue_t *aci_q)
-{
-  const uint8_t next = (aci_q->tail + 1) % ACI_QUEUE_SIZE;
-
-  return next == aci_q->head;
-}
-
-static bool m_aci_q_peek(aci_queue_t *aci_q, hal_aci_data_t *p_data)
-{
-  if (NULL == aci_q)
-  {
-    return false;
-  }
-
-  if (m_aci_q_is_empty(aci_q))
-  {
-    return false;
-  }
-
-  if (NULL != p_data)
-  {
-    memcpy((uint8_t *)p_data, (uint8_t *)&(aci_q->aci_data[aci_q->head]), sizeof(hal_aci_data_t));
-  }
-
-  return true;
 }
 
 static bool m_aci_spi_transfer(hal_aci_data_t * data_to_send, hal_aci_data_t * received_data)
@@ -487,7 +286,7 @@ bool hal_aci_tl_event_peek(hal_aci_data_t *p_aci_data)
     m_aci_event_check();
   }
 
-  if (m_aci_q_peek(&aci_rx_q, p_aci_data))
+  if (aci_queue_peek(&aci_rx_q, p_aci_data))
   {
     return true;
   }
@@ -499,14 +298,14 @@ bool hal_aci_tl_event_get(hal_aci_data_t *p_aci_data)
 {
   bool was_full;
 
-  if (!a_pins_local_ptr->interface_is_interrupt && !m_aci_q_is_full(&aci_rx_q))
+  if (!a_pins_local_ptr->interface_is_interrupt && !aci_queue_is_full(&aci_rx_q))
   {
     m_aci_event_check();
   }
 
-  was_full = m_aci_q_is_full(&aci_rx_q);
+  was_full = aci_queue_is_full(&aci_rx_q);
 
-  if (m_aci_q_dequeue(&aci_rx_q, p_aci_data))
+  if (aci_queue_dequeue(&aci_rx_q, p_aci_data))
   {
     if (aci_debug_print)
     {
@@ -521,7 +320,7 @@ bool hal_aci_tl_event_get(hal_aci_data_t *p_aci_data)
     }
 
     /* Attempt to pull REQN LOW since we've made room for new messages */
-    if (!m_aci_q_is_full(&aci_rx_q) && !m_aci_q_is_empty(&aci_tx_q))
+    if (!aci_queue_is_full(&aci_rx_q) && !aci_queue_is_empty(&aci_tx_q))
     {
       m_aci_reqn_enable();
     }
@@ -558,9 +357,9 @@ void hal_aci_tl_init(aci_pins_t *a_pins, bool debug)
   SPI.setClockDivider(a_pins->spi_clock_divider);
   SPI.setDataMode(SPI_MODE0);
 
-  /* initialize aci cmd queue */
-  m_aci_q_init(&aci_tx_q);
-  m_aci_q_init(&aci_rx_q);
+  /* Initialize the ACI Command queue. This must be called after the delay above. */
+  aci_queue_init(&aci_tx_q);
+  aci_queue_init(&aci_rx_q);
 
   //Configure the IO lines
   pinMode(a_pins->rdyn_pin,		INPUT_PULLUP);
@@ -568,11 +367,10 @@ void hal_aci_tl_init(aci_pins_t *a_pins, bool debug)
 
   if (UNUSED != a_pins->active_pin)
   {
-	pinMode(a_pins->active_pin,	INPUT);
+    pinMode(a_pins->active_pin,	INPUT);
   }
   /* Pin reset the nRF8001, required when the nRF8001 setup is being changed */
   hal_aci_tl_pin_reset();
-
 
   /* Set the nRF8001 to a known state as required by the datasheet*/
   digitalWrite(a_pins->miso_pin, 0);
@@ -600,10 +398,10 @@ bool hal_aci_tl_send(hal_aci_data_t *p_aci_cmd)
     return false;
   }
 
-  ret_val = m_aci_q_enqueue(&aci_tx_q, p_aci_cmd);
+  ret_val = aci_queue_enqueue(&aci_tx_q, p_aci_cmd);
   if (ret_val)
   {
-    if(!m_aci_q_is_full(&aci_rx_q))
+    if(!aci_queue_is_full(&aci_rx_q))
     {
       // Lower the REQN only when successfully enqueued
       m_aci_reqn_enable();
@@ -635,22 +433,22 @@ static uint8_t spi_readwrite(const uint8_t aci_byte)
 
 bool hal_aci_tl_rx_q_empty (void)
 {
-  return m_aci_q_is_empty(&aci_rx_q);
+  return aci_queue_is_empty(&aci_rx_q);
 }
 
 bool hal_aci_tl_rx_q_full (void)
 {
-  return m_aci_q_is_full(&aci_rx_q);
+  return aci_queue_is_full(&aci_rx_q);
 }
 
 bool hal_aci_tl_tx_q_empty (void)
 {
-  return m_aci_q_is_empty(&aci_tx_q);
+  return aci_queue_is_empty(&aci_tx_q);
 }
 
 bool hal_aci_tl_tx_q_full (void)
 {
-  return m_aci_q_is_full(&aci_tx_q);
+  return aci_queue_is_full(&aci_tx_q);
 }
 
 void hal_aci_tl_q_flush (void)
