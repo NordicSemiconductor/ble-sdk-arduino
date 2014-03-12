@@ -120,7 +120,7 @@ uint8_t do_aci_setup(aci_state_t *aci_stat)
     /* This counter is used to ensure that this function does not loop forever. When the device
      * returns a valid response, we reset the counter.
      */
-    if (i++ > 0xFFFFFFFE)
+    if (i++ > 0xFFFFE)
     {
       return SETUP_FAIL_TIMEOUT;	
     }
