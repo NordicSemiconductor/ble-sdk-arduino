@@ -42,19 +42,13 @@ and the received ACI event is placed in the tail of the event queue.
 #ifndef HAL_ACI_TL_H__
 #define HAL_ACI_TL_H__
 
-#include "aci.h"
 #include "hal_platform.h"
+#include "aci.h"
 #include "boards.h"
 
 #ifndef HAL_ACI_MAX_LENGTH
 #define HAL_ACI_MAX_LENGTH 31
 #endif
-
-/***********************************************************************    */
-/* The ACI_QUEUE_SIZE determines the memory usage of the system.            */
-/* Successfully tested to a ACI_QUEUE_SIZE of 4 (interrupt) and 4 (polling) */
-/***********************************************************************    */
-#define ACI_QUEUE_SIZE  4
 
 /************************************************************************/
 /* Unused nRF8001 pin                                                    */
@@ -68,19 +62,6 @@ typedef struct {
 } _aci_packed_ hal_aci_data_t;
 
 ACI_ASSERT_SIZE(hal_aci_data_t, HAL_ACI_MAX_LENGTH + 2);
-
-/** Data type for queue of data packets to send/receive from radio.
- *
- *  A FIFO queue is maintained for packets. New packets are added (enqueued)
- *  at the tail and taken (dequeued) from the head. The head variable is the
- *  index of the next packet to dequeue while the tail variable is the index of
- *  where the next packet should be queued.
- */
-typedef struct {
-	hal_aci_data_t           aci_data[ACI_QUEUE_SIZE];
-	uint8_t                  head;
-	uint8_t                  tail;
-} aci_queue_t;
 
 /** Datatype for ACI pins and interface (polling/interrupt)*/
 typedef struct aci_pins_t

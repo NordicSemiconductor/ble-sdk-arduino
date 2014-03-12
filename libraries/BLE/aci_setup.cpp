@@ -107,7 +107,7 @@ uint8_t do_aci_setup(aci_state_t *aci_stat)
    * so that the user can handle them. At this point we don't care what the event is,
    * as any event is an error.
    */
-  if (lib_aci_event_peek(NULL))
+  if (lib_aci_event_peek(aci_data))
   {
     return SETUP_FAIL_EVENT_QUEUE_NOT_EMPTY;
   }

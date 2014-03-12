@@ -26,7 +26,8 @@
 #include <SPI.h>
 #include "hal_platform.h"
 #include "hal_aci_tl.h"
-
+#include "aci_queue.h"
+#include <avr/sleep.h>
 
 /*
 PIC32 supports only MSbit transfer on SPI and the nRF8001 uses LSBit
@@ -41,7 +42,6 @@ The outgoing command and the incoming event needs to be converted
     #define REVERSE_BITS(byte) (((reverse_lookup[(byte & 0x0F)]) << 4) + reverse_lookup[((byte & 0xF0) >> 4)])
     static const uint8_t reverse_lookup[] = { 0, 8,  4, 12, 2, 10, 6, 14,1, 9, 5, 13,3, 11, 7, 15 };
 #endif
-
 
 static void m_aci_data_print(hal_aci_data_t *p_data);
 static void m_aci_event_check(void);

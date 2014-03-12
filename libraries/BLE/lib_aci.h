@@ -33,6 +33,7 @@
 
 #include "hal_platform.h"
 #include "hal_aci_tl.h"
+#include "aci_queue.h"
 #include "aci.h"
 #include "aci_cmds.h"
 #include "aci_evts.h"

@@ -31,6 +31,7 @@
 #include "acilib_defs.h"
 #include "acilib_if.h"
 #include "hal_aci_tl.h"
+#include "aci_queue.h"
 #include "lib_aci.h"
 
 
