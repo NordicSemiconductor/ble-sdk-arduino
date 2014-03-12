@@ -98,7 +98,6 @@ bool lib_aci_is_discovery_finished(aci_state_t *aci_stat)
   return(aci_stat->pipes_open_bitmap[0]&0x01);
 }
 
-
 void lib_aci_board_init(aci_state_t *aci_stat)
 {
 	hal_aci_evt_t *aci_data = NULL;
@@ -139,7 +138,7 @@ void lib_aci_board_init(aci_state_t *aci_stat)
 					msg_to_send.buffer[2] = 0x02; //Setup
 					msg_to_send.buffer[3] = 0;    //Hardware Error -> None
 					msg_to_send.buffer[4] = 2;    //Data Credit Available
-					m_aci_q_enqueue(&aci_rx_q, &msg_to_send);            
+					aci_queue_enqueue(&aci_rx_q, &msg_to_send);
 				}
 				else if (ACI_STATUS_SUCCESS == aci_evt->params.cmd_rsp.cmd_status) //We are now in STANDBY
 				{
@@ -149,7 +148,7 @@ void lib_aci_board_init(aci_state_t *aci_stat)
 					msg_to_send.buffer[2] = 0x03; //Standby
 					msg_to_send.buffer[3] = 0;    //Hardware Error -> None
 					msg_to_send.buffer[4] = 2;    //Data Credit Available
-					m_aci_q_enqueue(&aci_rx_q, &msg_to_send);            
+					aci_queue_enqueue(&aci_rx_q, &msg_to_send);
 				}
 				else if (ACI_STATUS_ERROR_CMD_UNKNOWN == aci_evt->params.cmd_rsp.cmd_status) //We are now in TEST
 				{
@@ -159,7 +158,7 @@ void lib_aci_board_init(aci_state_t *aci_stat)
 					msg_to_send.buffer[2] = 0x01; //Test
 					msg_to_send.buffer[3] = 0;    //Hardware Error -> None
 					msg_to_send.buffer[4] = 0;    //Data Credit Available
-					m_aci_q_enqueue(&aci_rx_q, &msg_to_send);
+					aci_queue_enqueue(&aci_rx_q, &msg_to_send);
 				}
 				
 				//Break out of the while loop
