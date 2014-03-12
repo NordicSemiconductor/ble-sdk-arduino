@@ -260,6 +260,7 @@ typedef struct
 } _aci_packed_ aci_cmd_params_bond_t;
 
 ACI_ASSERT_SIZE(aci_cmd_params_bond_t, 4);
+
 /**
  * @struct aci_cmd_params_disconnect_t
  * @brief  Structure for the ACI_CMD_DISCONNECT ACI command parameters
