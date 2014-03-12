@@ -84,7 +84,7 @@ static bool aci_setup_fill(aci_state_t *aci_stat, uint8_t *num_cmd_offset)
 uint8_t do_aci_setup(aci_state_t *aci_stat)
 {
   uint8_t setup_offset         = 0;
-  uint16_t i                   = 0x0000;
+  uint32_t i                   = 0x0000;
   aci_evt_t * aci_evt          = NULL;
   aci_status_code_t cmd_status = ACI_STATUS_ERROR_CRC_MISMATCH;
   
@@ -120,7 +120,7 @@ uint8_t do_aci_setup(aci_state_t *aci_stat)
     /* This counter is used to ensure that this function does not loop forever. When the device
      * returns a valid response, we reset the counter.
      */
-    if (i++ > 0xFFFE)
+    if (i++ > 0xFFFFFFFE)
     {
       return SETUP_FAIL_TIMEOUT;	
     }
