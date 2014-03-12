@@ -51,6 +51,7 @@ static inline void m_aci_reqn_disable (void);
 static inline void m_aci_reqn_enable (void);
 static bool m_aci_q_dequeue(aci_queue_t *aci_q, hal_aci_data_t *p_data);
 static bool m_aci_q_dequeue_from_isr(aci_queue_t *aci_q, hal_aci_data_t *p_data);
+static bool m_aci_q_enqueue(aci_queue_t *aci_q, hal_aci_data_t *p_data);
 static bool m_aci_q_enqueue_from_isr(aci_queue_t *aci_q, hal_aci_data_t *p_data);
 static void m_aci_q_flush(void);
 static void m_aci_q_flush_from_isr(void);
