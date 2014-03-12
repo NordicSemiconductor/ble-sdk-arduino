@@ -82,7 +82,6 @@ typedef struct {
 	uint8_t                  tail;
 } aci_queue_t;
 
-
 /** Datatype for ACI pins and interface (polling/interrupt)*/
 typedef struct aci_pins_t
 {
@@ -94,7 +93,6 @@ typedef struct aci_pins_t
 	uint8_t	sck_pin;				//Required
 	
 	uint8_t spi_clock_divider;      //Required : Clock divider on the SPI clock : nRF8001 supports a maximum clock of 3MHz
-	
 	
 	uint8_t	reset_pin;				//Recommended but optional - Set it to UNUSED when not connected
 	uint8_t active_pin;				//Optional - Set it to UNUSED when not connected
@@ -124,7 +122,6 @@ void hal_aci_tl_init(aci_pins_t *a_pins, bool debug);
  *  false if there is no more space to store messages to send.
  */
 bool hal_aci_tl_send(hal_aci_data_t *aci_buffer);
-
 
 /** @brief Process pending transactions.
  *  @details 

@@ -234,7 +234,7 @@ typedef enum
   ACI_TEST_MODE_DTM_UART    = 0x01,
   ACI_TEST_MODE_DTM_ACI     = 0x02,
   ACI_TEST_MODE_EXIT        = 0xFF
-  
+
 } _aci_packed_ aci_test_mode_change_t;
 
 ACI_ASSERT_SIZE(aci_test_mode_change_t, 1);
@@ -251,10 +251,10 @@ typedef enum
 
 /**
  * @def ACI_VS_UUID_128_MAX_COUNT
- * @brief Maximum number of 128-bit Vendor Specific 
+ * @brief Maximum number of 128-bit Vendor Specific
  *        UUIDs that can be set
  */
-#define ACI_VS_UUID_128_MAX_COUNT  64 /** #0 reserved for invalid, #1 reservered for BT SIG and a maximum of 1024 bytes (16*64) */ 
+#define ACI_VS_UUID_128_MAX_COUNT  64 /** #0 reserved for invalid, #1 reservered for BT SIG and a maximum of 1024 bytes (16*64) */
 
 /**
  * @struct aci_ll_conn_params_t
@@ -559,17 +559,17 @@ typedef enum
  /**
   * Command invalid in the current device state
   */
-  ACI_STATUS_ERROR_DEVICE_STATE_INVALID                     = 0x83,     
+  ACI_STATUS_ERROR_DEVICE_STATE_INVALID                     = 0x83,
  /**
   * Invalid length
   */
-  ACI_STATUS_ERROR_INVALID_LENGTH                           = 0x84,    
+  ACI_STATUS_ERROR_INVALID_LENGTH                           = 0x84,
  /**
   * Invalid input parameters
   */
-  ACI_STATUS_ERROR_INVALID_PARAMETER                        = 0x85,    
+  ACI_STATUS_ERROR_INVALID_PARAMETER                        = 0x85,
  /**
-  * Busy 
+  * Busy
   */
   ACI_STATUS_ERROR_BUSY                                     = 0x86,
  /**
@@ -603,7 +603,7 @@ typedef enum
  /**
   * Command rejected as a transaction is still pending
   */
-  ACI_STATUS_ERROR_REJECTED                                 = 0x8E,  
+  ACI_STATUS_ERROR_REJECTED                                 = 0x8E,
   /**
   * Pipe Error Event : Data size exceeds size specified for pipe : Transmit failed
   */

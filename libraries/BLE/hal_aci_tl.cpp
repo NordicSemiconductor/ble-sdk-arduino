@@ -26,7 +26,22 @@
 #include <SPI.h>
 #include "hal_platform.h"
 #include "hal_aci_tl.h"
-#include <avr/sleep.h>
+
+
+/*
+PIC32 supports only MSbit transfer on SPI and the nRF8001 uses LSBit
+Use the REVERSE_BITS macro to convert from MSBit to LSBit
+The outgoing command and the incoming event needs to be converted
+*/
+//Board dependent defines
+#if defined (__AVR__)
+    //For Arduino add nothing
+#elif defined(__PIC32MX__)
+    //For ChipKit as the transmission has to be reversed, the next definitions have to be added
+    #define REVERSE_BITS(byte) (((reverse_lookup[(byte & 0x0F)]) << 4) + reverse_lookup[((byte & 0xF0) >> 4)])
+    static const uint8_t reverse_lookup[] = { 0, 8,  4, 12, 2, 10, 6, 14,1, 9, 5, 13,3, 11, 7, 15 };
+#endif
+
 
 static void m_aci_data_print(hal_aci_data_t *p_data);
 static void m_aci_event_check(void);
@@ -212,9 +227,9 @@ static bool m_aci_q_dequeue(aci_queue_t *aci_q, hal_aci_data_t *p_data)
   {
     memcpy((uint8_t *)p_data, (uint8_t *)&(aci_q->aci_data[aci_q->head]), sizeof(hal_aci_data_t));
   }
-  
+
   aci_q->head = (aci_q->head + 1) % ACI_QUEUE_SIZE;
-  
+
   return true;
 }
 
@@ -254,7 +269,7 @@ bool m_aci_q_enqueue(aci_queue_t *aci_q, hal_aci_data_t *p_data)
   {
     return false;
   }
-  
+
   if (m_aci_q_is_full(aci_q))
   {
     return false;
@@ -312,7 +327,7 @@ static void m_aci_q_flush_from_isr(void)
 static void m_aci_q_init(aci_queue_t *aci_q)
 {
   uint8_t loop;
-  
+
   aci_q->head = 0;
   aci_q->tail = 0;
   for(loop=0; loop<ACI_QUEUE_SIZE; loop++)
@@ -423,7 +438,7 @@ static bool m_aci_spi_transfer(hal_aci_data_t * data_to_send, hal_aci_data_t * r
     max_bytes = HAL_ACI_MAX_LENGTH;
   }
 
-  // Transmit/receive the rest of the packet 
+  // Transmit/receive the rest of the packet
   for (byte_cnt = 0; byte_cnt < max_bytes; byte_cnt++)
   {
     received_data->buffer[byte_cnt+1] =  spi_readwrite(data_to_send->buffer[byte_sent_cnt++]);
@@ -453,12 +468,12 @@ void hal_aci_tl_pin_reset(void)
             //circuit that takes about 100ms to trigger the reset
             digitalWrite(a_pins_local_ptr->reset_pin, 1);
             delay(100);
-            digitalWrite(a_pins_local_ptr->reset_pin, 0);		
+            digitalWrite(a_pins_local_ptr->reset_pin, 0);
         }
         else
         {
             digitalWrite(a_pins_local_ptr->reset_pin, 1);
-            digitalWrite(a_pins_local_ptr->reset_pin, 0);		
+            digitalWrite(a_pins_local_ptr->reset_pin, 0);
             digitalWrite(a_pins_local_ptr->reset_pin, 1);
         }
     }
@@ -519,24 +534,31 @@ bool hal_aci_tl_event_get(hal_aci_data_t *p_aci_data)
 void hal_aci_tl_init(aci_pins_t *a_pins, bool debug)
 {
   aci_debug_print = debug;
-  
+
   /* Needs to be called as the first thing for proper intialization*/
   m_aci_pins_set(a_pins);
-  
+
   /*
   The SPI lines used are mapped directly to the hardware SPI
   MISO MOSI and SCK
   Change here if the pins are mapped differently
-  
+
   The SPI library assumes that the hardware pins are used
   */
   SPI.begin();
-  SPI.setBitOrder(LSBFIRST);
+  //Board dependent defines
+  #if defined (__AVR__)
+    //For Arduino use the LSB first
+    SPI.setBitOrder(LSBFIRST);
+  #elif defined(__PIC32MX__)
+    //For ChipKit use MSBFIRST and REVERSE the bits on the SPI as LSBFIRST is not supported
+    SPI.setBitOrder(MSBFIRST);
+  #endif
   SPI.setClockDivider(a_pins->spi_clock_divider);
   SPI.setDataMode(SPI_MODE0);
-  
+
   /* initialize aci cmd queue */
-  m_aci_q_init(&aci_tx_q);  
+  m_aci_q_init(&aci_tx_q);
   m_aci_q_init(&aci_rx_q);
 
   //Configure the IO lines
@@ -545,21 +567,20 @@ void hal_aci_tl_init(aci_pins_t *a_pins, bool debug)
 
   if (UNUSED != a_pins->active_pin)
   {
-	pinMode(a_pins->active_pin,	INPUT);  
+	pinMode(a_pins->active_pin,	INPUT);
   }
-  
   /* Pin reset the nRF8001, required when the nRF8001 setup is being changed */
   hal_aci_tl_pin_reset();
-	
-    
+
+
   /* Set the nRF8001 to a known state as required by the datasheet*/
   digitalWrite(a_pins->miso_pin, 0);
   digitalWrite(a_pins->mosi_pin, 0);
   digitalWrite(a_pins->reqn_pin, 1);
-  digitalWrite(a_pins->sck_pin,  0);  
-  
+  digitalWrite(a_pins->sck_pin,  0);
+
   delay(30); //Wait for the nRF8001 to get hold of its lines - the lines float for a few ms after the reset
-  
+
   /* Attach the interrupt to the RDYN line as requested by the caller */
   if (a_pins->interface_is_interrupt)
   {
@@ -593,13 +614,22 @@ bool hal_aci_tl_send(hal_aci_data_t *p_aci_cmd)
       m_aci_data_print(p_aci_cmd);
     }
   }
-  
+
   return ret_val;
 }
 
 static uint8_t spi_readwrite(const uint8_t aci_byte)
 {
-	return SPI.transfer(aci_byte);
+	//Board dependent defines
+#if defined (__AVR__)
+    //For Arduino the transmission does not have to be reversed
+    return SPI.transfer(aci_byte);
+#elif defined(__PIC32MX__)
+    //For ChipKit the transmission has to be reversed
+    uint8_t tmp_bits;
+    tmp_bits = SPI.transfer(REVERSE_BITS(aci_byte));
+	return REVERSE_BITS(tmp_bits);
+#endif
 }
 
 bool hal_aci_tl_rx_q_empty (void)

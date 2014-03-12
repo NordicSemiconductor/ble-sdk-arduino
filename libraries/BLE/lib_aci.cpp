@@ -34,8 +34,6 @@
 #include "lib_aci.h"
 
 
-
-
 #define LIB_ACI_DEFAULT_CREDIT_NUMBER   1
 
 /*
@@ -564,7 +562,7 @@ bool lib_aci_event_peek(hal_aci_evt_t *p_aci_evt_data)
 
 bool lib_aci_event_get(aci_state_t *aci_stat, hal_aci_evt_t *p_aci_evt_data)
 {
-  bool status;
+  bool status = false;
   
   status = hal_aci_tl_event_get((hal_aci_data_t *)p_aci_evt_data);
   
@@ -618,6 +616,9 @@ bool lib_aci_event_get(aci_state_t *aci_stat, hal_aci_evt_t *p_aci_evt_data)
              * values on some platforms.
              */
             break;
+
+			
+			
     }
   }
   return status;
@@ -724,6 +725,7 @@ void lib_aci_flush(void)
 void lib_aci_debug_print(bool enable)
 {
   hal_aci_tl_debug_print(enable);
+
 }
 
 void lib_aci_pin_reset(void)
