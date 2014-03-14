@@ -294,7 +294,6 @@ void aci_loop()
   if (lib_aci_event_get(&aci_state, &aci_data))
   {
     aci_evt_t * aci_evt;
-
     aci_evt = &aci_data.evt;
 
     switch(aci_evt->evt_opcode)
