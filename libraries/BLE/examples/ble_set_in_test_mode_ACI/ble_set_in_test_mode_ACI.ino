@@ -36,7 +36,6 @@ Note: Serial Event is NOT compatible with Leonardo, Micro, Esplora
 @todo: Test this to make sure it works with both the pyhon script and nRFgo studio: You can send the DTM commands from the nRFgo studio or from a Nordic Semiconductor supplied python script on a Windows PC.
  */
 #include <SPI.h>
-#include <avr/pgmspace.h>
 #include <hal_aci_tl.h>
 #include <lib_aci.h>
 
@@ -97,13 +96,17 @@ void setup(void)
   aci_state.aci_pins.interface_is_interrupt	  = false;
   aci_state.aci_pins.interrupt_number	          = 1;
 
-  lib_aci_init(&aci_state);
+  //We reset the nRF8001 here by toggling the RESET line connected to the nRF8001
+  //and initialize the data structures required to setup the nRF8001
+  //The second parameter is for turning debug printing on for the ACI Commands and Events so they be printed on the Serial
+  lib_aci_init(&aci_state, true);
 
   Serial.println(F("nRF8001 Reset done"));
 }
 
 void aci_loop(void)
 {
+
   // We enter the if statement only when there is a ACI event available to be processed
   if (lib_aci_event_get(&aci_state, &aci_data))
   {
