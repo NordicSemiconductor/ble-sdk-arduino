@@ -36,7 +36,6 @@
  *
  */
 #include <SPI.h>
-#include <avr/pgmspace.h>
 #include <lib_aci.h>
 #include <aci_setup.h>
 #include "services.h"
@@ -128,12 +127,15 @@ void setup(void)
   /** We reset the nRF8001 here by toggling the RESET line connected to the nRF8001
    *  and initialize the data structures required to setup the nRF8001
    */
-  lib_aci_init(&aci_state);
+   //The second parameter is for turning debug printing on for the ACI Commands and Events so they be printed on the Serial
+  lib_aci_init(&aci_state,true);
   heart_rate_init();
 }
 
 void aci_loop()
 {
+  static bool setup_required = false;
+
   // We enter the if statement only when there is a ACI event available to be processed
   if (lib_aci_event_get(&aci_state, &aci_data))
   {
@@ -154,10 +156,7 @@ void aci_loop()
             */
             aci_state.device_state = ACI_DEVICE_SETUP;
             Serial.println(F("Evt Device Started: Setup"));
-            if (ACI_STATUS_TRANSACTION_COMPLETE != do_aci_setup(&aci_state))
-            {
-              Serial.println(F("Error in ACI Setup"));
-            }
+            setup_required = true;
             break;
 
             case ACI_DEVICE_STANDBY:
@@ -303,6 +302,18 @@ void aci_loop()
     // If No event in the ACI Event queue and No event in the ACI Command queue
     // Arduino can go to sleep
   }
+  
+  /* setup_required is set to true when the device starts up and enters setup mode.
+   * It indicates that do_aci_setup() should be called. The flag should be cleared if
+   * do_aci_setup() returns ACI_STATUS_TRANSACTION_COMPLETE.
+   */
+  if(setup_required)
+  {
+    if (SETUP_SUCCESS == do_aci_setup(&aci_state))
+    {
+      setup_required = false;
+    }
+  }
 }
 
 /*
@@ -335,14 +346,11 @@ void loop()
         radio_ack_pending = true;
       }
 
-
-
       dummy_heart_rate++;
       if (dummy_heart_rate == 200)
       {
         dummy_heart_rate = 65;
       }
   }
-
 }
 
