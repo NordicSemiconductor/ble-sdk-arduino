@@ -56,7 +56,6 @@ Note: Pin #8 on Arduino -> PAIRING CLEAR pin: Connect to 3.3v to clear the pairi
  *
  */
 #include <SPI.h>
-#include <avr/pgmspace.h>
 #include <lib_aci.h>
 
 #include <aci_setup.h>
@@ -304,6 +303,8 @@ bool bond_data_read_store(aci_state_t *aci_stat)
 
 void aci_loop()
 {
+  static bool setup_required = false;
+
   // We enter the if statement only when there is a ACI event available to be processed
   if (lib_aci_event_get(&aci_state, &aci_data))
   {
@@ -325,10 +326,7 @@ void aci_loop()
             When the device is in the setup mode
             */
             Serial.println(F("Evt Device Started: Setup"));
-            if (ACI_STATUS_TRANSACTION_COMPLETE != do_aci_setup(&aci_state))
-            {
-              Serial.println(F("Error in ACI Setup"));
-            }
+            setup_required = true;
             break;
 
             case ACI_DEVICE_STANDBY:
@@ -578,6 +576,18 @@ void aci_loop()
     // Arduino can go to sleep now
     // Wakeup from sleep from the RDYN line
   }
+  
+  /* setup_required is set to true when the device starts up and enters setup mode.
+   * It indicates that do_aci_setup() should be called. The flag should be cleared if
+   * do_aci_setup() returns ACI_STATUS_TRANSACTION_COMPLETE.
+   */
+  if(setup_required)
+  {
+    if (SETUP_SUCCESS == do_aci_setup(&aci_state))
+    {
+      setup_required = false;
+    }
+  }
 }
 
 void alert_level_print(alert_level_t level)
@@ -656,7 +666,8 @@ void setup(void)
 
   //We reset the nRF8001 here by toggling the RESET line connected to the nRF8001
   //and initialize the data structures required to setup the nRF8001
-  lib_aci_init(&aci_state);
+  //The second parameter is for turning debug printing on for the ACI Commands and Events so they be printed on the Serial
+  lib_aci_init(&aci_state, true);
   aci_state.bonded = ACI_BOND_STATUS_FAILED;
 
   pinMode(6, INPUT); //Pin #6 on Arduino -> PAIRING CLEAR pin: Connect to 3.3v to clear the pairing
