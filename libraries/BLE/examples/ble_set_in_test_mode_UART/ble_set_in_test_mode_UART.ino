@@ -18,7 +18,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
- 
+
 /**
  * test project to put the nRF8001 in Test mode and allow DTM commands over the nRF8001 UART
  */
@@ -29,7 +29,7 @@
 @brief Put the nRF8001 in test mode.
 
 @details
-This project is to put the nRF8001 in test mode and enable the nRF8001 to accept DTM commands over UART . 
+This project is to put the nRF8001 in test mode and enable the nRF8001 to accept DTM commands over UART .
 You can send the DTM commands from the nRFgo studio or from a Nordic Semiconductor supplied python script on a Windows PC.
  */
 #include <SPI.h>
@@ -37,7 +37,7 @@ You can send the DTM commands from the nRFgo studio or from a Nordic Semiconduct
 #include <ble_system.h>
 #include <lib_aci.h>
 
-// aci_struct that will contain 
+// aci_struct that will contain
 // total initial credits
 // current credit
 // current state of the aci (setup/test/standby/active/sleep)
@@ -65,9 +65,9 @@ void __ble_assert(const char *file, uint16_t line)
 }
 
 void setup(void)
-{ 
+{
   Serial.begin(115200);
-  
+
   //Tell the ACI library, the MCU to nRF8001 pin connections
   aci_state.aci_pins.board_name = BOARD_DEFAULT; //See board.h for details REDBEARLAB_SHIELD_V1_1 or BOARD_DEFAULT
   aci_state.aci_pins.reqn_pin   = 9; //SS for Nordic board, 9 for REDBEARLAB_SHIELD_V1_1
@@ -75,16 +75,16 @@ void setup(void)
   aci_state.aci_pins.mosi_pin   = MOSI;
   aci_state.aci_pins.miso_pin   = MISO;
   aci_state.aci_pins.sck_pin    = SCK;
-	
+
   aci_state.aci_pins.spi_clock_divider     = SPI_CLOCK_DIV8;
-	  
+
   aci_state.aci_pins.reset_pin             = 4; //4 for Nordic board, UNUSED for REDBEARLAB_SHIELD_V1_1
   aci_state.aci_pins.active_pin            = UNUSED;
   aci_state.aci_pins.optional_chip_sel_pin = UNUSED;
-  
+
   aci_state.aci_pins.interface_is_interrupt	  = false;
   aci_state.aci_pins.interrupt_number	          = 1;
-  
+
   lib_aci_init(&aci_state);
   Serial.println(F("nRF8001 Reset done"));
 }
@@ -95,7 +95,7 @@ void loop()
   if (lib_aci_event_get(&aci_state, &aci_data))
   {
     aci_evt_t * aci_evt;
-    
+
     aci_evt = &aci_data.evt;
     switch(aci_evt->evt_opcode)
     {
@@ -103,18 +103,18 @@ void loop()
         As soon as you reset the nRF8001 you will get an ACI Device Started Event
         */
         case ACI_EVT_DEVICE_STARTED:
-        {          
+        {
           aci_state.data_credit_available = aci_evt->params.device_started.credit_available;
           switch(aci_evt->params.device_started.device_mode)
           {
             case ACI_DEVICE_SETUP:
-              Serial.println(F("Evt Device Started: Setup"));              
-              //Put the nRF8001 in Test mode. 
+              Serial.println(F("Evt Device Started: Setup"));
+              //Put the nRF8001 in Test mode.
               //See ACI Test Command in Section 24 (System Commands) of the nRF8001 datasheet.
               //Use ACI_TEST_MODE_DTM_ACI to send DTM commands over ACI
               lib_aci_test(ACI_TEST_MODE_DTM_UART);
               break;
-                            
+
             case ACI_DEVICE_TEST:
             {
               uint8_t i = 0;

@@ -18,7 +18,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
- 
+
 
 /** @defgroup ble_bandwidth_test ble_bandwidth_test
 @{
@@ -34,7 +34,7 @@ the bandwidth is controlled by the timing used on the link.
 
 The following instructions describe the steps to be made on the Windows PC:
 
- -# Install the Master Control Panel on your computer. Connect the Master Emulator 
+ -# Install the Master Control Panel on your computer. Connect the Master Emulator
     and make sure the hardware drivers are installed.
 
 -# You can use the nRF UART app in the Apple iOS app store with this UART template app
@@ -45,15 +45,15 @@ The following instructions describe the steps to be made on the Windows PC:
  * The loop() function as the name implies is called in a loop.
  *
  * The setup() and loop() function are called in this way.
- * main() 
+ * main()
  *  {
- *   setup(); 
+ *   setup();
  *   while(1)
  *   {
  *     loop();
  *   }
  * }
- *    
+ *
  */
 #include <SPI.h>
 #include <avr/pgmspace.h>
@@ -87,7 +87,7 @@ Defining number of packets to send
 /* Store the setup for the nRF8001 in the flash of the AVR to save on RAM */
 static hal_aci_data_t setup_msgs[NB_SETUP_MESSAGES] PROGMEM = SETUP_MESSAGES_CONTENT;
 
-// aci_struct that will contain 
+// aci_struct that will contain
 // total initial credits
 // current credit
 // current state of the aci (setup/standby/active/sleep)
@@ -166,19 +166,19 @@ The maximum size of a packet is 20 bytes.
 When a command it received a response(s) are transmitted back.
 Since the response is done using a Notification the peer must have opened it(subscribed to it) before any packet is transmitted.
 The pipe for the UART_TX becomes available once the peer opens it.
-See section 20.4.1 -> Opening a Transmit pipe 
+See section 20.4.1 -> Opening a Transmit pipe
 In the master control panel, clicking Enable Services will open all the pipes on the nRF8001.
 
 The ACI Evt Data Credit provides the radio level ack of a transmitted packet.
 */
 void setup(void)
-{ 
+{
   Serial.begin(115200);
   Serial.println(F("Arduino setup"));
-  
+
   /**
   Point ACI data structures to the the setup data that the nRFgo studio generated for the nRF8001
-  */   
+  */
   if (NULL != services_pipe_type_mapping)
   {
     aci_state.aci_setup_info.services_pipe_type_mapping = &services_pipe_type_mapping[0];
@@ -194,7 +194,7 @@ void setup(void)
 	/*
 	Tell the ACI library, the MCU to nRF8001 pin connections.
 	The Active pin is optional and can be marked UNUSED
-	*/	  	
+	*/
 	aci_state.aci_pins.board_name = BOARD_DEFAULT; //See board.h for details
 	aci_state.aci_pins.reqn_pin   = 9;
 	aci_state.aci_pins.rdyn_pin   = 8;
@@ -203,11 +203,11 @@ void setup(void)
 	aci_state.aci_pins.sck_pin    = SCK;
 
 	aci_state.aci_pins.spi_clock_divider     = SPI_CLOCK_DIV8;
-	  
+
 	aci_state.aci_pins.reset_pin             = 4;
 	aci_state.aci_pins.active_pin            = UNUSED;
 	aci_state.aci_pins.optional_chip_sel_pin = UNUSED;
-	  
+
 	aci_state.aci_pins.interface_is_interrupt	  = false;
 	aci_state.aci_pins.interrupt_number			  = 1;
 
@@ -217,7 +217,7 @@ void setup(void)
 }
 
 bool data_tx_send()
-{ 
+{
 //  uint16_t * p_counter_for_packet = (uint16_t *)&data_input[0x12];
 //  *p_counter_for_packet = sent_100k_data_pkt_counter;
   data_input[0x12] = (uint8_t) ((sent_100k_data_pkt_counter >> 8));
@@ -225,7 +225,7 @@ bool data_tx_send()
 
   if(lib_aci_send_data(PIPE_UART_OVER_BTLE_UART_TX_TX, &data_input[0], 20))
   {
-    return true;  
+    return true;
   }
   else
   {
@@ -245,15 +245,15 @@ void aci_loop()
   if (lib_aci_event_get(&aci_state, &aci_data))
   {
     aci_evt_t * aci_evt;
-    
-    aci_evt = &aci_data.evt;    
+
+    aci_evt = &aci_data.evt;
     switch(aci_evt->evt_opcode)
     {
         /**
         As soon as you reset the nRF8001 you will get an ACI Device Started Event
         */
         case ACI_EVT_DEVICE_STARTED:
-        {          
+        {
           aci_state.data_credit_total = aci_evt->params.device_started.credit_available;
           switch(aci_evt->params.device_started.device_mode)
           {
@@ -267,7 +267,7 @@ void aci_loop()
               Serial.println(F("Error in ACI Setup"));
             }
             break;
-            
+
             case ACI_DEVICE_STANDBY:
               Serial.println(F("Evt Device Started: Standby"));
               //Looking for an iPhone by sending radio advertisements
@@ -285,7 +285,7 @@ void aci_loop()
           }
         }
         break; //ACI Device Started Event
-        
+
       case ACI_EVT_CMD_RSP:
         //If an ACI command response event comes with an error -> stop
         if (ACI_STATUS_SUCCESS != aci_evt->params.cmd_rsp.cmd_status)
@@ -301,27 +301,27 @@ void aci_loop()
         if (ACI_CMD_GET_DEVICE_VERSION == aci_evt->params.cmd_rsp.cmd_opcode)
         {
           //Store the version and configuration information of the nRF8001 in the Hardware Revision String Characteristic
-          lib_aci_set_local_data(&aci_state, PIPE_DEVICE_INFORMATION_HARDWARE_REVISION_STRING_SET, 
+          lib_aci_set_local_data(&aci_state, PIPE_DEVICE_INFORMATION_HARDWARE_REVISION_STRING_SET,
             (uint8_t *)&(aci_evt->params.cmd_rsp.params.get_device_version), sizeof(aci_evt_cmd_rsp_params_get_device_version_t));
-        }        
+        }
         break;
-        
+
       case ACI_EVT_CONNECTED:
         Serial.println(F("Evt Connected"));
         aci_state.data_credit_available = aci_state.data_credit_total;
-        
+
         /*
         Get the device version of the nRF8001 and store it in the Hardware Revision String
         */
         lib_aci_device_version();
         break;
-        
+
       case ACI_EVT_PIPE_STATUS:
         Serial.println(F("Evt Pipe Status"));
         if (lib_aci_is_pipe_available(&aci_state, PIPE_UART_OVER_BTLE_UART_TX_TX) && (false == timing_change_done))
         {
           lib_aci_change_timing(11/*13.75ms*/, 18/*22.5ms*/, 0/*Slave latency*/, 600/*6000 ms*/); // Used to increase or decrease bandwidth
-                                            
+
           timing_change_done = true;
         }
         else if (lib_aci_is_pipe_available(&aci_state, PIPE_UART_OVER_BTLE_UART_TX_TX))
@@ -334,24 +334,24 @@ void aci_loop()
           data_tx_state = false;
         }
         break;
-        
+
       case ACI_EVT_TIMING:
         Serial.print(F("Evt link connection interval changed to (ms): "));
         data_tx_state = true;
         Serial.println(aci_evt->params.timing.conn_rf_interval * 1.25);
         break;
-        
+
       case ACI_EVT_DISCONNECTED:
         Serial.println(F("Evt Disconnected/Advertising timed out"));
         //Initialize the variables used
         sent_100k_data_pkt_counter = 0;
         data_tx_state              = false;
         timing_change_done         = false;
-        
+
         lib_aci_connect(180/* in seconds */, 0x0100 /* advertising interval 100ms*/);
-        Serial.println(F("Advertising started"));        
+        Serial.println(F("Advertising started"));
         break;
-        
+
       case ACI_EVT_DATA_RECEIVED:
         Serial.print(F("UART RX: 0x"));
         Serial.print(aci_evt->params.data_received.rx_data.pipe_number, HEX);
@@ -367,20 +367,20 @@ void aci_loop()
         }
         Serial.println(F(""));
         break;
-   
+
       case ACI_EVT_DATA_CREDIT:
         aci_state.data_credit_available = aci_state.data_credit_available + aci_evt->params.data_credit.credit;
         break;
-      
+
       case ACI_EVT_PIPE_ERROR:
         //See the appendix in the nRF8001 Product Specication for details on the error codes
         Serial.print(F("ACI Evt Pipe Error: Pipe #:"));
         Serial.print(aci_evt->params.pipe_error.pipe_number, DEC);
         Serial.print(F("  Pipe Error Code: 0x"));
         Serial.println(aci_evt->params.pipe_error.error_code, HEX);
-                
+
         //Increment the credit available as the data packet was not sent.
-        //The pipe error also represents the Attribute protocol Error Response sent from the peer and that should not be counted 
+        //The pipe error also represents the Attribute protocol Error Response sent from the peer and that should not be counted
         //for the credit.
         if (ACI_STATUS_ERROR_PEER_ATT_ERROR != aci_evt->params.pipe_error.error_code)
         {
@@ -390,7 +390,7 @@ void aci_loop()
       case ACI_EVT_HW_ERROR:
         Serial.println(F("HW error: "));
         Serial.println(aci_evt->params.hw_error.line_num, DEC);
-      
+
         for(uint8_t counter = 0; counter <= (aci_evt->len - 3); counter++)
         {
         Serial.write(aci_evt->params.hw_error.file_name[counter]); //uint8_t file_name[20];
@@ -398,14 +398,14 @@ void aci_loop()
         Serial.println();
         lib_aci_connect(30/* in seconds */, 0x0100 /* advertising interval 100ms*/);
         Serial.println(F("Advertising started"));
-        break;   
-           
+        break;
+
     }
   }
   else
   {
-    
-    
+
+
     //Serial.println(F("No ACI Events available"));
     // No event in the ACI Event queue and if there is no event in the ACI command queue the arduino can go to sleep
     // Arduino can go to sleep now
@@ -422,29 +422,29 @@ void loop()
     {
       sent_100k_data_pkt_counter++;
       aci_state.data_credit_available--;
-      
+
       if(1 == sent_100k_data_pkt_counter)
       {
         Serial.print("Time Start: ");
         time1 = millis();
         //prints time since program started
-        Serial.println(time1);        
+        Serial.println(time1);
       }
-      
+
       if (NUM_20BYTE_PACKETS_FOR_100KB == sent_100k_data_pkt_counter)
       {
         data_tx_state = false;
         sent_100k_data_pkt_counter=0;
         time2 = millis();
-        Serial.print("Time Stop: ms: ");        
+        Serial.print("Time Stop: ms: ");
         //prints time since program started
-        Serial.println(time2);         
-        Serial.print("Time diff: ms: ");                
+        Serial.println(time2);
+        Serial.print("Time diff: ms: ");
         Serial.println(time2-time1);
-        
+
         Serial.print(F("Number of bytes = "));
         Serial.println(NUM_20BYTE_PACKETS_FOR_100KB);
-        
+
         Serial.print(F("Bandwidth from nRF8001 to peer: Bytes per second: "));
         Serial.println( (NUM_20BYTE_PACKETS_FOR_100KB*20/((time2-time1)/1000) ) );
       }
@@ -455,7 +455,7 @@ void loop()
     }
   }
   //if credit-send as fast as possible.
-        
+
 
 }
 
