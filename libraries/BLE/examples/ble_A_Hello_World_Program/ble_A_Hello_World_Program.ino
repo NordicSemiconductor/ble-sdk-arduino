@@ -205,7 +205,7 @@ void setup(void)
 	//If the RESET line is not available we call the ACI Radio Reset to soft reset the nRF8001
 	//then we initialize the data structures required to setup the nRF8001
 	//The second parameter is for turning debug printing on for the ACI Commands and Events so they be printed on the Serial
-	lib_aci_init(&aci_state, true);
+	lib_aci_init(&aci_state, false);
     Serial.println(F("Set up done"));
 }
 

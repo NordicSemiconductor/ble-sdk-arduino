@@ -99,7 +99,7 @@ void setup(void)
   aci_state.aci_pins.interrupt_number	      = 1;
 
   //The second parameter is for turning debug printing on for the ACI Commands and Events so they be printed on the Serial
-  hal_aci_tl_init(&(aci_state.aci_pins),true);
+  hal_aci_tl_init(&(aci_state.aci_pins),false);
   Serial.println(F("nRF8001 Reset done"));
 }
 

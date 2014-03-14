@@ -133,7 +133,7 @@ void setup(void)
   /* We initialize the data structures required to setup the nRF8001
   */
   //The second parameter is for turning debug printing on for the ACI Commands and Events so they be printed on the Serial
-  lib_aci_init(&aci_state, true);
+  lib_aci_init(&aci_state, false);
 }
 
 

@@ -132,7 +132,7 @@ void setup(void)
 
   //We reset the nRF8001 here by toggling the RESET line connected to the nRF8001
   //and initialize the data structures required to setup the nRF8001
-  lib_aci_init(&aci_state, true);
+  lib_aci_init(&aci_state, false);
 }
 
 void loop()
