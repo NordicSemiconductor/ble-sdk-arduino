@@ -56,7 +56,6 @@ The following instructions describe the steps to be made on the Windows PC:
  *
  */
 #include <SPI.h>
-#include <avr/pgmspace.h>
 #include <ble_system.h>
 #include <lib_aci.h>
 #include <aci_setup.h>
@@ -213,7 +212,7 @@ void setup(void)
 
   //We reset the nRF8001 here by toggling the RESET line connected to the nRF8001
   //and initialize the data structures required to setup the nRF8001
-  lib_aci_init(&aci_state);
+  lib_aci_init(&aci_state,true);
 }
 
 bool data_tx_send()
@@ -241,11 +240,12 @@ void uart_tx()
 
 void aci_loop()
 {
+  static bool setup_required = false;
+
   // We enter the if statement only when there is a ACI event available to be processed
   if (lib_aci_event_get(&aci_state, &aci_data))
   {
     aci_evt_t * aci_evt;
-
     aci_evt = &aci_data.evt;
     switch(aci_evt->evt_opcode)
     {
@@ -262,10 +262,7 @@ void aci_loop()
             When the device is in the setup mode
             */
             Serial.println(F("Evt Device Started: Setup"));
-            if (ACI_STATUS_TRANSACTION_COMPLETE != do_aci_setup(&aci_state))
-            {
-              Serial.println(F("Error in ACI Setup"));
-            }
+            setup_required = true;
             break;
 
             case ACI_DEVICE_STANDBY:
@@ -410,6 +407,18 @@ void aci_loop()
     // No event in the ACI Event queue and if there is no event in the ACI command queue the arduino can go to sleep
     // Arduino can go to sleep now
     // Wakeup from sleep from the RDYN line
+  }
+  
+  /* setup_required is set to true when the device starts up and enters setup mode.
+   * It indicates that do_aci_setup() should be called. The flag should be cleared if
+   * do_aci_setup() returns ACI_STATUS_TRANSACTION_COMPLETE.
+   */
+  if(setup_required)
+  {
+    if (SETUP_SUCCESS == do_aci_setup(&aci_state))
+    {
+      setup_required = false;
+    }
   }
 }
 
