@@ -636,7 +636,7 @@ void setup(void)
   /** We reset the nRF8001 here by toggling the RESET line connected to the nRF8001
    *  and initialize the data structures required to setup the nRF8001
    */
-   //The second parameter is for turning debug printing on for the ACI Commands and Events so they be printed on the Serial
+  //The second parameter is for turning debug printing on for the ACI Commands and Events so they be printed on the Serial
   lib_aci_init(&aci_state, true);
 
   pinMode(6, INPUT); //Pin #6 on Arduino -> PAIRING CLEAR pin: Connect to 3.3v to clear the pairing
