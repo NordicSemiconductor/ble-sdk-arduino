@@ -650,7 +650,7 @@ void setup(void)
   if (0x01 == digitalRead(6))
   {
     //Clear the pairing
-    Serial.println(F("Pairing cleared. Remove the wire on Pin 8 and reset the board for normal operation."));
+    Serial.println(F("Pairing cleared. Remove the wire on Pin 6 and reset the board for normal operation."));
     //Address. Value
     EEPROM.write(0, 0);
     while(1) {};

@@ -41,7 +41,7 @@ The following instructions describe the steps to be made on the Windows PC:
  -# Alternatively you should be able to get the board to work directly with a Win 8/Win RT PC after adding
  a the required buttons for I/O.
 
-Note: Pin #8 on Arduino -> PAIRING CLEAR pin: Connect to 3.3v to clear the pairing
+Note: Pin #6 on Arduino -> PAIRING CLEAR pin: Connect to 3.3v to clear the pairing
 
 The setup() and the loop() functions are the equvivlent of
     main()
@@ -643,7 +643,7 @@ void setup(void)
   if (0x01 == digitalRead(6))
   {
     //Clear the pairing
-    Serial.println(F("Pairing cleared. Remove the wire on Pin 8 and reset the board for normal operation."));
+    Serial.println(F("Pairing cleared. Remove the wire on Pin 6 and reset the board for normal operation."));
     //Address. Value
     EEPROM.write(0, 0);
     while(1) {};

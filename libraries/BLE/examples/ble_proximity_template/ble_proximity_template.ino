@@ -37,7 +37,7 @@ The following instructions describe the steps to be made on the Windows PC:
 
 -# You can use the nRF proximity app in the Apple iOS app store with this proximity template app
 
-Note: Pin #8 on Arduino -> PAIRING CLEAR pin: Connect to 3.3v to clear the pairing
+Note: Pin #6 on Arduino -> PAIRING CLEAR pin: Connect to 3.3v to clear the pairing
 
  *
  * Click on the "Serial Monitor" button on the Arduino IDE to reset the Arduino and start the application.

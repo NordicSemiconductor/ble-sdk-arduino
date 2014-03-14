@@ -205,6 +205,7 @@ void aci_loop()
           Change the setting in nRFgo studio -> nRF8001 configuration -> GAP Settings and recompile the xml file.
           */
           lib_aci_change_timing_GAP_PPCP();
+		  timing_change_done = true;
         }
         break;
 
@@ -212,7 +213,6 @@ void aci_loop()
         /*
         Link timing has changed.
         */
-        timing_change_done = true;
         Serial.print(F("Timing changed: "));
         Serial.println(aci_evt->params.timing.conn_rf_interval, HEX);
         break;
