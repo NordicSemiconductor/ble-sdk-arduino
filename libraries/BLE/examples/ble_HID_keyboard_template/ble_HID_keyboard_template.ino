@@ -684,8 +684,6 @@ void setup(void)
 	Serial.begin(115200);
 	Serial.println(F("Arduino setup"));
 
-
-
 	/**
 	Point ACI data structures to the the setup data that the nRFgo studio generated for the nRF8001
 	*/
