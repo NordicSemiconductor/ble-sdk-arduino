@@ -18,7 +18,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
- 
+
 
 /** @defgroup ble_proximity_template ble_proximity_template
 @{
@@ -26,18 +26,18 @@
 @brief Empty project that can be used as a template for new proximity projects.
 
 @details
-This project is a firmware template for new proximity projects. 
+This project is a firmware template for new proximity projects.
 The project will run correctly in its current state.
 With this project you have a starting point for adding your own application functionality.
 
 The following instructions describe the steps to be made on the Windows PC:
 
- -# Install the Master Control Panel on your computer. Connect the Master Emulator 
+ -# Install the Master Control Panel on your computer. Connect the Master Emulator
     (nRF2739) and make sure the hardware drivers are installed.
 
 -# You can use the nRF proximity app in the Apple iOS app store with this proximity template app
 
-Note: Pin #8 on Arduino -> PAIRING CLEAR pin: Connect to 3.3v to clear the pairing   
+Note: Pin #6 on Arduino -> PAIRING CLEAR pin: Connect to 3.3v to clear the pairing
 
  *
  * Click on the "Serial Monitor" button on the Arduino IDE to reset the Arduino and start the application.
@@ -45,18 +45,17 @@ Note: Pin #8 on Arduino -> PAIRING CLEAR pin: Connect to 3.3v to clear the pairi
  * The loop() function as the name implies is called in a loop.
  *
  * The setup() and loop() function are called in this way.
- * main() 
+ * main()
  *  {
- *   setup(); 
+ *   setup();
  *   while(1)
  *   {
  *     loop();
  *   }
  * }
- *    
+ *
  */
 #include <SPI.h>
-#include <avr/pgmspace.h>
 #include <lib_aci.h>
 
 #include <aci_setup.h>
@@ -86,7 +85,7 @@ However this removes the need to do the setup of the nRF8001 on every reset.
 /* Store the setup for the nRF8001 in the flash of the AVR to save on RAM */
 static hal_aci_data_t setup_msgs[NB_SETUP_MESSAGES] PROGMEM = SETUP_MESSAGES_CONTENT;
 
-// aci_struct that will contain 
+// aci_struct that will contain
 // total initial credits
 // current credit
 // current state of the aci (setup/standby/active/sleep)
@@ -137,22 +136,22 @@ This will restore the nRF8001 to the situation when the Dynamic Data was Read ou
 */
 aci_status_code_t bond_data_restore(aci_state_t *aci_stat, uint8_t eeprom_status, bool *bonded_first_time_state)
 {
-  aci_evt_t *aci_evt; 
+  aci_evt_t *aci_evt;
   uint8_t eeprom_offset_read = 1;
   uint8_t write_dyn_num_msgs = 0;
   uint8_t len =0;
-  
-  
+
+
   // Get the number of messages to write for the eeprom_status
   write_dyn_num_msgs = eeprom_status & 0x7F;
-  
+
   //Read from the EEPROM
   while(1)
   {
     len = EEPROM.read(eeprom_offset_read);
     eeprom_offset_read++;
     aci_cmd.buffer[0] = len;
-    
+
     for (uint8_t i=1; i<=len; i++)
     {
         aci_cmd.buffer[i] = EEPROM.read(eeprom_offset_read);
@@ -164,34 +163,34 @@ aci_status_code_t bond_data_restore(aci_state_t *aci_stat, uint8_t eeprom_status
       Serial.println(F("bond_data_restore: Cmd Q Full"));
       return ACI_STATUS_ERROR_INTERNAL;
     }
-  
+
     //Spin in the while loop waiting for an event
     while (1)
     {
       if (lib_aci_event_get(aci_stat, &aci_data))
       {
-        aci_evt = &aci_data.evt; 
-        
+        aci_evt = &aci_data.evt;
+
         if (ACI_EVT_CMD_RSP != aci_evt->evt_opcode)
         {
             //Got something other than a command response evt -> Error
-            Serial.print(F("bond_data_restore: Expected cmd rsp evt. Got: 0x"));           
+            Serial.print(F("bond_data_restore: Expected cmd rsp evt. Got: 0x"));
             Serial.println(aci_evt->evt_opcode, HEX);
             return ACI_STATUS_ERROR_INTERNAL;
         }
         else
         {
           write_dyn_num_msgs--;
-          
+
           //ACI Evt Command Response
           if (ACI_STATUS_TRANSACTION_COMPLETE == aci_evt->params.cmd_rsp.cmd_status)
           {
             //Set the state variables correctly
             *bonded_first_time_state = false;
             aci_stat->bonded = ACI_BOND_STATUS_SUCCESS;
-            
+
             delay(10);
-            
+
             return ACI_STATUS_TRANSACTION_COMPLETE;
           }
           if (0 >= write_dyn_num_msgs)
@@ -200,14 +199,14 @@ aci_status_code_t bond_data_restore(aci_state_t *aci_stat, uint8_t eeprom_status
             return ACI_STATUS_ERROR_INTERNAL;
           }
           if (ACI_STATUS_TRANSACTION_CONTINUE == aci_evt->params.cmd_rsp.cmd_status)
-          {            
+          {
             //break and write the next ACI Write Dynamic Data
             break;
           }
         }
       }
-    }    
-  }  
+    }
+  }
 }
 
 
@@ -218,14 +217,14 @@ This function is specific to the atmega328
 void bond_data_store(aci_evt_t *evt)
 {
   static int eeprom_write_offset = 1;
-  
+
   //Write it to non-volatile storage
   EEPROM.write( eeprom_write_offset, evt->len -2 );
   eeprom_write_offset++;
-  
+
   EEPROM.write( eeprom_write_offset, ACI_CMD_WRITE_DYNAMIC_DATA);
   eeprom_write_offset++;
-  
+
   for (uint8_t i=0; i< (evt->len-3); i++)
   {
     EEPROM.write( eeprom_write_offset, evt->params.cmd_rsp.params.padding[i]);
@@ -242,81 +241,83 @@ bool bond_data_read_store(aci_state_t *aci_stat)
   bool status = false;
   aci_evt_t * aci_evt = NULL;
   uint8_t read_dyn_num_msgs = 0;
- 
-  //Start reading the dynamic data 
+
+  //Start reading the dynamic data
   lib_aci_read_dynamic_data();
   read_dyn_num_msgs++;
-  
+
   while (1)
   {
     if (true == lib_aci_event_get(aci_stat, &aci_data))
     {
       aci_evt = &aci_data.evt;
-  
+
       if (ACI_EVT_CMD_RSP != aci_evt->evt_opcode )
       {
         //Got something other than a command response evt -> Error
         status = false;
         break;
       }
-      
+
       if (ACI_STATUS_TRANSACTION_COMPLETE == aci_evt->params.cmd_rsp.cmd_status)
       {
-        //Store the contents of the command response event in the EEPROM 
+        //Store the contents of the command response event in the EEPROM
         //(len, cmd, seq-no, data) : cmd ->Write Dynamic Data so it can be used directly
         bond_data_store(aci_evt);
-        
+
         //Set the flag in the EEPROM that the contents of the EEPROM is valid
         EEPROM.write(0, 0x80|read_dyn_num_msgs );
         //Finished with reading the dynamic data
         status = true;
-        
+
         break;
       }
-      
+
       if (!(ACI_STATUS_TRANSACTION_CONTINUE == aci_evt->params.cmd_rsp.cmd_status))
       {
         //We failed the read dymanic data
         //Set the flag in the EEPROM that the contents of the EEPROM is invalid
         EEPROM.write(0, 0x00);
-        
+
         status = false;
         break;
       }
       else
       {
-        //Store the contents of the command response event in the EEPROM 
+        //Store the contents of the command response event in the EEPROM
         // (len, cmd, seq-no, data) : cmd ->Write Dynamic Data so it can be used directly when re-storing the dynamic data
         bond_data_store(aci_evt);
-        
+
         //Read the next dynamic data message
         lib_aci_read_dynamic_data();
         read_dyn_num_msgs++;
       }
-                       
+
     }
-  }  
-  return status;  
+  }
+  return status;
 }
 
 
 
 
 void aci_loop()
-{  
+{
+  static bool setup_required = false;
+
   // We enter the if statement only when there is a ACI event available to be processed
   if (lib_aci_event_get(&aci_state, &aci_data))
   {
     aci_evt_t * aci_evt;
-    
-    aci_evt = &aci_data.evt;    
+
+    aci_evt = &aci_data.evt;
     switch(aci_evt->evt_opcode)
     {
         /**
         As soon as you reset the nRF8001 you will get an ACI Device Started Event
         */
         case ACI_EVT_DEVICE_STARTED:
-        {          
+        {
           aci_state.data_credit_total = aci_evt->params.device_started.credit_available;
           switch(aci_evt->params.device_started.device_mode)
           {
@@ -325,12 +326,9 @@ void aci_loop()
             When the device is in the setup mode
             */
             Serial.println(F("Evt Device Started: Setup"));
-            if (ACI_STATUS_TRANSACTION_COMPLETE != do_aci_setup(&aci_state))
-            {
-              Serial.println(F("Error in ACI Setup"));
-            }
+            setup_required = true;
             break;
-            
+
             case ACI_DEVICE_STANDBY:
               Serial.println(F("Evt Device Started: Standby"));
               if (aci_evt->params.device_started.hw_error)
@@ -338,7 +336,7 @@ void aci_loop()
                 delay(20); //Magic number used to make sure the HW error event is handled correctly.
               }
               else
-              { 
+              {
                 //Manage the bond in EEPROM of the AVR
                 {
                   uint8_t eeprom_status = 0;
@@ -357,10 +355,10 @@ void aci_loop()
                     else
                     {
                       Serial.println(F("Bond restore failed. Delete the bond and try again."));
-                    }                  
-                  }                
+                    }
+                  }
                 }
-           
+
                   // Start bonding as all proximity devices need to be bonded to be usable
                   if (ACI_BOND_STATUS_SUCCESS != aci_state.bonded)
                   {
@@ -380,7 +378,7 @@ void aci_loop()
           }
         }
         break; //ACI Device Started Event
-        
+
       case ACI_EVT_CMD_RSP:
         //If an ACI command response event comes with an error -> stop
         if (ACI_STATUS_SUCCESS != aci_evt->params.cmd_rsp.cmd_status)
@@ -396,61 +394,61 @@ void aci_loop()
         if (ACI_CMD_GET_DEVICE_VERSION == aci_evt->params.cmd_rsp.cmd_opcode)
         {
           //Store the version and configuration information of the nRF8001 in the Hardware Revision String Characteristic
-          lib_aci_set_local_data(&aci_state, PIPE_DEVICE_INFORMATION_HARDWARE_REVISION_STRING_SET, 
+          lib_aci_set_local_data(&aci_state, PIPE_DEVICE_INFORMATION_HARDWARE_REVISION_STRING_SET,
             (uint8_t *)&(aci_evt->params.cmd_rsp.params.get_device_version), sizeof(aci_evt_cmd_rsp_params_get_device_version_t));
-        }        
+        }
         break;
-        
+
       case ACI_EVT_CONNECTED:
         Serial.println(F("Evt Connected"));
         aci_state.data_credit_available = aci_state.data_credit_total;
-        timing_change_done = false;        
+        timing_change_done = false;
         /*
         Get the device version of the nRF8001 and store it in the Hardware Revision String
         */
         lib_aci_device_version();
         break;
-        
+
       case ACI_EVT_BOND_STATUS:
         aci_state.bonded = aci_evt->params.bond_status.status_code;
         break;
-        
+
       case ACI_EVT_PIPE_STATUS:
         Serial.println(F("Evt Pipe Status"));
         //Link is encrypted when the PIPE_LINK_LOSS_ALERT_ALERT_LEVEL_RX_ACK_AUTO is available
-        if ((false == timing_change_done) && 
+        if ((false == timing_change_done) &&
             lib_aci_is_pipe_available(&aci_state, PIPE_LINK_LOSS_ALERT_ALERT_LEVEL_RX_ACK_AUTO))
         {
-          lib_aci_change_timing_GAP_PPCP(); // change the timing on the link as specified in the nRFgo studio -> nRF8001 conf. -> GAP. 
+          lib_aci_change_timing_GAP_PPCP(); // change the timing on the link as specified in the nRFgo studio -> nRF8001 conf. -> GAP.
                                             // Used to increase or decrease bandwidth
           timing_change_done = true;
         }
         // The pipe will be available only in an encrpyted link to the phone
-        if ((ACI_BOND_STATUS_SUCCESS == aci_state.bonded) && 
+        if ((ACI_BOND_STATUS_SUCCESS == aci_state.bonded) &&
               (lib_aci_is_pipe_available(&aci_state, PIPE_LINK_LOSS_ALERT_ALERT_LEVEL_RX_ACK_AUTO)) &&
               (lib_aci_is_pipe_available(&aci_state, PIPE_IMMEDIATE_ALERT_ALERT_LEVEL_RX)))
         {
           //Note: This may be called multiple times after the Arduino has connected to the right phone
           Serial.println(F("phone Detected."));
           Serial.println(F("Do more stuff here. when your phone is detected"));
-        }        
+        }
         break;
-        
+
       case ACI_EVT_TIMING:
         Serial.println(F("Evt link connection interval changed"));
         //Disconnect as soon as we are bonded and required pipes are available
         //This is used to store the bonding info on disconnect and then re-connect to verify the bond
         if((ACI_BOND_STATUS_SUCCESS == aci_state.bonded) &&
            (true == bonded_first_time) &&
-           (GAP_PPCP_MAX_CONN_INT >= aci_state.connection_interval) && 
+           (GAP_PPCP_MAX_CONN_INT >= aci_state.connection_interval) &&
            (GAP_PPCP_MIN_CONN_INT <= aci_state.connection_interval) && //Timing change already done: Provide time for the the peer to finish
            (lib_aci_is_pipe_available(&aci_state, PIPE_LINK_LOSS_ALERT_ALERT_LEVEL_RX_ACK_AUTO)) &&
            (lib_aci_is_pipe_available(&aci_state, PIPE_IMMEDIATE_ALERT_ALERT_LEVEL_RX)))
            {
              lib_aci_disconnect(&aci_state, ACI_REASON_TERMINATE);
-           }        
+           }
         break;
-        
+
       case ACI_EVT_DISCONNECTED:
         Serial.println(F("Evt Disconnected. Link Lost or Advertising timed out"));
         if (ACI_BOND_STATUS_SUCCESS == aci_state.bonded)
@@ -460,7 +458,7 @@ void aci_loop()
               if (bonded_first_time)
               {
                 bonded_first_time = false;
-                //Store away the dynamic data of the nRF8001 in the Flash or EEPROM of the MCU 
+                //Store away the dynamic data of the nRF8001 in the Flash or EEPROM of the MCU
                 // so we can restore the bond information of the nRF8001 in the event of power loss
                 if (bond_data_read_store(&aci_state))
                 {
@@ -475,8 +473,8 @@ void aci_loop()
                 //While deleting bonding information delete on the Arduino and on the phone.
                 Serial.println(F("phone/Arduino has deleted the bonding/pairing information"));
               }
-          
-              proximity_disconect_evt_rcvd (aci_evt->params.disconnected.btle_status);            
+
+              proximity_disconect_evt_rcvd (aci_evt->params.disconnected.btle_status);
           }
           lib_aci_connect(180/* in seconds */, 0x0100 /* advertising interval 100ms*/);
           Serial.println(F("Using existing bond stored in EEPROM."));
@@ -489,9 +487,9 @@ void aci_loop()
           //There is no existing bond. Try to bond.
           lib_aci_bond(180/* in seconds */, 0x0050 /* advertising interval 50ms*/);
           Serial.println(F("Advertising started. Bonding."));
-        }                
+        }
         break;
-        
+
       case ACI_EVT_DATA_RECEIVED:
         Serial.print(F("Pipe #"));
         Serial.print(aci_evt->params.data_received.rx_data.pipe_number, DEC);
@@ -500,37 +498,37 @@ void aci_loop()
         link_loss_pipes_updated_evt_rcvd(aci_evt->params.data_received.rx_data.pipe_number,
                                          &aci_evt->params.data_received.rx_data.aci_data[0]);
         break;
-   
+
       case ACI_EVT_DATA_CREDIT:
         aci_state.data_credit_available = aci_state.data_credit_available + aci_evt->params.data_credit.credit;
         break;
-      
+
       case ACI_EVT_PIPE_ERROR:
         //See the appendix in the nRF8001 Product Specication for details on the error codes
         Serial.print(F("ACI Evt Pipe Error: Pipe #:"));
         Serial.print(aci_evt->params.pipe_error.pipe_number, DEC);
         Serial.print(F("  Pipe Error Code: 0x"));
         Serial.println(aci_evt->params.pipe_error.error_code, HEX);
-                
+
         //Increment the credit available as the data packet was not sent.
-        //The pipe error also represents the Attribute protocol Error Response sent from the peer and that should not be counted 
+        //The pipe error also represents the Attribute protocol Error Response sent from the peer and that should not be counted
         //for the credit.
         if (ACI_STATUS_ERROR_PEER_ATT_ERROR != aci_evt->params.pipe_error.error_code)
         {
           aci_state.data_credit_available++;
         }
         break;
-      
+
       case ACI_EVT_HW_ERROR:
         Serial.print(F("HW error: "));
         Serial.println(aci_evt->params.hw_error.line_num, DEC);
-        
+
         for(uint8_t counter = 0; counter <= (aci_evt->len - 3); counter++)
         {
         Serial.write(aci_evt->params.hw_error.file_name[counter]); //uint8_t file_name[20];
         }
         Serial.println();
-        
+
         //Manage the bond in EEPROM of the AVR
         {
           uint8_t eeprom_status = 0;
@@ -549,10 +547,10 @@ void aci_loop()
             else
             {
               Serial.println(F("Bond restore failed. Delete the bond and try again."));
-            }                  
-          }                
+            }
+          }
         }
-   
+
         // Start bonding as all proximity devices need to be bonded to be usable
         if (ACI_BOND_STATUS_SUCCESS != aci_state.bonded)
         {
@@ -568,7 +566,7 @@ void aci_loop()
             Serial.println(F("Already bonded : Advertising started : Waiting to be connected"));
         }
         break;
-           
+
     }
   }
   else
@@ -577,6 +575,18 @@ void aci_loop()
     // No event in the ACI Event queue and if there is no event in the ACI command queue the arduino can go to sleep
     // Arduino can go to sleep now
     // Wakeup from sleep from the RDYN line
+  }
+  
+  /* setup_required is set to true when the device starts up and enters setup mode.
+   * It indicates that do_aci_setup() should be called. The flag should be cleared if
+   * do_aci_setup() returns ACI_STATUS_TRANSACTION_COMPLETE.
+   */
+  if(setup_required)
+  {
+    if (SETUP_SUCCESS == do_aci_setup(&aci_state))
+    {
+      setup_required = false;
+    }
   }
 }
 
@@ -587,11 +597,11 @@ void alert_level_print(alert_level_t level)
     case ALERT_LEVEL_NO_ALERT:
       Serial.println(F("NO_ALERT"));
       break;
-      
+
     case ALERT_LEVEL_MILD_ALERT:
       Serial.println(F("MILD_ALERT"));
       break;
-    
+
     case ALERT_LEVEL_HIGH_ALERT:
       Serial.println(F("HIGH_ALERT"));
       break;
@@ -618,13 +628,13 @@ Description:
 The ACI Evt Data Credit provides the radio level ack of a transmitted packet.
 */
 void setup(void)
-{ 
+{
   Serial.begin(115200);
   Serial.println(F("Arduino setup"));
-  
+
   /**
   Point ACI data structures to the the setup data that the nRFgo studio generated for the nRF8001
-  */   
+  */
   if (NULL != services_pipe_type_mapping)
   {
     aci_state.aci_setup_info.services_pipe_type_mapping = &services_pipe_type_mapping[0];
@@ -644,21 +654,22 @@ void setup(void)
 	aci_state.aci_pins.mosi_pin   = MOSI;
 	aci_state.aci_pins.miso_pin   = MISO;
 	aci_state.aci_pins.sck_pin    = SCK;
-	
+
 	aci_state.aci_pins.spi_clock_divider     = SPI_CLOCK_DIV8;
-	  
+
 	aci_state.aci_pins.reset_pin             = 4;
 	aci_state.aci_pins.active_pin            = UNUSED;
 	aci_state.aci_pins.optional_chip_sel_pin = UNUSED;
-	  
+
 	aci_state.aci_pins.interface_is_interrupt	  = false;
 	aci_state.aci_pins.interrupt_number			  = UNUSED;
-  
+
   //We reset the nRF8001 here by toggling the RESET line connected to the nRF8001
   //and initialize the data structures required to setup the nRF8001
-  lib_aci_init(&aci_state);
+  //The second parameter is for turning debug printing on for the ACI Commands and Events so they be printed on the Serial
+  lib_aci_init(&aci_state, false);
   aci_state.bonded = ACI_BOND_STATUS_FAILED;
-  
+
   pinMode(6, INPUT); //Pin #6 on Arduino -> PAIRING CLEAR pin: Connect to 3.3v to clear the pairing
   if (0x01 == digitalRead(6))
   {
@@ -668,7 +679,7 @@ void setup(void)
     //Address. Value
     EEPROM.write(0, 0);
     while(1) {};
-  }  
+  }
 }
 
 

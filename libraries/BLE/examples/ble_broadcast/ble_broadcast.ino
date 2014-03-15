@@ -18,7 +18,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
- 
+
 /**
  * My project template
  */
@@ -29,18 +29,17 @@
 @brief Empty project that can be used as a template for new projects.
 
 @details
-This project is a firmware template for new projects. 
-The project will run correctly in its current state, but does nothing. 
+This project is a firmware template for new projects.
+The project will run correctly in its current state, but does nothing.
 With this project you have a starting point for adding your own application functionality.
 
 The following instructions describe the steps to be made on the Windows PC:
 
- -# Install the Master Control Panel on your computer. Connect the Master Emulator 
+ -# Install the Master Control Panel on your computer. Connect the Master Emulator
     (nRF2739) and make sure the hardware drivers are installed.
-    
+
  */
 #include <SPI.h>
-#include <avr/pgmspace.h>
 #include <ble_system.h>
 #include <lib_aci.h>
 #include <lib_traces.h>
@@ -67,7 +66,7 @@ However this removes the need to do the setup of the nRF8001 on every reset.
 #endif
 static hal_aci_data_t setup_msgs[NB_SETUP_MESSAGES] PROGMEM = SETUP_MESSAGES_CONTENT;
 
-// aci_struct that will contain 
+// aci_struct that will contain
 // total initial credits
 // current credit
 // current state of the aci (setup/standby/active/sleep)
@@ -94,10 +93,10 @@ void __ble_assert(const char *file, uint16_t line)
 }
 
 void setup(void)
-{ 
+{
   Serial.begin(115200);
   Serial.println(F("Arduino setup"));
-  
+
   if (NULL != services_pipe_type_mapping)
   {
     aci_state.aci_setup_info.services_pipe_type_mapping = &services_pipe_type_mapping[0];
@@ -109,11 +108,11 @@ void setup(void)
   aci_state.aci_setup_info.number_of_pipes    = NUMBER_OF_PIPES;
   aci_state.aci_setup_info.setup_msgs         = setup_msgs;
   aci_state.aci_setup_info.num_setup_msgs     = NB_SETUP_MESSAGES;
-  
+
   /*
   Tell the ACI library, the MCU to nRF8001 pin connections.
   The Active pin is optional and can be marked UNUSED
-  */	  	
+  */
   aci_state.aci_pins.board_name = BOARD_DEFAULT; //See board.h for details
   aci_state.aci_pins.reqn_pin   = 9;
   aci_state.aci_pins.rdyn_pin   = 8;
@@ -122,35 +121,36 @@ void setup(void)
   aci_state.aci_pins.sck_pin    = SCK;
 
   aci_state.aci_pins.spi_clock_divider     = SPI_CLOCK_DIV8;
-	  
+
   aci_state.aci_pins.reset_pin             = 4;
   aci_state.aci_pins.active_pin            = UNUSED;
   aci_state.aci_pins.optional_chip_sel_pin = UNUSED;
-	  
+
   aci_state.aci_pins.interface_is_interrupt	  = false;
   aci_state.aci_pins.interrupt_number	      = 1;
-  
+
 
   //We reset the nRF8001 here by toggling the RESET line connected to the nRF8001
   //and initialize the data structures required to setup the nRF8001
-  lib_aci_init(&aci_state);
+  lib_aci_init(&aci_state, false);
 }
 
 void loop()
 {
+  static bool setup_required = false;
+
   // We enter the if statement only when there is a ACI event available to be processed
   if (lib_aci_event_get(&aci_state, &aci_data))
   {
     aci_evt_t * aci_evt;
-    
-    aci_evt = &aci_data.evt;    
+    aci_evt = &aci_data.evt;
     switch(aci_evt->evt_opcode)
     {
         /**
         As soon as you reset the nRF8001 you will get an ACI Device Started Event
         */
         case ACI_EVT_DEVICE_STARTED:
-        {          
+        {
           aci_state.data_credit_available = aci_evt->params.device_started.credit_available;
           switch(aci_evt->params.device_started.device_mode)
           {
@@ -159,21 +159,18 @@ void loop()
             When the device is in the setup mode
             */
             Serial.println(F("Evt Device Started: Setup"));
-            if (ACI_STATUS_TRANSACTION_COMPLETE != do_aci_setup(&aci_state))
-            {
-              Serial.println(F("Error in ACI Setup"));
-            }
+			setup_required = true;
             break;
-            
+
             case ACI_DEVICE_STANDBY:
               Serial.println(F("Evt Device Started: Standby"));
               //See ACI Broadcast in the data sheet of the nRF8001
               lib_aci_broadcast(10/* in seconds */, 0x0100 /* advertising interval 100ms */);
               //While broadcasting (non_connectable) interval of 100ms is the minimum possible
               Serial.println(F("Broadcasting started"));
-              //To stop the broadcasting before the timeout use the 
+              //To stop the broadcasting before the timeout use the
               //lib_aci_radio_reset to soft reset the radio
-              //See ACI RadioReset in the datasheet of the nRF8001          
+              //See ACI RadioReset in the datasheet of the nRF8001
               break;
           }
         }
@@ -200,11 +197,11 @@ void loop()
       case ACI_EVT_DISCONNECTED:
         if (ACI_STATUS_ERROR_ADVT_TIMEOUT == aci_evt->params.disconnected.aci_status)
         {
-          Serial.println(F("Broadcasting timed out"));      
+          Serial.println(F("Broadcasting timed out"));
         }
         else
         {
-          Serial.println(F("Evt Disconnected. Link Loss"));                
+          Serial.println(F("Evt Disconnected. Link Loss"));
         }
         break;
       case ACI_EVT_DATA_RECEIVED:
@@ -217,13 +214,13 @@ void loop()
       case ACI_EVT_HW_ERROR:
         Serial.println(F("HW error: "));
         Serial.println(aci_evt->params.hw_error.line_num, DEC);
-      
+
         for(uint8_t counter = 0; counter <= (aci_evt->len - 3); counter++)
         {
         Serial.write(aci_evt->params.hw_error.file_name[counter]); //uint8_t file_name[20];
         }
         Serial.println();
-        break;      
+        break;
     }
   }
   else
@@ -232,6 +229,18 @@ void loop()
     // No event in the ACI Event queue
     // Arduino can go to sleep now
     // Wakeup from sleep from the RDYN line
+  }
+  
+  /* setup_required is set to true when the device starts up and enters setup mode.
+   * It indicates that do_aci_setup() should be called. The flag should be cleared if
+   * do_aci_setup() returns ACI_STATUS_TRANSACTION_COMPLETE.
+   */
+  if(setup_required)
+  {
+    if (SETUP_SUCCESS == do_aci_setup(&aci_state))
+    {
+      setup_required = false;
+    }
   }
 }
 

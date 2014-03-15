@@ -18,10 +18,10 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
- 
+
 /**
  * Test project to put the nRF8001 in Test mode and allow DTM commands over the Arduino Serial interface.
- * Note: The serial interface of some arduino boards is reset on startup, so some work is needed on the nRFgo studio 
+ * Note: The serial interface of some arduino boards is reset on startup, so some work is needed on the nRFgo studio
  * before it can be used with this project.
  */
 
@@ -32,15 +32,14 @@
 
 @details
 This project is to put the nRF8001 in test mode and enable the nRF8001 to accept DTM commands over ACI using the Arduino serial interface.
-Note: Serial Event is NOT compatible with Leonardo, Micro, Esplora 
+Note: Serial Event is NOT compatible with Leonardo, Micro, Esplora
 @todo: Test this to make sure it works with both the pyhon script and nRFgo studio: You can send the DTM commands from the nRFgo studio or from a Nordic Semiconductor supplied python script on a Windows PC.
  */
 #include <SPI.h>
-#include <avr/pgmspace.h>
 #include <hal_aci_tl.h>
 #include <lib_aci.h>
 
-// aci_struct that will contain 
+// aci_struct that will contain
 // total initial credits
 // current credit
 // current state of the aci (setup/test/standby/active/sleep)
@@ -74,11 +73,11 @@ void __ble_assert(const char *file, uint16_t line)
 }
 
 void setup(void)
-{ 
+{
   Serial.begin(19200);
   //Wait until the serial port is available (useful only for the leonardo)
   while(!Serial)
-  {}  
+  {}
   Serial.println(F("Arduino setup"));
   //Tell the ACI library, the MCU to nRF8001 pin connections
   aci_state.aci_pins.board_name = BOARD_DEFAULT; //See board.h for details REDBEARLAB_SHIELD_V1_1 or BOARD_DEFAULT
@@ -87,28 +86,32 @@ void setup(void)
   aci_state.aci_pins.mosi_pin   = MOSI;
   aci_state.aci_pins.miso_pin   = MISO;
   aci_state.aci_pins.sck_pin    = SCK;
-	
+
   aci_state.aci_pins.spi_clock_divider     = SPI_CLOCK_DIV8;
-	  
+
   aci_state.aci_pins.reset_pin             = 4; //4 for Nordic board, UNUSED for REDBEARLAB_SHIELD_V1_1
   aci_state.aci_pins.active_pin            = UNUSED;
   aci_state.aci_pins.optional_chip_sel_pin = UNUSED;
-  
+
   aci_state.aci_pins.interface_is_interrupt	  = false;
   aci_state.aci_pins.interrupt_number	          = 1;
-  
-  lib_aci_init(&aci_state);
+
+  //We reset the nRF8001 here by toggling the RESET line connected to the nRF8001
+  //and initialize the data structures required to setup the nRF8001
+  //The second parameter is for turning debug printing on for the ACI Commands and Events so they be printed on the Serial
+  lib_aci_init(&aci_state, false);
 
   Serial.println(F("nRF8001 Reset done"));
 }
 
 void aci_loop(void)
 {
+
   // We enter the if statement only when there is a ACI event available to be processed
   if (lib_aci_event_get(&aci_state, &aci_data))
   {
     aci_evt_t * aci_evt;
-    
+
     aci_evt = &aci_data.evt;
     switch(aci_evt->evt_opcode)
     {
@@ -116,19 +119,19 @@ void aci_loop(void)
         As soon as you reset the nRF8001 you will get an ACI Device Started Event
         */
         case ACI_EVT_DEVICE_STARTED:
-        {          
+        {
           aci_state.data_credit_available = aci_evt->params.device_started.credit_available;
           switch(aci_evt->params.device_started.device_mode)
           {
             case ACI_DEVICE_SETUP:
-              Serial.println(F("Evt Device Started: Setup"));              
-              //Put the nRF8001 in Test mode. 
+              Serial.println(F("Evt Device Started: Setup"));
+              //Put the nRF8001 in Test mode.
               //See ACI Test Command in Section 24 (System Commands) of the nRF8001 datasheet.
               //Use ACI_TEST_MODE_DTM_ACI to send DTM commands over ACI
               //lib_aci_test(ACI_TEST_MODE_DTM_UART);
               lib_aci_test(ACI_TEST_MODE_DTM_ACI);
               break;
-                            
+
             case ACI_DEVICE_TEST:
             {
               uint8_t i = 0;
@@ -165,7 +168,7 @@ void aci_loop(void)
   else
   {
     // No event in the ACI Event queue
-  } 
+  }
 }
 
 void dtm_command_loop(void)
@@ -184,19 +187,19 @@ void dtm_command_loop(void)
           //Forwarding DTM command to the nRF8001
           lib_aci_dtm_command(dtm_buffer[0], dtm_buffer[1]);
       }
-      
+
       // clear the string:
       inputString = "";
       stringComplete = false;
     }
-  }  
+  }
 }
 
 void loop()
 {
    //Process any ACI commands or events
   aci_loop();
-  
+
   //Process any DTM command, DTM Events is processed in the aci_loop
   dtm_command_loop();
 
@@ -218,7 +221,7 @@ void serialEvent() {
     // if the incoming character is a newline, set a flag
     // so the main loop can do something about it:
     if (inputString.length()==2) {
-      stringComplete = true;     
-    } 
+      stringComplete = true;
+    }
   }
 }

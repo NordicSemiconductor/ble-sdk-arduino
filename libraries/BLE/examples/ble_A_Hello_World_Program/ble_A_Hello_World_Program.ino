@@ -150,9 +150,11 @@ void setup(void)
 {
 	Serial.begin(115200);
 	//Wait until the serial port is available (useful only for the Leonardo)
+	//As the Leonardo board is not reseted every time you open the Serial Monitor
 	#if defined (__AVR_ATmega32U4__)
 		while(!Serial)
 		{}
+		delay(5000);  //5 seconds delay for enabling to see the start up comments on the serial board
 	#elif defined(__PIC32MX__)
 		delay(1000);
 	#endif
@@ -202,10 +204,9 @@ void setup(void)
     //We reset the nRF8001 here by toggling the RESET line connected to the nRF8001
 	//If the RESET line is not available we call the ACI Radio Reset to soft reset the nRF8001
 	//then we initialize the data structures required to setup the nRF8001
-	lib_aci_init(&aci_state, true);
+	//The second parameter is for turning debug printing on for the ACI Commands and Events so they be printed on the Serial
+	lib_aci_init(&aci_state, false);
     Serial.println(F("Set up done"));
-    //Turn debug printing on for the ACI Commands and Events to be printed on the Serial
-	lib_aci_debug_print(true);
 }
 
 void uart_over_ble_init(void)
