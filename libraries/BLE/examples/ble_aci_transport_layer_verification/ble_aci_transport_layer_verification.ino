@@ -38,7 +38,6 @@ received in the ACI echo event should be the same.
 
 #define DEBUG_ENABLE CODED_TRACES
 #include <SPI.h>
-#include <ble_system.h>
 #include <lib_aci.h>
 
 // aci_struct that will contain
@@ -55,7 +54,6 @@ received in the ACI echo event should be the same.
 static struct aci_state_t aci_state;
 
 static hal_aci_evt_t aci_data;
-
 
 static uint8_t echo_data[] = { 0x00, 0xaa, 0x55, 0xff, 0x77, 0x55, 0x33, 0x22, 0x11, 0x44, 0x66, 0x88, 0x99, 0xbb, 0xdd, 0xcc, 0x00, 0xaa, 0x55, 0xff };
 static uint8_t aci_echo_cmd = 0;
@@ -76,27 +74,37 @@ void __ble_assert(const char *file, uint16_t line)
 void setup(void)
 {
   Serial.begin(115200);
+  //Wait until the serial port is available (useful only for the Leonardo)
+  //As the Leonardo board is not reseted every time you open the Serial Monitor
+  #if defined (__AVR_ATmega32U4__)
+    while(!Serial)
+    {}
+    delay(5000);  //5 seconds delay for enabling to see the start up comments on the serial board
+  #elif defined(__PIC32MX__)
+    delay(1000);
+  #endif
   Serial.println(F("Arduino setup"));
 
   /*
   Tell the ACI library, the MCU to nRF8001 pin connections.
   The Active pin is optional and can be marked UNUSED
   */
-  aci_state.aci_pins.board_name = BOARD_DEFAULT; //See board.h for details
-  aci_state.aci_pins.reqn_pin   = 9;
-  aci_state.aci_pins.rdyn_pin   = 8;
+  aci_state.aci_pins.board_name = BOARD_DEFAULT; //See board.h for details REDBEARLAB_SHIELD_V1_1 or BOARD_DEFAULT
+  aci_state.aci_pins.reqn_pin   = 9; //SS for Nordic board, 9 for REDBEARLAB_SHIELD_V1_1
+  aci_state.aci_pins.rdyn_pin   = 8; //3 for Nordic board, 8 for REDBEARLAB_SHIELD_V1_1
   aci_state.aci_pins.mosi_pin   = MOSI;
   aci_state.aci_pins.miso_pin   = MISO;
   aci_state.aci_pins.sck_pin    = SCK;
 
-  aci_state.aci_pins.spi_clock_divider     = SPI_CLOCK_DIV8;
+  aci_state.aci_pins.spi_clock_divider      = SPI_CLOCK_DIV8;//SPI_CLOCK_DIV8  = 2MHz SPI speed
+                                                             //SPI_CLOCK_DIV16 = 1MHz SPI speed
 
-  aci_state.aci_pins.reset_pin             = 4;
-  aci_state.aci_pins.active_pin            = UNUSED;
-  aci_state.aci_pins.optional_chip_sel_pin = UNUSED;
+  aci_state.aci_pins.reset_pin              = 4; //4 for Nordic board, UNUSED for REDBEARLAB_SHIELD_V1_1
+  aci_state.aci_pins.active_pin             = UNUSED;
+  aci_state.aci_pins.optional_chip_sel_pin  = UNUSED;
 
-  aci_state.aci_pins.interface_is_interrupt	  = false;
-  aci_state.aci_pins.interrupt_number	      = 1;
+  aci_state.aci_pins.interface_is_interrupt = false;
+  aci_state.aci_pins.interrupt_number       = 1;
 
   //The second parameter is for turning debug printing on for the ACI Commands and Events so they be printed on the Serial
   hal_aci_tl_init(&(aci_state.aci_pins),false);
@@ -112,38 +120,38 @@ void loop()
     aci_evt = &aci_data.evt;
     switch(aci_evt->evt_opcode)
     {
-        /**
-        As soon as you reset the nRF8001 you will get an ACI Device Started Event
-        */
-        case ACI_EVT_DEVICE_STARTED:
+      /**
+      As soon as you reset the nRF8001 you will get an ACI Device Started Event
+      */
+      case ACI_EVT_DEVICE_STARTED:
+      {
+        aci_state.data_credit_available = aci_evt->params.device_started.credit_available;
+        switch(aci_evt->params.device_started.device_mode)
         {
-          aci_state.data_credit_available = aci_evt->params.device_started.credit_available;
-          switch(aci_evt->params.device_started.device_mode)
+          case ACI_DEVICE_SETUP:
+            Serial.println(F("Evt Device Started: Setup"));
+            lib_aci_test(ACI_TEST_MODE_DTM_UART);
+            break;
+          case ACI_DEVICE_STANDBY:
+            Serial.println(F("Evt Device Started: Standby"));
+            break;
+          case ACI_DEVICE_TEST:
           {
-            case ACI_DEVICE_SETUP:
-              Serial.println(F("Evt Device Started: Setup"));
-              lib_aci_test(ACI_TEST_MODE_DTM_UART);
-              break;
-            case ACI_DEVICE_STANDBY:
-              Serial.println(F("Evt Device Started: Standby"));
-              break;
-            case ACI_DEVICE_TEST:
+            uint8_t i = 0;
+            Serial.println(F("Evt Device Started: Test"));
+            Serial.println(F("Started infinite Echo test"));
+            Serial.println(F("Repeat the test with all bytes in echo_data inverted."));
+            Serial.println(F("Waiting 4 seconds before the test starts...."));
+            delay(4000);
+            for(i=0; i<NUM_ECHO_CMDS; i++)
             {
-              uint8_t i = 0;
-              Serial.println(F("Evt Device Started: Test"));
-              Serial.println(F("Started infinite Echo test"));
-              Serial.println(F("Repeat the test with all bytes in echo_data inverted."));
-              Serial.println(F("Waiting 4 seconds before the test starts...."));
-              delay(4000);
-              for(i=0; i<NUM_ECHO_CMDS; i++)
-              {
-                lib_aci_echo_msg(sizeof(echo_data), &echo_data[0]);
-                aci_echo_cmd++;
-              }
+              lib_aci_echo_msg(sizeof(echo_data), &echo_data[0]);
+              aci_echo_cmd++;
             }
-              break;
           }
+            break;
         }
+      }
         break; //ACI Device Started Event
       case ACI_EVT_CMD_RSP:
         //If an ACI command response event comes with an error -> stop
@@ -178,7 +186,7 @@ void loop()
           }
         }
         break;
-   }
+    }
   }
   else
   {
