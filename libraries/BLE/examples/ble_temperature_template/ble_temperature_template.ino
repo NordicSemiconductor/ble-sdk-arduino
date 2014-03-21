@@ -21,6 +21,8 @@
 
 /**
  *
+ * IMPORTANT: This example still is not compatible with CHIPKIT
+ *
  * Click on the "Serial Monitor" button on the Arduino IDE to get reset the Arduino and start the application.
  * The setup() function is called first and is called only one for each reset of the Arduino.
  * The loop() function as the name implies is called in a loop.
@@ -43,7 +45,6 @@
 #include <avr/power.h>
 
 #include "services.h"
-#include <ble_system.h>
 #include <lib_aci.h>
 
 #include <aci_setup.h>
@@ -51,11 +52,11 @@
 #include "timer1.h"
 
 #ifdef SERVICES_PIPE_TYPE_MAPPING_CONTENT
-    static services_pipe_type_mapping_t
-        services_pipe_type_mapping[NUMBER_OF_PIPES] = SERVICES_PIPE_TYPE_MAPPING_CONTENT;
+  static services_pipe_type_mapping_t
+      services_pipe_type_mapping[NUMBER_OF_PIPES] = SERVICES_PIPE_TYPE_MAPPING_CONTENT;
 #else
-    #define NUMBER_OF_PIPES 0
-    static services_pipe_type_mapping_t * services_pipe_type_mapping = NULL;
+  #define NUMBER_OF_PIPES 0
+  static services_pipe_type_mapping_t * services_pipe_type_mapping = NULL;
 #endif
 
 #define TEMPERATURE_NUM_SAMPLES  10
@@ -74,7 +75,6 @@ static hal_aci_data_t setup_msgs[NB_SETUP_MESSAGES] PROGMEM = SETUP_MESSAGES_CON
 static struct aci_state_t aci_state;
 static hal_aci_evt_t aci_data;
 
-
 /**
 Counter in seconds.
 When this counter counts down to zero -> wakeup the nRF8001
@@ -86,7 +86,6 @@ Variables used for the temperature measurement and transmission
 */
 //static h_thermo_temp_measure_t h_temperature;
 //static h_temp_type_t current_type;
-
 
 static int32_t temperature = 0; // Needs to be an int32 to measure negative values
 static float temperature_f;
@@ -118,17 +117,16 @@ void aci_loop()
   if (lib_aci_event_get(&aci_state, &aci_data))
   {
     aci_evt_t * aci_evt;
-
     aci_evt = &aci_data.evt;
 
     switch(aci_evt->evt_opcode)
     {
-        case ACI_EVT_DEVICE_STARTED:
+      case ACI_EVT_DEVICE_STARTED:
+      {
+        aci_state.data_credit_available = aci_evt->params.device_started.credit_available;
+        switch(aci_evt->params.device_started.device_mode)
         {
-          aci_state.data_credit_available = aci_evt->params.device_started.credit_available;
-          switch(aci_evt->params.device_started.device_mode)
-          {
-            case ACI_DEVICE_SETUP:
+          case ACI_DEVICE_SETUP:
             /**
             When the device is in the setup mode
             */
@@ -137,26 +135,23 @@ void aci_loop()
             setup_required = true;
             break;
 
-            case ACI_DEVICE_STANDBY:
-              aci_state.device_state = ACI_DEVICE_STANDBY;
-              sleep_to_wakeup_timeout = 30;
-              Serial.println(F("Evt Device Started: Standby"));
-              if (aci_evt->params.device_started.hw_error)
-              {
-                delay(20); //Magic number used to make sure the HW error event is handled correctly.
-              }
-              else
-              {
-                lib_aci_connect(30/* in seconds */, 0x0100 /* advertising interval 100ms*/);
-                Serial.println(F("Advertising started"));
-              }
-              break;
+          case ACI_DEVICE_STANDBY:
+            aci_state.device_state = ACI_DEVICE_STANDBY;
+            sleep_to_wakeup_timeout = 30;
+            Serial.println(F("Evt Device Started: Standby"));
+            if (aci_evt->params.device_started.hw_error)
+            {
+              delay(20); //Magic number used to make sure the HW error event is handled correctly.
             }
-          }
+            else
+            {
+              lib_aci_connect(30/* in seconds */, 0x0100 /* advertising interval 100ms*/);
+              Serial.println(F("Advertising started"));
+            }
+            break;
+        }
+      }
         break; //ACI Device Started Event
-
-
-
 
       case ACI_EVT_CMD_RSP:
         //If an ACI command response event comes with an error -> stop
@@ -216,9 +211,6 @@ void aci_loop()
         }
         break;
 
-
-
-
       case ACI_EVT_CONNECTED:
         /*
         The nRF8001 is now connected to the peer device.
@@ -226,7 +218,6 @@ void aci_loop()
         Serial.println(F("Evt Connected"));
         ack_temp_measure_pending = false;
         break;
-
 
       case ACI_EVT_DATA_CREDIT:
         Serial.println(F("Evt Credit: Peer Radio acked our temperature measurement"));
@@ -238,9 +229,6 @@ void aci_loop()
         The confirmation is the ack from the peer GATT client is sent as a ACI_EVT_DATA_ACK.
         */
         break;
-
-
-
 
       case ACI_EVT_DISCONNECTED:
         /**
@@ -265,21 +253,18 @@ void aci_loop()
         }
         break;
 
-
-
-
       case ACI_EVT_PIPE_STATUS:
-      {
-        Serial.println(F("Evt Pipe Status"));
-        /** check if the peer has subscribed to the Temperature Characteristic
-        */
-        if (lib_aci_is_pipe_available(&aci_state, PIPE_HEALTH_THERMOMETER_TEMPERATURE_MEASUREMENT_TX_ACK))
         {
-          Timer1start();
-        }
+          Serial.println(F("Evt Pipe Status"));
+          /** check if the peer has subscribed to the Temperature Characteristic
+          */
+          if (lib_aci_is_pipe_available(&aci_state, PIPE_HEALTH_THERMOMETER_TEMPERATURE_MEASUREMENT_TX_ACK))
+          {
+            Timer1start();
+          }
 
-      }
-      break;
+        }
+        break;
 
       case ACI_EVT_PIPE_ERROR:
         //See the appendix in the nRF8001 Product Specication for details on the error codes
@@ -321,11 +306,11 @@ void aci_loop()
         Serial.println(F("Advertising started"));
         break;
 
-        default:
-          Serial.print(F("Evt Opcode 0x"));
-          Serial.print(aci_evt->evt_opcode, HEX);
-          Serial.println(F(" unhandled"));
-          break;
+      default:
+        Serial.print(F("Evt Opcode 0x"));
+        Serial.print(aci_evt->evt_opcode, HEX);
+        Serial.println(F(" unhandled"));
+        break;
     }
   }
   else
@@ -350,10 +335,19 @@ void aci_loop()
 }
 
 
-
 void setup(void)
 {
   Serial.begin(115200);
+  //Wait until the serial port is available (useful only for the Leonardo)
+  //As the Leonardo board is not reseted every time you open the Serial Monitor
+  #if defined (__AVR_ATmega32U4__)
+    while(!Serial)
+    {}
+    delay(5000);  //5 seconds delay for enabling to see the start up comments on the serial board
+  #elif defined(__PIC32MX__)
+    delay(1000);
+  #endif
+
   Serial.println(F("Arduino setup"));
 
   /**
@@ -382,14 +376,15 @@ void setup(void)
   aci_state.aci_pins.miso_pin   = MISO;
   aci_state.aci_pins.sck_pin    = SCK;
 
-  aci_state.aci_pins.spi_clock_divider     = SPI_CLOCK_DIV8;
+  aci_state.aci_pins.spi_clock_divider      = SPI_CLOCK_DIV8;//SPI_CLOCK_DIV8  = 2MHz SPI speed
+                                                             //SPI_CLOCK_DIV16 = 1MHz SPI speed
+  
+  aci_state.aci_pins.reset_pin              = 4; //4 for Nordic board, UNUSED for REDBEARLAB_SHIELD_V1_1
+  aci_state.aci_pins.active_pin             = UNUSED;
+  aci_state.aci_pins.optional_chip_sel_pin  = UNUSED;
 
-  aci_state.aci_pins.reset_pin             = 4;
-  aci_state.aci_pins.active_pin            = UNUSED;
-  aci_state.aci_pins.optional_chip_sel_pin = UNUSED;
-
-  aci_state.aci_pins.interface_is_interrupt	  = false;
-  aci_state.aci_pins.interrupt_number	      = 1;
+  aci_state.aci_pins.interface_is_interrupt = false; //Interrupts still not available in Chipkit
+  aci_state.aci_pins.interrupt_number       = 1;
 
   /** We reset the nRF8001 here by toggling the RESET line connected to the nRF8001
    *  and initialize the data structures required to setup the nRF8001
@@ -416,7 +411,6 @@ void loop()
   if (1 == timer1_f)
   {
     uint8_t i = 0;
-
     timer1_f  = 0;
 
     if((ACI_DEVICE_STANDBY == aci_state.device_state)

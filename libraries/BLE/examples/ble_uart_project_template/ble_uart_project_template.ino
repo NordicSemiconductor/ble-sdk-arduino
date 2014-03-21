@@ -116,6 +116,7 @@ Used to test the UART TX characteristic notification
 static uart_over_ble_t uart_over_ble;
 static uint8_t         uart_buffer[20];
 static uint8_t         uart_buffer_len = 0;
+static uint8_t         dummychar = 0;
 
 /*
 Initialize the radio_ack. This is the ack received for every transmitted packet.
@@ -148,53 +149,61 @@ The ACI Evt Data Credit provides the radio level ack of a transmitted packet.
 */
 void setup(void)
 {
-	Serial.begin(115200);
-	//Wait until the serial port is available (useful only for the leonardo)
-	while(!Serial)
-	{}
-	Serial.println(F("Arduino setup"));
-	Serial.println(F("Set line ending to newline to send data from the serial monitor"));
+  Serial.begin(115200);
+  //Wait until the serial port is available (useful only for the Leonardo)
+  //As the Leonardo board is not reseted every time you open the Serial Monitor
+  #if defined (__AVR_ATmega32U4__)
+    while(!Serial)
+    {}
+    delay(5000);  //5 seconds delay for enabling to see the start up comments on the serial board
+  #elif defined(__PIC32MX__)
+    delay(1000);
+  #endif
 
-	/**
-	Point ACI data structures to the the setup data that the nRFgo studio generated for the nRF8001
-	*/
-	if (NULL != services_pipe_type_mapping)
-	{
-	aci_state.aci_setup_info.services_pipe_type_mapping = &services_pipe_type_mapping[0];
-	}
-	else
-	{
-	aci_state.aci_setup_info.services_pipe_type_mapping = NULL;
-	}
-	aci_state.aci_setup_info.number_of_pipes    = NUMBER_OF_PIPES;
-	aci_state.aci_setup_info.setup_msgs         = setup_msgs;
-	aci_state.aci_setup_info.num_setup_msgs     = NB_SETUP_MESSAGES;
+  Serial.println(F("Arduino setup"));
+  Serial.println(F("Set line ending to newline to send data from the serial monitor"));
 
-	/*
-	Tell the ACI library, the MCU to nRF8001 pin connections.
-	The Active pin is optional and can be marked UNUSED
-	*/
-	aci_state.aci_pins.board_name = BOARD_DEFAULT; //See board.h for details REDBEARLAB_SHIELD_V1_1 or BOARD_DEFAULT
-	aci_state.aci_pins.reqn_pin   = 9; //SS for Nordic board, 9 for REDBEARLAB_SHIELD_V1_1
-	aci_state.aci_pins.rdyn_pin   = 8; //3 for Nordic board, 8 for REDBEARLAB_SHIELD_V1_1
-	aci_state.aci_pins.mosi_pin   = MOSI;
-	aci_state.aci_pins.miso_pin   = MISO;
-	aci_state.aci_pins.sck_pin    = SCK;
+  /**
+  Point ACI data structures to the the setup data that the nRFgo studio generated for the nRF8001
+  */
+  if (NULL != services_pipe_type_mapping)
+  {
+    aci_state.aci_setup_info.services_pipe_type_mapping = &services_pipe_type_mapping[0];
+  }
+  else
+  {
+    aci_state.aci_setup_info.services_pipe_type_mapping = NULL;
+  }
+  aci_state.aci_setup_info.number_of_pipes    = NUMBER_OF_PIPES;
+  aci_state.aci_setup_info.setup_msgs         = setup_msgs;
+  aci_state.aci_setup_info.num_setup_msgs     = NB_SETUP_MESSAGES;
 
-	aci_state.aci_pins.spi_clock_divider          = SPI_CLOCK_DIV8;
+  /*
+  Tell the ACI library, the MCU to nRF8001 pin connections.
+  The Active pin is optional and can be marked UNUSED
+  */
+  aci_state.aci_pins.board_name = BOARD_DEFAULT; //See board.h for details REDBEARLAB_SHIELD_V1_1 or BOARD_DEFAULT
+  aci_state.aci_pins.reqn_pin   = 9; //SS for Nordic board, 9 for REDBEARLAB_SHIELD_V1_1
+  aci_state.aci_pins.rdyn_pin   = 8; //3 for Nordic board, 8 for REDBEARLAB_SHIELD_V1_1
+  aci_state.aci_pins.mosi_pin   = MOSI;
+  aci_state.aci_pins.miso_pin   = MISO;
+  aci_state.aci_pins.sck_pin    = SCK;
 
-	aci_state.aci_pins.reset_pin             = 4; //4 for Nordic board, UNUSED for REDBEARLAB_SHIELD_V1_1
-	aci_state.aci_pins.active_pin            = UNUSED;
-	aci_state.aci_pins.optional_chip_sel_pin = UNUSED;
+  aci_state.aci_pins.spi_clock_divider      = SPI_CLOCK_DIV8;//SPI_CLOCK_DIV8  = 2MHz SPI speed
+                                                             //SPI_CLOCK_DIV16 = 1MHz SPI speed
+  
+  aci_state.aci_pins.reset_pin              = 4; //4 for Nordic board, UNUSED for REDBEARLAB_SHIELD_V1_1
+  aci_state.aci_pins.active_pin             = UNUSED;
+  aci_state.aci_pins.optional_chip_sel_pin  = UNUSED;
 
-	aci_state.aci_pins.interface_is_interrupt	  = false;
-	aci_state.aci_pins.interrupt_number			  = 1;
+  aci_state.aci_pins.interface_is_interrupt = false; //Interrupts still not available in Chipkit
+  aci_state.aci_pins.interrupt_number       = 1;
 
-	//We reset the nRF8001 here by toggling the RESET line connected to the nRF8001
-	//If the RESET line is not available we call the ACI Radio Reset to soft reset the nRF8001
-	//then we initialize the data structures required to setup the nRF8001
-	//The second parameter is for turning debug printing on for the ACI Commands and Events so they be printed on the Serial
-	lib_aci_init(&aci_state, false);
+  //We reset the nRF8001 here by toggling the RESET line connected to the nRF8001
+  //If the RESET line is not available we call the ACI Radio Reset to soft reset the nRF8001
+  //then we initialize the data structures required to setup the nRF8001
+  //The second parameter is for turning debug printing on for the ACI Commands and Events so they be printed on the Serial
+  lib_aci_init(&aci_state, false);
 }
 
 void uart_over_ble_init(void)
@@ -204,95 +213,90 @@ void uart_over_ble_init(void)
 
 bool uart_tx(uint8_t *buffer, uint8_t buffer_len)
 {
-	bool status = false;
+  bool status = false;
 
-	if (lib_aci_is_pipe_available(&aci_state, PIPE_UART_OVER_BTLE_UART_TX_TX) &&
-	    (aci_state.data_credit_available >= 1))
-	{
-		status = lib_aci_send_data(PIPE_UART_OVER_BTLE_UART_TX_TX, buffer, buffer_len);
-		if (status)
-		{
-			aci_state.data_credit_available--;
-		}
-	}
-
-	return status;
+  if (lib_aci_is_pipe_available(&aci_state, PIPE_UART_OVER_BTLE_UART_TX_TX) &&
+      (aci_state.data_credit_available >= 1))
+  {
+    status = lib_aci_send_data(PIPE_UART_OVER_BTLE_UART_TX_TX, buffer, buffer_len);
+    if (status)
+    {
+      aci_state.data_credit_available--;
+    }
+  }
+  return status;
 }
 
 bool uart_process_control_point_rx(uint8_t *byte, uint8_t length)
 {
-    bool status = false;
-    aci_ll_conn_params_t *conn_params;
+  bool status = false;
+  aci_ll_conn_params_t *conn_params;
 
-	if (lib_aci_is_pipe_available(&aci_state, PIPE_UART_OVER_BTLE_UART_CONTROL_POINT_TX) )
+  if (lib_aci_is_pipe_available(&aci_state, PIPE_UART_OVER_BTLE_UART_CONTROL_POINT_TX) )
+  {
+    Serial.println(*byte, HEX);
+    switch(*byte)
     {
-        Serial.println(*byte, HEX);
-        switch(*byte)
-        {
-            /*
-            Queues a ACI Disconnect to the nRF8001 when this packet is received.
-            May cause some of the UART packets being sent to be dropped
-            */
-            case UART_OVER_BLE_DISCONNECT:
-                /*
-                Parameters:
-                None
-                */
-                lib_aci_disconnect(&aci_state, ACI_REASON_TERMINATE);
-                status = true;
-                break;
+      /*
+      Queues a ACI Disconnect to the nRF8001 when this packet is received.
+      May cause some of the UART packets being sent to be dropped
+      */
+      case UART_OVER_BLE_DISCONNECT:
+        /*
+        Parameters:
+        None
+        */
+        lib_aci_disconnect(&aci_state, ACI_REASON_TERMINATE);
+        status = true;
+        break;
 
+      /*
+      Queues an ACI Change Timing to the nRF8001
+      */
+      case UART_OVER_BLE_LINK_TIMING_REQ:
+        /*
+        Parameters:
+        Connection interval min: 2 bytes
+        Connection interval max: 2 bytes
+        Slave latency:           2 bytes
+        Timeout:                 2 bytes
+        Same format as Peripheral Preferred Connection Parameters (See nRFgo studio -> nRF8001 Configuration -> GAP Settings
+        Refer to the ACI Change Timing Request in the nRF8001 Product Specifications
+        */
+        conn_params = (aci_ll_conn_params_t *)(byte+1);
+        lib_aci_change_timing( conn_params->min_conn_interval,
+                                conn_params->max_conn_interval,
+                                conn_params->slave_latency,
+                                conn_params->timeout_mult);
+        status = true;
+        break;
 
-            /*
-            Queues an ACI Change Timing to the nRF8001
-            */
-            case UART_OVER_BLE_LINK_TIMING_REQ:
-                /*
-                Parameters:
-                Connection interval min: 2 bytes
-                Connection interval max: 2 bytes
-                Slave latency:           2 bytes
-                Timeout:                 2 bytes
-                Same format as Peripheral Preferred Connection Parameters (See nRFgo studio -> nRF8001 Configuration -> GAP Settings
-                Refer to the ACI Change Timing Request in the nRF8001 Product Specifications
-                */
-                conn_params = (aci_ll_conn_params_t *)(byte+1);
-                lib_aci_change_timing( conn_params->min_conn_interval,
-                                        conn_params->max_conn_interval,
-                                        conn_params->slave_latency,
-                                        conn_params->timeout_mult);
-                status = true;
-                break;
+      /*
+      Clears the RTS of the UART over BLE
+      */
+      case UART_OVER_BLE_TRANSMIT_STOP:
+        /*
+        Parameters:
+        None
+        */
+        uart_over_ble.uart_rts_local = false;
+        status = true;
+        break;
 
-
-            /*
-            Clears the RTS of the UART over BLE
-            */
-            case UART_OVER_BLE_TRANSMIT_STOP:
-                /*
-                Parameters:
-                None
-                */
-                uart_over_ble.uart_rts_local = false;
-                status = true;
-                break;
-
-
-            /*
-            Set the RTS of the UART over BLE
-            */
-            case UART_OVER_BLE_TRANSMIT_OK:
-                /*
-                Parameters:
-                None
-                */
-                uart_over_ble.uart_rts_local = true;
-                status = true;
-                break;
-        }
+      /*
+      Set the RTS of the UART over BLE
+      */
+      case UART_OVER_BLE_TRANSMIT_OK:
+        /*
+        Parameters:
+        None
+        */
+        uart_over_ble.uart_rts_local = true;
+        status = true;
+        break;
     }
-
-    return status;
+  }
+  return status;
 }
 
 void aci_loop()
@@ -303,19 +307,19 @@ void aci_loop()
   if (lib_aci_event_get(&aci_state, &aci_data))
   {
     aci_evt_t * aci_evt;
-
     aci_evt = &aci_data.evt;
+
     switch(aci_evt->evt_opcode)
     {
-        /**
-        As soon as you reset the nRF8001 you will get an ACI Device Started Event
-        */
-        case ACI_EVT_DEVICE_STARTED:
+      /**
+      As soon as you reset the nRF8001 you will get an ACI Device Started Event
+      */
+      case ACI_EVT_DEVICE_STARTED:
+      {
+        aci_state.data_credit_total = aci_evt->params.device_started.credit_available;
+        switch(aci_evt->params.device_started.device_mode)
         {
-          aci_state.data_credit_total = aci_evt->params.device_started.credit_available;
-          switch(aci_evt->params.device_started.device_mode)
-          {
-            case ACI_DEVICE_SETUP:
+          case ACI_DEVICE_SETUP:
             /**
             When the device is in the setup mode
             */
@@ -323,23 +327,22 @@ void aci_loop()
             setup_required = true;
             break;
 
-            case ACI_DEVICE_STANDBY:
-              Serial.println(F("Evt Device Started: Standby"));
-              //Looking for an iPhone by sending radio advertisements
-              //When an iPhone connects to us we will get an ACI_EVT_CONNECTED event from the nRF8001
-              if (aci_evt->params.device_started.hw_error)
-              {
-                delay(20); //Magic number used to make sure the HW error event is handled correctly.
-              }
-              else
-              {
-              lib_aci_connect(180/* in seconds */, 0x0050 /* advertising interval 50ms*/);
-              Serial.println(F("Advertising started"));
-              }
-
-              break;
-          }
+          case ACI_DEVICE_STANDBY:
+            Serial.println(F("Evt Device Started: Standby"));
+            //Looking for an iPhone by sending radio advertisements
+            //When an iPhone connects to us we will get an ACI_EVT_CONNECTED event from the nRF8001
+            if (aci_evt->params.device_started.hw_error)
+            {
+              delay(20); //Magic number used to make sure the HW error event is handled correctly.
+            }
+            else
+            {
+            lib_aci_connect(180/* in seconds */, 0x0050 /* advertising interval 50ms*/);
+            Serial.println(F("Advertising started"));
+            }
+            break;
         }
+      }
         break; //ACI Device Started Event
 
       case ACI_EVT_CMD_RSP:
@@ -399,38 +402,36 @@ void aci_loop()
         break;
 
       case ACI_EVT_DATA_RECEIVED:
-		Serial.print(F("Pipe Number: "));
-		Serial.println(aci_evt->params.data_received.rx_data.pipe_number, DEC);
+        Serial.print(F("Pipe Number: "));
+        Serial.println(aci_evt->params.data_received.rx_data.pipe_number, DEC);
+        if (PIPE_UART_OVER_BTLE_UART_RX_RX == aci_evt->params.data_received.rx_data.pipe_number)
+        {
+          Serial.print(F(" Data(Hex) : "));
+          for(int i=0; i<aci_evt->len - 2; i++)
+          {
+            Serial.print((char)aci_evt->params.data_received.rx_data.aci_data[i]);
+            uart_buffer[i] = aci_evt->params.data_received.rx_data.aci_data[i];
+            Serial.print(F(" "));
+          }
 
-		if (PIPE_UART_OVER_BTLE_UART_RX_RX == aci_evt->params.data_received.rx_data.pipe_number)
-			{
-
-			  Serial.print(F(" Data(Hex) : "));
-			  for(int i=0; i<aci_evt->len - 2; i++)
-			  {
-				Serial.print((char)aci_evt->params.data_received.rx_data.aci_data[i]);
-				uart_buffer[i] = aci_evt->params.data_received.rx_data.aci_data[i];
-				Serial.print(F(" "));
-			  }
-			  uart_buffer_len = aci_evt->len - 2;
-			  Serial.println(F(""));
-			  if (lib_aci_is_pipe_available(&aci_state, PIPE_UART_OVER_BTLE_UART_TX_TX))
-			  {
-
-					/*Do this to test the loopback otherwise comment it out
-					*/
-					/*
-					if (!uart_tx(&uart_buffer[0], aci_evt->len - 2))
-					{
-						Serial.println(F("UART loopback failed"));
-					}
-					else
-					{
-						Serial.println(F("UART loopback OK"));
-					}
-					*/
-			  }
-		}
+          uart_buffer_len = aci_evt->len - 2;
+          Serial.println(F(""));
+          if (lib_aci_is_pipe_available(&aci_state, PIPE_UART_OVER_BTLE_UART_TX_TX))
+          {
+            /*Do this to test the loopback otherwise comment it out
+            */
+            /*
+            if (!uart_tx(&uart_buffer[0], aci_evt->len - 2))
+            {
+              Serial.println(F("UART loopback failed"));
+            }
+            else
+            {
+              Serial.println(F("UART loopback OK"));
+            }
+            */
+          }
+        }
         if (PIPE_UART_OVER_BTLE_UART_CONTROL_POINT_RX == aci_evt->params.data_received.rx_data.pipe_number)
         {
             uart_process_control_point_rx(&aci_evt->params.data_received.rx_data.aci_data[0], aci_evt->len - 2); //Subtract for Opcode and Pipe number
@@ -463,7 +464,7 @@ void aci_loop()
 
         for(uint8_t counter = 0; counter <= (aci_evt->len - 3); counter++)
         {
-        Serial.write(aci_evt->params.hw_error.file_name[counter]); //uint8_t file_name[20];
+          Serial.write(aci_evt->params.hw_error.file_name[counter]); //uint8_t file_name[20];
         }
         Serial.println();
         lib_aci_connect(180/* in seconds */, 0x0050 /* advertising interval 50ms*/);
@@ -493,8 +494,8 @@ void aci_loop()
   }
 }
 
-String inputString     = "";     // a string to hold incoming data
 bool stringComplete = false;  // whether the string is complete
+uint8_t stringIndex = 0;      //Initialize the index to store incoming chars
 
 void loop() {
 
@@ -502,49 +503,75 @@ void loop() {
   aci_loop();
 
   // print the string when a newline arrives:
-  if (stringComplete) {
+  if (stringComplete)
+  {
     Serial.print(F("Sending: "));
-    Serial.println(inputString);
-    inputString.toCharArray((char*)uart_buffer,20);
+    Serial.println((char *)&uart_buffer[0]);
 
-    if (inputString.length() > 20)
-    {
-        uart_buffer_len = 20;
-        uart_buffer[19] = '\n';
-        Serial.println(F("Serial input truncted"));
-    }
-    else
-    {
-        uart_buffer_len = inputString.length();
-    }
+    uart_buffer_len = stringIndex + 1;
 
     if (!lib_aci_send_data(PIPE_UART_OVER_BTLE_UART_TX_TX, uart_buffer, uart_buffer_len))
-      {
-        Serial.println(F("Serial input dropped"));
-      }
-    // clear the string:
-    inputString = "";
+    {
+      Serial.println(F("Serial input dropped"));
+    }
+
+    // clear the uart_buffer:
+    for (stringIndex = 0; stringIndex < 20; stringIndex++)
+    {
+      uart_buffer[stringIndex] = ' ';
+    }
+
+    // reset the flag and the index in order to receive more data
+    stringIndex    = 0;
     stringComplete = false;
   }
+
+  //For ChipKit you have to call the function that reads from Serial
+  #if defined (__PIC32MX__)
+    if (Serial.available())
+    {
+      serialEvent();
+    }
+  #endif
 }
 
 /*
-  SerialEvent occurs whenever a new data comes in the
+ COMMENT ONLY FOR ARDUINO
+ SerialEvent occurs whenever a new data comes in the
  hardware serial RX.  This routine is run between each
  time loop() runs, so using delay inside loop can delay
  response.  Multiple bytes of data may be available.
  Serial Event is NOT compatible with Leonardo, Micro, Esplora
  */
 void serialEvent() {
-  while (Serial.available()) {
+
+  while(Serial.available() > 0){
     // get the new byte:
-    char inChar = (char)Serial.read();
-    // add it to the inputString:
-    inputString += inChar;
-    // if the incoming character is a newline, set a flag
-    // so the main loop can do something about it:
-    if (inChar == '\n') {
-      stringComplete = true;
+    dummychar = (uint8_t)Serial.read();
+    if(!stringComplete)
+    {
+      if (dummychar == '\n')
+      {
+        // if the incoming character is a newline, set a flag
+        // so the main loop can do something about it
+        stringIndex--;
+        stringComplete = true;
+      }
+      else
+      {
+        if(stringIndex > 19)
+        {
+          Serial.println("Serial input truncated");
+          stringIndex--;
+          stringComplete = true;
+        }
+        else
+        {
+          // add it to the uart_buffer
+          uart_buffer[stringIndex] = dummychar;
+          stringIndex++;
+        }
+      }
     }
   }
 }
