@@ -8,6 +8,12 @@ The shield is available from seeedstudio and makershed.
 The BLE folder in \libraries\ contains the ported bluetooth library (ACI library) and an example project folder.
 This folder (BLE) should be extracted into the Arduino "libraries" folder. 
 
+####Start using the SDK
+1. Download the SDK by clicking "Download ZIP" at the bottom of the right side menu.
+2. Unzip the file.
+3. In the arduino IDE, click 'Sketch' and choose 'Import library' and 'Add Library...'
+4. From the ble-sdk-arduino folder, choose to import the \libraries\BLE folder.
+
 ####When using the Bluetooth low energy shield v.1.1 or v.2012.07:
 Plug the Bluetooth low energy shield onto the Arduino. Set the "Default Handshaking" switch to ON.
 The nRF8001 REQN is on Digital 9 of the Arduino. The nRF8001 RDYN is on Digital 8 of the Arduino.
