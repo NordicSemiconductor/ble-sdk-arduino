@@ -1,4 +1,4 @@
-﻿/* Copyright (c) 2014, Nordic Semiconductor ASA
+/* Copyright (c) 2014, Nordic Semiconductor ASA
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
