@@ -39,7 +39,7 @@
 /* The ACI_QUEUE_SIZE determines the memory usage of the system.            */
 /* Successfully tested to a ACI_QUEUE_SIZE of 4 (interrupt) and 4 (polling) */
 /***********************************************************************    */
-#define ACI_QUEUE_SIZE  2
+#define ACI_QUEUE_SIZE  4
 
 /** Data type for queue of data packets to send/receive from radio.
  *
