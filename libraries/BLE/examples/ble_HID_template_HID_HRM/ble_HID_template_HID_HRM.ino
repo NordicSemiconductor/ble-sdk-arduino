@@ -30,8 +30,6 @@
 
 @details
 
-IMPORTANT: This example still is not compatible with CHIPKIT
-
 This project is a firmware template for new HID projects.
 The project will run correctly in its current state.
 With this project you have a starting point for adding your own application functionality.
@@ -189,7 +187,6 @@ aci_status_code_t bond_data_restore(aci_state_t *aci_stat, uint8_t eeprom_status
         }
       }
     }
-
   }
 }
 

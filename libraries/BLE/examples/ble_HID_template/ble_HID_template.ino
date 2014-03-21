@@ -30,8 +30,6 @@
 
 @details
 
-IMPORTANT: This example still is not compatible with CHIPKIT
-
 This project is a firmware template for new HID projects.
 The project will run correctly in its current state.
 With this project you have a starting point for adding your own application functionality.
