@@ -11,6 +11,8 @@
 
 * Turned off debug serial output as default.
 
+* Added platform specific code for Chipkit to some examples.
+
 ##Fixes:
 * Added API for assert handling.
 
@@ -21,8 +23,6 @@
 * The code works with the Leonardo, 
   Note that the Leonardo is not reset when you start the serial monitor,
   so a delay is needed if you want to be able to see the output of the initial prints using Serial
-
-* Added platform specific code for Chipkit to some examples.
 
 * Rewrote nRF8001 Setup procedure, do_aci_setup().
 
@@ -43,9 +43,7 @@ This issue is applicable for all projects that use pairing.
 
 7. Documentation for the Bluetooth low energy SDK for Arduino is still in progress.
 
-9. Some problems with platform specific code for Chipkit.
-
-10. Sending zero byte value from the hello world example causes nRF UART on iOS to crash.
+9. Sending zero byte value from the hello world example causes nRF UART on iOS to crash.
 
 #Release notes 0.8.1:
 
