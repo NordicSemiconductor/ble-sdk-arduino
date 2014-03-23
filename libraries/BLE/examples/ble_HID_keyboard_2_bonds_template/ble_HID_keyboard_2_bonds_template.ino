@@ -29,11 +29,14 @@
 @brief HID Keyboard project that can be used as a template for new projects.
 
 @details
+
+IMPORTANT: This example still is not compatible with CHIPKIT
+
 This project is a firmware template for new HID keyboard projects which need to use 2 bonds.
 The project will run correctly in its current state.
 This will show the Arduino board as a HID Keybaord to the Win 8.
 After HID Keyboard has been bonded with Win 8.
-The letter 'a' is sent to the Win 8 every 4 seconds.
+The letter 'A' is sent to the Win 8 every 4 seconds.
 With this project you have a starting point for adding your own application functionality.
 
 The following instructions describe the steps to be made on the Windows PC:
@@ -45,7 +48,7 @@ The following instructions describe the steps to be made on the Windows PC:
  the required buttons for I/O.
 
 Note:
-Pin #8 on Arduino -> PAIRING CLEAR pin: Connect to 3.3v to clear the pairing
+Pin #6 on Arduino -> PAIRING CLEAR pin: Connect to 3.3v to clear the pairing
 Pin #2 on Arduino -> Add new bond pin: Connect to 3.3v to add a new bond.
 
 The bonding information is stored in the EEPROM of the ATmega328 in the Arduino UNO
@@ -89,7 +92,6 @@ static hal_aci_data_t setup_msgs[NB_SETUP_MESSAGES] PROGMEM = SETUP_MESSAGES_CON
 static struct aci_state_t aci_state;
 static hal_aci_evt_t aci_data;
 static hal_aci_data_t aci_cmd;
-
 
 /*
 We will store the bonding info for the nRF8001 in the MCU to recover from a power loss situation
@@ -153,26 +155,25 @@ FUNC ***/
 
 void Timer1start()
 {
+  // Setup Timer1 overflow to fire every 4000ms
+  //   period [sec] = (1 / f_clock [sec]) * prescale * (count)
+  //                  (1/16000000)  * 1024 * (count) = 4000 ms
 
-    // Setup Timer1 overflow to fire every 4000ms
-    //   period [sec] = (1 / f_clock [sec]) * prescale * (count)
-    //                  (1/16000000)  * 1024 * (count) = 4000 ms
 
+  TCCR1B  = 0x00;        // Disable Timer1 while we set it up
 
-    TCCR1B  = 0x00;        // Disable Timer1 while we set it up
-
-    TCNT1H  = 11;          // Approx 4000ms when prescaler is set to 1024
-    TCNT1L  = 0;
-    TIFR1   = 0x00;        // Timer1 INT Flag Reg: Clear Timer Overflow Flag
-    TIMSK1  = 0x01;        // Timer1 INT Reg: Timer1 Overflow Interrupt Enable
-    TCCR1A  = 0x00;        // Timer1 Control Reg A: Wave Gen Mode normal
-    TCCR1B  = 0x05;        // Timer1 Control Reg B: Timer Prescaler set to 1024
+  TCNT1H  = 11;          // Approx 4000ms when prescaler is set to 1024
+  TCNT1L  = 0;
+  TIFR1   = 0x00;        // Timer1 INT Flag Reg: Clear Timer Overflow Flag
+  TIMSK1  = 0x01;        // Timer1 INT Reg: Timer1 Overflow Interrupt Enable
+  TCCR1A  = 0x00;        // Timer1 Control Reg A: Wave Gen Mode normal
+  TCCR1B  = 0x05;        // Timer1 Control Reg B: Timer Prescaler set to 1024
 }
 
 void Timer1stop()
 {
-    TCCR1B = 0x00;
-    TIMSK1 = 0x00;
+  TCCR1B = 0x00;
+  TIMSK1 = 0x00;
 }
 
 /*** FUNC
@@ -185,14 +186,14 @@ FUNC ***/
 
 ISR(TIMER1_OVF_vect)
 {
-    if (0 == timer1_f)
-    {
-      timer1_f = 1;
-    }
+  if (0 == timer1_f)
+  {
+    timer1_f = 1;
+  }
 
-    TCNT1H = 11;    // Approx 4000 ms - Reload
-    TCNT1L = 0;
-    TIFR1  = 0x00;    // timer1 int flag reg: clear timer overflow flag
+  TCNT1H = 11;    // Approx 4000 ms - Reload
+  TCNT1L = 0;
+  TIFR1  = 0x00;    // timer1 int flag reg: clear timer overflow flag
 };
 
 /* Define how assert should function in the BLE library */
@@ -270,8 +271,8 @@ aci_status_code_t bond_data_restore(aci_state_t *aci_stat, uint8_t bond_index)
 
     for (uint8_t i=1; i<=len; i++)
     {
-        aci_cmd.buffer[i] = EEPROM.read(eeprom_offset_read);
-        eeprom_offset_read++;
+      aci_cmd.buffer[i] = EEPROM.read(eeprom_offset_read);
+      eeprom_offset_read++;
     }
 
     //@todo : Fix this bug that is changing this byte
@@ -293,10 +294,10 @@ aci_status_code_t bond_data_restore(aci_state_t *aci_stat, uint8_t bond_index)
 
         if (ACI_EVT_CMD_RSP != aci_evt->evt_opcode)
         {
-            //Got something other than a command response evt -> Error
-            Serial.print(F("bond_data_restore: Expected cmd rsp evt. Got: 0x"));
-            Serial.println(aci_evt->evt_opcode, HEX);
-            return ACI_STATUS_ERROR_INTERNAL;
+          //Got something other than a command response evt -> Error
+          Serial.print(F("bond_data_restore: Expected cmd rsp evt. Got: 0x"));
+          Serial.println(aci_evt->evt_opcode, HEX);
+          return ACI_STATUS_ERROR_INTERNAL;
         }
         else
         {
@@ -320,7 +321,6 @@ aci_status_code_t bond_data_restore(aci_state_t *aci_stat, uint8_t bond_index)
         }
       }
     }
-
   }
 }
 
@@ -332,8 +332,6 @@ Uses the global   static int eeprom_write_offset to track the EEPROM write offse
 */
 void bond_data_store(aci_evt_t *evt)
 {
-
-
   //Write it to non-volatile storage
   EEPROM.write( eeprom_write_offset, evt->len -2 );
   eeprom_write_offset++;
@@ -436,13 +434,13 @@ void aci_loop()
           switch(aci_evt->params.device_started.device_mode)
           {
             case ACI_DEVICE_SETUP:
-            /**
-            When the device is in the setup mode
-            */
-            aci_state.device_state = ACI_DEVICE_SETUP;
-            Serial.println(F("Evt Device Started: Setup"));
-            setup_required = true;
-            break;
+              /**
+              When the device is in the setup mode
+              */
+              aci_state.device_state = ACI_DEVICE_SETUP;
+              Serial.println(F("Evt Device Started: Setup"));
+              setup_required = true;
+              break;
 
             case ACI_DEVICE_STANDBY:
               Serial.println(F("Evt Device Started: Standby"));
@@ -503,7 +501,7 @@ void aci_loop()
               break;
           }
         }
-        break; //ACI Device Started Event
+          break; //ACI Device Started Event
 
       case ACI_EVT_CMD_RSP:
         //If an ACI command response event comes with an error -> stop
@@ -598,29 +596,29 @@ void aci_loop()
         */
         if(ACI_STATUS_ERROR_ADVT_TIMEOUT == aci_evt->params.disconnected.aci_status)
         {
-            aci_status_code_t bond_restore_status;
+          aci_status_code_t bond_restore_status;
 
-            Serial.print(F("Previous Bond present. Restoring bond "));
+          Serial.print(F("Previous Bond present. Restoring bond "));
 
-            //We must have lost power and restarted and must restore the bonding infromation using the ACI Write Dynamic Data
-            //Switch to the next bond
-            Serial.println(current_bond_index);
-            if (current_bond_index >= BONDS_MAX)
-            {
-              current_bond_index = 0;
-            }
-            bond_restore_status = bond_data_restore(&aci_state, current_bond_index);
-            current_bond_index++;
+          //We must have lost power and restarted and must restore the bonding infromation using the ACI Write Dynamic Data
+          //Switch to the next bond
+          Serial.println(current_bond_index);
+          if (current_bond_index >= BONDS_MAX)
+          {
+            current_bond_index = 0;
+          }
+          bond_restore_status = bond_data_restore(&aci_state, current_bond_index);
+          current_bond_index++;
 
-            if (ACI_STATUS_TRANSACTION_COMPLETE == bond_restore_status)
-            {
-              Serial.println(F("Bond restored successfully"));
-            }
-            if (BOND_DOES_NOT_EXIST_AT_INDEX == bond_restore_status)
-            {
-              Serial.println(F("Bond does not exist"));
-              current_bond_index = 0;
-            }
+          if (ACI_STATUS_TRANSACTION_COMPLETE == bond_restore_status)
+          {
+            Serial.println(F("Bond restored successfully"));
+          }
+          if (BOND_DOES_NOT_EXIST_AT_INDEX == bond_restore_status)
+          {
+            Serial.println(F("Bond does not exist"));
+            current_bond_index = 0;
+          }
         }
         else
         {
@@ -647,18 +645,17 @@ void aci_loop()
           }
         }
 
-
         //If a new bond is to be added, PIN 2 must tbe high or no bond exists
         if (0x01 == digitalRead(2) || (0 == bond_number))
         {
-              //Start bonding
-              //Less than 2 bonds. We can add one more
-              if (bond_number < BONDS_MAX)
-              {
-                // Previous bonding failed. Try to bond again.
-                lib_aci_bond(180/* in seconds */, 0x0050 /* advertising interval 50ms*/);
-                Serial.println(F("Advertising started : Waiting to be connected and bonded for a new bond to be added"));
-              }
+          //Start bonding
+          //Less than 2 bonds. We can add one more
+          if (bond_number < BONDS_MAX)
+          {
+            // Previous bonding failed. Try to bond again.
+            lib_aci_bond(180/* in seconds */, 0x0050 /* advertising interval 50ms*/);
+            Serial.println(F("Advertising started : Waiting to be connected and bonded for a new bond to be added"));
+          }
         }
         else
         {
@@ -690,7 +687,7 @@ void aci_loop()
 
         for(uint8_t counter = 0; counter <= (aci_evt->len - 3); counter++)
         {
-        Serial.write(aci_evt->params.hw_error.file_name[counter]); //uint8_t file_name[20];
+          Serial.write(aci_evt->params.hw_error.file_name[counter]); //uint8_t file_name[20];
         }
         Serial.println();
 
@@ -765,16 +762,22 @@ void aci_loop()
   }
 }
 
-
-
-
-
 /*
 This is called only once after a reset of the AVR
 */
 void setup(void)
 {
   Serial.begin(115200);
+  //Wait until the serial port is available (useful only for the Leonardo)
+  //As the Leonardo board is not reseted every time you open the Serial Monitor
+  #if defined (__AVR_ATmega32U4__)
+    while(!Serial)
+    {}
+    delay(5000);  //5 seconds delay for enabling to see the start up comments on the serial board
+  #elif defined(__PIC32MX__)
+    delay(1000);
+  #endif
+
   Serial.println(F("Arduino setup"));
 
   /**
@@ -803,14 +806,15 @@ void setup(void)
   aci_state.aci_pins.miso_pin   = MISO;
   aci_state.aci_pins.sck_pin    = SCK;
 
-  aci_state.aci_pins.spi_clock_divider     = SPI_CLOCK_DIV8;
+  aci_state.aci_pins.spi_clock_divider      = SPI_CLOCK_DIV8;//SPI_CLOCK_DIV8  = 2MHz SPI speed
+                                                             //SPI_CLOCK_DIV16 = 1MHz SPI speed
 
-  aci_state.aci_pins.reset_pin             = 4;
-  aci_state.aci_pins.active_pin            = UNUSED;
-  aci_state.aci_pins.optional_chip_sel_pin = UNUSED;
+  aci_state.aci_pins.reset_pin              = 4;
+  aci_state.aci_pins.active_pin             = UNUSED;
+  aci_state.aci_pins.optional_chip_sel_pin  = UNUSED;
 
-  aci_state.aci_pins.interface_is_interrupt	  = false;
-  aci_state.aci_pins.interrupt_number	      = 1;
+  aci_state.aci_pins.interface_is_interrupt = false;
+  aci_state.aci_pins.interrupt_number       = 1;
 
   /** We reset the nRF8001 here by toggling the RESET line connected to the nRF8001
    *  and initialize the data structures required to setup the nRF8001
@@ -838,7 +842,6 @@ void setup(void)
   }
 }
 
-
 /* This is like a main() { while(1) { loop() } }
 */
 void loop(void)
@@ -861,6 +864,7 @@ void loop(void)
     lib_aci_send_data(PIPE_HID_SERVICE_HID_REPORT_TX, &keypressA[0], 8);
     aci_state.data_credit_available--;
   }
+  
   if (0x01 == digitalRead(2) && (disconnect_started == false))
   {
     //Disconnect the link by ACI Disconnect

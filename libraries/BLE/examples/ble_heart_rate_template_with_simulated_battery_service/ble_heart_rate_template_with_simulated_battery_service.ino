@@ -20,6 +20,7 @@
  */
 
  /**
+ *IMPORTANT: This example still is not compatible with CHIPKIT
  *
  * Click on the "Serial Monitor" button on the Arduino IDE to get reset the Arduino and start the application.
  * The setup() function is called first and is called only one for each reset of the Arduino.
@@ -73,7 +74,6 @@ static aci_state_t aci_state;
 
 static hal_aci_evt_t aci_data;
 
-
 static bool radio_ack_pending  = false;
 static bool timing_change_done = false;
 
@@ -103,25 +103,25 @@ FUNC ***/
 void Timer1start()
 {
 
-    // Setup Timer1 overflow to fire every 4000ms
-    //   period [sec] = (1 / f_clock [sec]) * prescale * (count)
-    //                  (1/16000000)  * 1024 * (count) = 4000 ms
+  // Setup Timer1 overflow to fire every 4000ms
+  //   period [sec] = (1 / f_clock [sec]) * prescale * (count)
+  //                  (1/16000000)  * 1024 * (count) = 4000 ms
 
 
-    TCCR1B  = 0x00;        // Disable Timer1 while we set it up
+  TCCR1B  = 0x00;        // Disable Timer1 while we set it up
 
-    TCNT1H  = 11;          // Approx 4000ms when prescaler is set to 1024
-    TCNT1L  = 0;
-    TIFR1   = 0x00;        // Timer1 INT Flag Reg: Clear Timer Overflow Flag
-    TIMSK1  = 0x01;        // Timer1 INT Reg: Timer1 Overflow Interrupt Enable
-    TCCR1A  = 0x00;        // Timer1 Control Reg A: Wave Gen Mode normal
-    TCCR1B  = 0x05;        // Timer1 Control Reg B: Timer Prescaler set to 1024
+  TCNT1H  = 11;          // Approx 4000ms when prescaler is set to 1024
+  TCNT1L  = 0;
+  TIFR1   = 0x00;        // Timer1 INT Flag Reg: Clear Timer Overflow Flag
+  TIMSK1  = 0x01;        // Timer1 INT Reg: Timer1 Overflow Interrupt Enable
+  TCCR1A  = 0x00;        // Timer1 Control Reg A: Wave Gen Mode normal
+  TCCR1B  = 0x05;        // Timer1 Control Reg B: Timer Prescaler set to 1024
 }
 
 void Timer1stop()
 {
-    TCCR1B = 0x00;
-    TIMSK1 = 0x00;
+  TCCR1B = 0x00;
+  TIMSK1 = 0x00;
 }
 
 /*** FUNC
@@ -130,12 +130,12 @@ Function:   Handles the Timer1-overflow interrupt
 FUNC ***/
 ISR(TIMER1_OVF_vect)
 {
-   perform_heart_rate_simulation();
-   lib_aci_get_battery_level();
+  perform_heart_rate_simulation();
+  lib_aci_get_battery_level();
 
-    TCNT1H = 11;    // Approx 4000 ms - Reload
-    TCNT1L = 0;
-    TIFR1  = 0x00;    // timer1 int flag reg: clear timer overflow flag
+  TCNT1H = 11;    // Approx 4000 ms - Reload
+  TCNT1L = 0;
+  TIFR1  = 0x00;    // timer1 int flag reg: clear timer overflow flag
 };
 
 void perform_heart_rate_simulation(void)
@@ -146,19 +146,19 @@ void perform_heart_rate_simulation(void)
       && (false == radio_ack_pending)
       && (true == timing_change_done))
   {
-      heart_rate_set_support_contact_bit();
-      heart_rate_set_contact_status_bit();
-      if (heart_rate_send_hr((uint8_t)dummy_heart_rate))
-      {
-        aci_state.data_credit_available--;
-      }
-      radio_ack_pending = true;
+    heart_rate_set_support_contact_bit();
+    heart_rate_set_contact_status_bit();
+    if (heart_rate_send_hr((uint8_t)dummy_heart_rate))
+    {
+      aci_state.data_credit_available--;
+    }
+    radio_ack_pending = true;
 
-      dummy_heart_rate++;
-      if (dummy_heart_rate == 200)
-      {
-        dummy_heart_rate = 65;
-      }
+    dummy_heart_rate++;
+    if (dummy_heart_rate == 200)
+    {
+      dummy_heart_rate = 65;
+    }
   }
 }
 
@@ -176,6 +176,16 @@ void __ble_assert(const char *file, uint16_t line)
 void setup(void)
 {
   Serial.begin(115200);
+  //Wait until the serial port is available (useful only for the Leonardo)
+  //As the Leonardo board is not reseted every time you open the Serial Monitor
+  #if defined (__AVR_ATmega32U4__)
+    while(!Serial)
+    {}
+    delay(5000);  //5 seconds delay for enabling to see the start up comments on the serial board
+  #elif defined(__PIC32MX__)
+    delay(1000);
+  #endif
+
   Serial.println(F("Arduino setup"));
 
   /**
@@ -201,15 +211,15 @@ void setup(void)
   aci_state.aci_pins.miso_pin   = MISO;
   aci_state.aci_pins.sck_pin    = SCK;
 
-  aci_state.aci_pins.spi_clock_divider     = SPI_CLOCK_DIV8;
+  aci_state.aci_pins.spi_clock_divider      = SPI_CLOCK_DIV8;//SPI_CLOCK_DIV8  = 2MHz SPI speed
+                                                             //SPI_CLOCK_DIV16 = 1MHz SPI speed
 
-  aci_state.aci_pins.reset_pin             = 4;
-  aci_state.aci_pins.active_pin            = UNUSED;
-  aci_state.aci_pins.optional_chip_sel_pin = UNUSED;
+  aci_state.aci_pins.reset_pin              = 4;
+  aci_state.aci_pins.active_pin             = UNUSED;
+  aci_state.aci_pins.optional_chip_sel_pin  = UNUSED;
 
-  aci_state.aci_pins.interface_is_interrupt	  = false;
-  aci_state.aci_pins.interrupt_number		  = UNUSED;
-
+  aci_state.aci_pins.interface_is_interrupt = false;
+  aci_state.aci_pins.interrupt_number       = UNUSED;
 
   /** We reset the nRF8001 here by toggling the RESET line connected to the nRF8001
    *  and initialize the data structures required to setup the nRF8001
@@ -227,18 +237,18 @@ void aci_loop()
   if (lib_aci_event_get(&aci_state, &aci_data))
   {
     aci_evt_t * aci_evt;
-
     aci_evt = &aci_data.evt;
+
     //@todo change this so that the commands and events can be processed here in a switch case instead of callbacks
     //hal_aci_tl_msg_rcv_hook(&aci_data);
     switch(aci_evt->evt_opcode)
     {
-        case ACI_EVT_DEVICE_STARTED:
+      case ACI_EVT_DEVICE_STARTED:
+      {
+        aci_state.data_credit_available = aci_evt->params.device_started.credit_available;
+        switch(aci_evt->params.device_started.device_mode)
         {
-          aci_state.data_credit_available = aci_evt->params.device_started.credit_available;
-          switch(aci_evt->params.device_started.device_mode)
-          {
-            case ACI_DEVICE_SETUP:
+          case ACI_DEVICE_SETUP:
             /**
             When the device is in the setup mode
             */
@@ -247,20 +257,20 @@ void aci_loop()
             setup_required = true;
             break;
 
-            case ACI_DEVICE_STANDBY:
-              aci_state.device_state = ACI_DEVICE_STANDBY;
-              Serial.println(F("Evt Device Started: Standby"));
-              if (aci_evt->params.device_started.hw_error)
-              {
-                delay(20); //Magic number used to make sure the HW error event is handled correctly.
-              }
-              else
-              {
-                Timer1start();
-                lib_aci_connect(30/* in seconds */, 0x0100 /* advertising interval 100ms*/);
-                Serial.println(F("Advertising started"));
-              }
-              break;
+          case ACI_DEVICE_STANDBY:
+            aci_state.device_state = ACI_DEVICE_STANDBY;
+            Serial.println(F("Evt Device Started: Standby"));
+            if (aci_evt->params.device_started.hw_error)
+            {
+              delay(20); //Magic number used to make sure the HW error event is handled correctly.
+            }
+            else
+            {
+              Timer1start();
+              lib_aci_connect(30/* in seconds */, 0x0100 /* advertising interval 100ms*/);
+              Serial.println(F("Advertising started"));
+            }
+            break;
           }
         }
         break; //ACI Device Started Event
@@ -344,8 +354,8 @@ void aci_loop()
 
       case ACI_EVT_CONNECTED:
         radio_ack_pending  = false;
-        timing_change_done = false;
         aci_state.data_credit_available = aci_state.data_credit_total;
+        timing_change_done = false;
         Serial.println(F("Evt Connected"));
         break;
 
@@ -441,7 +451,6 @@ void hook_for_resetting_energy_expended(void)
 {
 }
 #endif
-
 
 void loop()
 {

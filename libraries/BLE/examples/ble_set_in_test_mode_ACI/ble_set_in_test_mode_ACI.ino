@@ -55,11 +55,13 @@ static struct aci_state_t aci_state;
 static hal_aci_evt_t aci_data;
 static hal_aci_data_t aci_cmd;
 
-static char dtm_buffer[3]; //DTM input from PC, needs one ekstra buffer as toCharArray null terminates the string.
-uint8_t dtm_report[2]; // DTM output
-String inputString     = "";     // a String to hold incoming data @todo: consider changing this to a string - char array
+uint8_t dtm_report[2];           // DTM output
+static uint8_t uart_buffer[20];
+static uint8_t uart_buffer_len = 0;
+static uint8_t dummychar = 0;
 boolean stringComplete = false;  // whether the string is complete
-boolean dtmMode = false; //is the device in dtm mode
+uint8_t stringIndex = 0;         //Initialize the index to store incoming chars
+boolean dtmMode = false;         //is the device in dtm mode
 
 /* Define how assert should function in the BLE library */
 void __ble_assert(const char *file, uint16_t line)
@@ -75,10 +77,18 @@ void __ble_assert(const char *file, uint16_t line)
 void setup(void)
 {
   Serial.begin(19200);
-  //Wait until the serial port is available (useful only for the leonardo)
-  while(!Serial)
-  {}
+  //Wait until the serial port is available (useful only for the Leonardo)
+  //As the Leonardo board is not reseted every time you open the Serial Monitor
+  #if defined (__AVR_ATmega32U4__)
+    while(!Serial)
+    {}
+    delay(5000);  //5 seconds delay for enabling to see the start up comments on the serial board
+  #elif defined(__PIC32MX__)
+    delay(1000);
+  #endif
+  
   Serial.println(F("Arduino setup"));
+  
   //Tell the ACI library, the MCU to nRF8001 pin connections
   aci_state.aci_pins.board_name = BOARD_DEFAULT; //See board.h for details REDBEARLAB_SHIELD_V1_1 or BOARD_DEFAULT
   aci_state.aci_pins.reqn_pin   = 9; //SS for Nordic board, 9 for REDBEARLAB_SHIELD_V1_1
@@ -87,14 +97,15 @@ void setup(void)
   aci_state.aci_pins.miso_pin   = MISO;
   aci_state.aci_pins.sck_pin    = SCK;
 
-  aci_state.aci_pins.spi_clock_divider     = SPI_CLOCK_DIV8;
+  aci_state.aci_pins.spi_clock_divider      = SPI_CLOCK_DIV8;//SPI_CLOCK_DIV8  = 2MHz SPI speed
+                                                             //SPI_CLOCK_DIV16 = 1MHz SPI speed
 
-  aci_state.aci_pins.reset_pin             = 4; //4 for Nordic board, UNUSED for REDBEARLAB_SHIELD_V1_1
-  aci_state.aci_pins.active_pin            = UNUSED;
-  aci_state.aci_pins.optional_chip_sel_pin = UNUSED;
+  aci_state.aci_pins.reset_pin              = 4; //4 for Nordic board, UNUSED for REDBEARLABS
+  aci_state.aci_pins.active_pin             = UNUSED;
+  aci_state.aci_pins.optional_chip_sel_pin  = UNUSED;
 
-  aci_state.aci_pins.interface_is_interrupt	  = false;
-  aci_state.aci_pins.interrupt_number	          = 1;
+  aci_state.aci_pins.interface_is_interrupt = false;
+  aci_state.aci_pins.interrupt_number       = 1;
 
   //We reset the nRF8001 here by toggling the RESET line connected to the nRF8001
   //and initialize the data structures required to setup the nRF8001
@@ -111,39 +122,40 @@ void aci_loop(void)
   if (lib_aci_event_get(&aci_state, &aci_data))
   {
     aci_evt_t * aci_evt;
-
     aci_evt = &aci_data.evt;
+
     switch(aci_evt->evt_opcode)
     {
-        /**
-        As soon as you reset the nRF8001 you will get an ACI Device Started Event
-        */
-        case ACI_EVT_DEVICE_STARTED:
+      /**
+      As soon as you reset the nRF8001 you will get an ACI Device Started Event
+      */
+      case ACI_EVT_DEVICE_STARTED:
+      {
+        aci_state.data_credit_available = aci_evt->params.device_started.credit_available;
+        switch(aci_evt->params.device_started.device_mode)
         {
-          aci_state.data_credit_available = aci_evt->params.device_started.credit_available;
-          switch(aci_evt->params.device_started.device_mode)
-          {
-            case ACI_DEVICE_SETUP:
-              Serial.println(F("Evt Device Started: Setup"));
-              //Put the nRF8001 in Test mode.
-              //See ACI Test Command in Section 24 (System Commands) of the nRF8001 datasheet.
-              //Use ACI_TEST_MODE_DTM_ACI to send DTM commands over ACI
-              //lib_aci_test(ACI_TEST_MODE_DTM_UART);
-              lib_aci_test(ACI_TEST_MODE_DTM_ACI);
-              break;
+          case ACI_DEVICE_SETUP:
+            Serial.println(F("Evt Device Started: Setup"));
+            //Put the nRF8001 in Test mode.
+            //See ACI Test Command in Section 24 (System Commands) of the nRF8001 datasheet.
+            //Use ACI_TEST_MODE_DTM_ACI to send DTM commands over ACI
+            //lib_aci_test(ACI_TEST_MODE_DTM_UART);
+            lib_aci_test(ACI_TEST_MODE_DTM_ACI);
+            break;
 
-            case ACI_DEVICE_TEST:
-            {
-              uint8_t i = 0;
-              Serial.println(F("Evt Device Started: Test"));
-              Serial.println(F("Device in DTM over ACI mode"));
-              Serial.println(F("Use DTM over UART with the Arduino serial interface to send DTM commands to the nRF8001"));
-			  dtmMode = true;
-            }
-              break;
+          case ACI_DEVICE_TEST:
+          {
+            uint8_t i = 0;
+            Serial.println(F("Evt Device Started: Test"));
+            Serial.println(F("Device in DTM over ACI mode"));
+            Serial.println(F("Use DTM over UART with the Arduino serial interface to send DTM commands to the nRF8001"));
+      dtmMode = true;
           }
+            break;
         }
+      }
         break; //ACI Device Started Event
+
       case ACI_EVT_CMD_RSP:
         //If an ACI command response event comes with an error -> stop
         if (ACI_STATUS_SUCCESS != aci_evt->params.cmd_rsp.cmd_status)
@@ -163,7 +175,7 @@ void aci_loop(void)
           Serial.write(dtm_report,2);
         }
         break;
-   }
+    }
   }
   else
   {
@@ -175,21 +187,28 @@ void dtm_command_loop(void)
 {
   if(dtmMode)
   {
-     // print the string when a newline arrives:
-    if (stringComplete) {
-      if (inputString.length() > 2)
+     uart_buffer_len = stringIndex + 1;
+    // print the string when a newline arrives:
+    if (stringComplete) 
+    {
+      if (uart_buffer_len > 2)
       {
-          Serial.println(F("DTM command to long")); //Not compatible with DTM tester?
+        Serial.println(F("DTM command to long")); //Not compatible with DTM tester?
       }
       else
       {
-          inputString.toCharArray(dtm_buffer,3);
-          //Forwarding DTM command to the nRF8001
-          lib_aci_dtm_command(dtm_buffer[0], dtm_buffer[1]);
+        //Forwarding DTM command to the nRF8001
+        lib_aci_dtm_command(uart_buffer[0], uart_buffer[1]);
       }
 
-      // clear the string:
-      inputString = "";
+      // clear the uart_buffer:
+      for (stringIndex = 0; stringIndex < 20; stringIndex++)
+      {
+        uart_buffer[stringIndex] = ' ';
+      }
+
+      // reset the flag and the index in order to receive more data
+      stringIndex    = 0;
       stringComplete = false;
     }
   }
@@ -202,26 +221,53 @@ void loop()
 
   //Process any DTM command, DTM Events is processed in the aci_loop
   dtm_command_loop();
-
+  
+  //For ChipKit you have to call the function that reads from Serial
+  #if defined (__PIC32MX__)
+    if (Serial.available())
+    {
+      serialEvent();
+    }
+  #endif
 }
 
 /*
-  SerialEvent occurs whenever a new data comes in the
+ COMMENT ONLY FOR ARDUINO
+ SerialEvent occurs whenever a new data comes in the
  hardware serial RX.  This routine is run between each
  time loop() runs, so using delay inside loop can delay
  response.  Multiple bytes of data may be available.
  Serial Event is NOT compatible with Leonardo, Micro, Esplora
  */
 void serialEvent() {
-  while (Serial.available()) {
+
+  while(Serial.available() > 0){
     // get the new byte:
-    char inChar = (char)Serial.read();
-    // add it to the inputString:
-    inputString += inChar;
-    // if the incoming character is a newline, set a flag
-    // so the main loop can do something about it:
-    if (inputString.length()==2) {
-      stringComplete = true;
+    dummychar = (uint8_t)Serial.read();
+    if(!stringComplete)
+    {
+      if (dummychar == '\n')
+      {
+        // if the incoming character is a newline, set a flag
+        // so the main loop can do something about it
+        stringIndex--;
+        stringComplete = true;
+      }
+      else
+      {
+        if(stringIndex > 19)
+        {
+          Serial.println("Serial input truncated");
+          stringIndex--;
+          stringComplete = true;
+        }
+        else
+        {
+          // add it to the uart_buffer
+          uart_buffer[stringIndex] = dummychar;
+          stringIndex++;
+        }
+      }
     }
   }
 }

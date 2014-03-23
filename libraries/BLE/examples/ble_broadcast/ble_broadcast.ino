@@ -40,10 +40,7 @@ The following instructions describe the steps to be made on the Windows PC:
 
  */
 #include <SPI.h>
-#include <ble_system.h>
 #include <lib_aci.h>
-#include <lib_traces.h>
-#include <lib/assertions.h>
 #include <aci_setup.h>
 
 /**
@@ -95,6 +92,15 @@ void __ble_assert(const char *file, uint16_t line)
 void setup(void)
 {
   Serial.begin(115200);
+  //Wait until the serial port is available (useful only for the Leonardo)
+  //As the Leonardo board is not reseted every time you open the Serial Monitor
+  #if defined (__AVR_ATmega32U4__)
+    while(!Serial)
+    {}
+    delay(5000);  //5 seconds delay for enabling to see the start up comments on the serial board
+  #elif defined(__PIC32MX__)
+    delay(1000);
+  #endif
   Serial.println(F("Arduino setup"));
 
   if (NULL != services_pipe_type_mapping)
@@ -120,15 +126,15 @@ void setup(void)
   aci_state.aci_pins.miso_pin   = MISO;
   aci_state.aci_pins.sck_pin    = SCK;
 
-  aci_state.aci_pins.spi_clock_divider     = SPI_CLOCK_DIV8;
+  aci_state.aci_pins.spi_clock_divider      = SPI_CLOCK_DIV8;//SPI_CLOCK_DIV8  = 2MHz SPI speed
+                                                             //SPI_CLOCK_DIV16 = 1MHz SPI speed
 
-  aci_state.aci_pins.reset_pin             = 4;
-  aci_state.aci_pins.active_pin            = UNUSED;
-  aci_state.aci_pins.optional_chip_sel_pin = UNUSED;
+  aci_state.aci_pins.reset_pin              = 4;
+  aci_state.aci_pins.active_pin             = UNUSED;
+  aci_state.aci_pins.optional_chip_sel_pin  = UNUSED;
 
-  aci_state.aci_pins.interface_is_interrupt	  = false;
-  aci_state.aci_pins.interrupt_number	      = 1;
-
+  aci_state.aci_pins.interface_is_interrupt = false;
+  aci_state.aci_pins.interrupt_number       = 1;
 
   //We reset the nRF8001 here by toggling the RESET line connected to the nRF8001
   //and initialize the data structures required to setup the nRF8001
@@ -146,35 +152,36 @@ void loop()
     aci_evt = &aci_data.evt;
     switch(aci_evt->evt_opcode)
     {
-        /**
-        As soon as you reset the nRF8001 you will get an ACI Device Started Event
-        */
-        case ACI_EVT_DEVICE_STARTED:
+      /**
+      As soon as you reset the nRF8001 you will get an ACI Device Started Event
+      */
+      case ACI_EVT_DEVICE_STARTED:
+      {
+        aci_state.data_credit_available = aci_evt->params.device_started.credit_available;
+        switch(aci_evt->params.device_started.device_mode)
         {
-          aci_state.data_credit_available = aci_evt->params.device_started.credit_available;
-          switch(aci_evt->params.device_started.device_mode)
-          {
-            case ACI_DEVICE_SETUP:
+          case ACI_DEVICE_SETUP:
             /**
             When the device is in the setup mode
             */
             Serial.println(F("Evt Device Started: Setup"));
-			setup_required = true;
+            setup_required = true;
             break;
 
-            case ACI_DEVICE_STANDBY:
-              Serial.println(F("Evt Device Started: Standby"));
-              //See ACI Broadcast in the data sheet of the nRF8001
-              lib_aci_broadcast(10/* in seconds */, 0x0100 /* advertising interval 100ms */);
-              //While broadcasting (non_connectable) interval of 100ms is the minimum possible
-              Serial.println(F("Broadcasting started"));
-              //To stop the broadcasting before the timeout use the
-              //lib_aci_radio_reset to soft reset the radio
-              //See ACI RadioReset in the datasheet of the nRF8001
-              break;
-          }
+          case ACI_DEVICE_STANDBY:
+            Serial.println(F("Evt Device Started: Standby"));
+            //See ACI Broadcast in the data sheet of the nRF8001
+            lib_aci_broadcast(10/* in seconds */, 0x0100 /* advertising interval 100ms */);
+            //While broadcasting (non_connectable) interval of 100ms is the minimum possible
+            Serial.println(F("Broadcasting started"));
+            //To stop the broadcasting before the timeout use the
+            //lib_aci_radio_reset to soft reset the radio
+            //See ACI RadioReset in the datasheet of the nRF8001
+            break;
         }
+      }
         break; //ACI Device Started Event
+
       case ACI_EVT_CMD_RSP:
         //If an ACI command response event comes with an error -> stop
         if (ACI_STATUS_SUCCESS != aci_evt->params.cmd_rsp.cmd_status)
@@ -188,13 +195,16 @@ void loop()
           while (1);
         }
         break;
+
       case ACI_EVT_CONNECTED:
         Serial.println(F("Evt Connected"));
         break;
+
       case ACI_EVT_PIPE_STATUS:
         Serial.println(F("Evt Pipe Status"));
         break;
-      case ACI_EVT_DISCONNECTED:
+
+        case ACI_EVT_DISCONNECTED:
         if (ACI_STATUS_ERROR_ADVT_TIMEOUT == aci_evt->params.disconnected.aci_status)
         {
           Serial.println(F("Broadcasting timed out"));
@@ -204,6 +214,7 @@ void loop()
           Serial.println(F("Evt Disconnected. Link Loss"));
         }
         break;
+
       case ACI_EVT_DATA_RECEIVED:
         Serial.print(F("Data received on Pipe #: 0x"));
         Serial.println(aci_evt->params.data_received.rx_data.pipe_number, HEX);
@@ -214,7 +225,6 @@ void loop()
       case ACI_EVT_HW_ERROR:
         Serial.println(F("HW error: "));
         Serial.println(aci_evt->params.hw_error.line_num, DEC);
-
         for(uint8_t counter = 0; counter <= (aci_evt->len - 3); counter++)
         {
         Serial.write(aci_evt->params.hw_error.file_name[counter]); //uint8_t file_name[20];

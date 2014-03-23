@@ -173,8 +173,17 @@ void setup(void)
   uint8_t crc_loop;
 
   Serial.begin(115200);
-  Serial.println(F("Arduino setup"));
+  //Wait until the serial port is available (useful only for the Leonardo)
+  //As the Leonardo board is not reseted every time you open the Serial Monitor
+  #if defined (__AVR_ATmega32U4__)
+    while(!Serial)
+    {}
+    delay(5000);  //5 seconds delay for enabling to see the start up comments on the serial board
+  #elif defined(__PIC32MX__)
+    delay(1000);
+  #endif
 
+  Serial.println(F("Arduino setup"));
 
   //Run the CRC algorithm on the modified Setup to find the new CRC
   for (crc_loop=0; crc_loop <NB_SETUP_MESSAGES; crc_loop++)
@@ -222,14 +231,15 @@ void setup(void)
   aci_state.aci_pins.miso_pin   = MISO;
   aci_state.aci_pins.sck_pin    = SCK;
 
-  aci_state.aci_pins.spi_clock_divider     = SPI_CLOCK_DIV8;
+  aci_state.aci_pins.spi_clock_divider      = SPI_CLOCK_DIV8;//SPI_CLOCK_DIV8  = 2MHz SPI speed
+                                                             //SPI_CLOCK_DIV16 = 1MHz SPI speed
 
-  aci_state.aci_pins.reset_pin             = 4;
-  aci_state.aci_pins.active_pin            = UNUSED;
-  aci_state.aci_pins.optional_chip_sel_pin = UNUSED;
+  aci_state.aci_pins.reset_pin              = 4;
+  aci_state.aci_pins.active_pin             = UNUSED;
+  aci_state.aci_pins.optional_chip_sel_pin  = UNUSED;
 
-  aci_state.aci_pins.interface_is_interrupt	  = false;
-  aci_state.aci_pins.interrupt_number	      = 1;
+  aci_state.aci_pins.interface_is_interrupt = false;
+  aci_state.aci_pins.interrupt_number       = 1;
 
   //We reset the nRF8001 here by toggling the RESET line connected to the nRF8001
   //and initialize the data structures required to setup the nRF8001
@@ -255,15 +265,15 @@ void aci_loop()
 
     switch(aci_evt->evt_opcode)
     {
-        /**
-        As soon as you reset the nRF8001 you will get an ACI Device Started Event
-        */
-        case ACI_EVT_DEVICE_STARTED:
+      /**
+      As soon as you reset the nRF8001 you will get an ACI Device Started Event
+      */
+      case ACI_EVT_DEVICE_STARTED:
+      {
+        aci_state.data_credit_total = aci_evt->params.device_started.credit_available;
+        switch(aci_evt->params.device_started.device_mode)
         {
-          aci_state.data_credit_total = aci_evt->params.device_started.credit_available;
-          switch(aci_evt->params.device_started.device_mode)
-          {
-            case ACI_DEVICE_SETUP:
+          case ACI_DEVICE_SETUP:
             /**
             When the device is in the setup mode
             */
@@ -271,22 +281,22 @@ void aci_loop()
             setup_required = true;
             break;
 
-            case ACI_DEVICE_STANDBY:
-              Serial.println(F("Evt Device Started: Standby"));
-              //Looking for an iPhone by sending radio advertisements
-              //When an iPhone connects to us we will get an ACI_EVT_CONNECTED event from the nRF8001
-              if (aci_evt->params.device_started.hw_error)
-              {
-                delay(20); //Magic number used to make sure the HW error event is handled correctly.
-              }
-              else
-              {
+          case ACI_DEVICE_STANDBY:
+            Serial.println(F("Evt Device Started: Standby"));
+            //Looking for an iPhone by sending radio advertisements
+            //When an iPhone connects to us we will get an ACI_EVT_CONNECTED event from the nRF8001
+            if (aci_evt->params.device_started.hw_error)
+            {
+              delay(20); //Magic number used to make sure the HW error event is handled correctly.
+            }
+            else
+            {
               lib_aci_connect(180/* in seconds */, 0x0050 /* advertising interval 50ms*/);
               Serial.println(F("Advertising started"));
-              }
-              break;
-          }
+            }
+            break;
         }
+      }
         break; //ACI Device Started Event
 
       case ACI_EVT_CMD_RSP:
@@ -329,25 +339,25 @@ void aci_loop()
         }
         break;
 
-	  case ACI_EVT_BOND_STATUS:
-		if (ACI_BOND_STATUS_SUCCESS == aci_evt->params.bond_status.status_code)
-		{
-			bonded = true;
-		}
-		else
-		{
-			bonded = false;
-		}
-		break;
+      case ACI_EVT_BOND_STATUS:
+        if (ACI_BOND_STATUS_SUCCESS == aci_evt->params.bond_status.status_code)
+        {
+          bonded = true;
+        }
+        else
+        {
+          bonded = false;
+        }
+      break;
 
-	  case ACI_EVT_DISPLAY_PASSKEY:
-		Serial.print  (char(aci_evt->params.display_passkey.passkey[0]));
-		Serial.print  (char(aci_evt->params.display_passkey.passkey[1]));
-		Serial.print  (char(aci_evt->params.display_passkey.passkey[2]));
-		Serial.print  (char(aci_evt->params.display_passkey.passkey[3]));
-		Serial.print  (char(aci_evt->params.display_passkey.passkey[4]));
-		Serial.println(char(aci_evt->params.display_passkey.passkey[5]));
-		break;
+      case ACI_EVT_DISPLAY_PASSKEY:
+        Serial.print  (char(aci_evt->params.display_passkey.passkey[0]));
+        Serial.print  (char(aci_evt->params.display_passkey.passkey[1]));
+        Serial.print  (char(aci_evt->params.display_passkey.passkey[2]));
+        Serial.print  (char(aci_evt->params.display_passkey.passkey[3]));
+        Serial.print  (char(aci_evt->params.display_passkey.passkey[4]));
+        Serial.println(char(aci_evt->params.display_passkey.passkey[5]));
+        break;
 
       case ACI_EVT_TIMING:
         Serial.println(F("Evt link connection interval changed"));
@@ -355,7 +365,7 @@ void aci_loop()
 
       case ACI_EVT_DISCONNECTED:
         Serial.println(F("Evt Disconnected/Advertising timed out"));
-	lib_aci_connect(180/* in seconds */, 0x0100 /* advertising interval 100ms*/);
+        lib_aci_connect(180/* in seconds */, 0x0100 /* advertising interval 100ms*/);
         Serial.println(F("Advertising started"));
         break;
 
@@ -398,6 +408,7 @@ void aci_loop()
           aci_state.data_credit_available++;
         }
         break;
+
       case ACI_EVT_HW_ERROR:
         Serial.println(F("HW error: "));
         Serial.println(aci_evt->params.hw_error.line_num, DEC);
