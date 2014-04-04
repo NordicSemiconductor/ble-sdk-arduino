@@ -113,6 +113,52 @@
         </Characteristic>
     </Service>
     <Service Type="local" PrimaryService="true">
+        <Name>Device Firmware Update BLE Service</Name>
+        <Uuid BaseUUID="000000001212EFDE1523785FEABCD123" BaseUUIDName="DFU Base UUID">1530</Uuid>
+        <Characteristic>
+            <Name>DFU Packet</Name>
+            <Uuid BaseUUID="000000001212EFDE1523785FEABCD123" BaseUUIDName="DFU Base UUID">1532</Uuid>
+            <DefaultValue></DefaultValue>
+            <UsePresentationFormat>0</UsePresentationFormat>
+            <MaxDataLength>20</MaxDataLength>
+            <AttributeLenType>2</AttributeLenType>
+            <ForceOpen>false</ForceOpen>
+            <Properties>
+                <WriteWithoutResponse>true</WriteWithoutResponse>
+                <Write>false</Write>
+                <Notify>false</Notify>
+                <Indicate>false</Indicate>
+                <Broadcast>false</Broadcast>
+            </Properties>
+            <SetPipe>false</SetPipe>
+            <AckIsAuto>false</AckIsAuto>
+            <PresentationFormatDescriptor Value="0000" Exponent="0" Format="1" NameSpace="01" Unit="0000"/>
+            <PeriodForReadingThisCharacteristic>0</PeriodForReadingThisCharacteristic>
+            <PeriodForProperties/>
+        </Characteristic>
+        <Characteristic>
+            <Name>DFU Control Point</Name>
+            <Uuid BaseUUID="000000001212EFDE1523785FEABCD123" BaseUUIDName="DFU Base UUID">1531</Uuid>
+            <DefaultValue></DefaultValue>
+            <UsePresentationFormat>0</UsePresentationFormat>
+            <MaxDataLength>20</MaxDataLength>
+            <AttributeLenType>2</AttributeLenType>
+            <ForceOpen>false</ForceOpen>
+            <Properties>
+                <WriteWithoutResponse>false</WriteWithoutResponse>
+                <Write>true</Write>
+                <Notify>true</Notify>
+                <Indicate>false</Indicate>
+                <Broadcast>false</Broadcast>
+            </Properties>
+            <SetPipe>false</SetPipe>
+            <AckIsAuto>true</AckIsAuto>
+            <PresentationFormatDescriptor Value="0000" Exponent="0" Format="1" NameSpace="01" Unit="0000"/>
+            <PeriodForReadingThisCharacteristic>0</PeriodForReadingThisCharacteristic>
+            <PeriodForProperties/>
+        </Characteristic>
+    </Service>
+    <Service Type="local" PrimaryService="true">
         <Name>UART over BTLE</Name>
         <Uuid BaseUUID="6E400000B5A3F393E0A9E50E24DCCA9E" BaseUUIDName="UART Base UUID">0001</Uuid>
         <Characteristic>
@@ -233,7 +279,7 @@
         <AddServiceUpdateCharacteristic>true</AddServiceUpdateCharacteristic>
         <AddServiceUpdateCharacteristicPipe>true</AddServiceUpdateCharacteristicPipe>
         <ServiceToAdvertise>
-            <Uuid BaseUUID="6E400000B5A3F393E0A9E50E24DCCA9E" BaseUUIDName="UART Base UUID">0001</Uuid>
+            <Uuid BaseUUID="000000001212EFDE1523785FEABCD123" BaseUUIDName="DFU Base UUID">1530</Uuid>
         </ServiceToAdvertise>
         <CustomAdTypes>
             <AdType index="1">
