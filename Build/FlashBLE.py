@@ -1,5 +1,6 @@
 import os
 import commands
+import subprocess
 
 print "Flashing all BLE examples"
 
@@ -25,10 +26,15 @@ if "ARDUINO_DIR" in os.environ:
         print OBJ_EXAMPLE
         os.chdir(OBJ_EXAMPLE)
         print "make upload"
-        os.system("make upload")
+        return_val=subprocess.call(["make", "upload"])
+        if return_val == 0:
+             print "------------->   Successful flashing   <-------------"
+        else:
+             print "xxxxxxxxxxx   Error while flashing    xxxxxxxxxxxxxx"
     
     print "===================="
-    print "Go back to our folder %s" %Our_dir
+    
+    print "\nGo back to our folder %s" %Our_dir
     os.chdir(Our_dir)
 else:
     print "Environmental variable ARDUINO_DIR not declared."
