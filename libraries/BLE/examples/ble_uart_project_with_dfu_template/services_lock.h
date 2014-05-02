@@ -40,7 +40,7 @@
 // You have now chosen to upload the configuration to OTP on the device.
 // This will result in a device that you can not modify afterwards. If this is your intention,
 // remove this comment and the #error below
-//#error Generating configuration for OTP. Please verify usage by removing this error message from include file.
+// #error Generating configuration for OTP. Please verify usage by removing this error message from include file.
 
 #define SETUP_ID 0
 #define SETUP_FORMAT 3 /** nRF8001 D */
