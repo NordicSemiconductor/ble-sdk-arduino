@@ -7,7 +7,7 @@ A few parts of the SDK however must be re-implemented on the new micro controlle
 these are the SPI/ACI interface, GPIO interface, delay and optionally the interrupt interface. 
 All other code in the SDK can be ported to the new micro controller.
 
-###Getting the nRF8001 SDK for Arduino ready for porting:
+##Getting the nRF8001 SDK for Arduino ready for porting:
 
 Change the file names and make the required entry points for main() so it is easily portable to C based environments.
 
@@ -43,7 +43,6 @@ Remove the function static void m_aci_isr(void) from the hal_aci_tl.cpp
 Remove all instances of noInterrupts(); and interrupts();
 
 Remove the below code in hal_aci_tl.cpp in the function 
-
 bool hal_aci_tl_event_get(hal_aci_data_t *p_aci_data)
 
         if (was_full && a_pins_local_ptr->interface_is_interrupt)
@@ -53,7 +52,6 @@ bool hal_aci_tl_event_get(hal_aci_data_t *p_aci_data)
         }
 
 Remove the code below in hal_aci_tl.cpp in the function 
-
 void hal_aci_tl_init(aci_pins_t *a_pins, bool debug)
 
       /* Attach the interrupt to the RDYN line as requested by the caller */
@@ -100,7 +98,7 @@ to
         m_aci_event_check();
       }
 
-###Remove the below functions from aci_queue.cpp
+####Remove the below functions from aci_queue.cpp
 
 bool aci_queue_dequeue_from_isr(aci_queue_t *aci_q, hal_aci_data_t *p_data)
 
@@ -114,12 +112,12 @@ bool aci_queue_peek_from_isr(aci_queue_t *aci_q, hal_aci_data_t *p_data)
 
 Now you are ready to port the portable portions of the SDK to the new mcu and re-implement the SPI,  GPIO and delay interfaces
 
-###Re-implement GPIO, SPI and Delay
+##Re-implement GPIO, SPI and Delay
 
 The GPIO interfaces that are used are digitalRead, digitalWrite and pinMode.
 
 The pinMode supports INPUT, OUTPUT and INPUT_PULLUP options. You need to re-implement these functions. 
-You can choose to support the existing function interfaces or use the intefaces as provided in your mcu’s toolchain.
+You can choose to support the existing function interfaces or use the intefaces as provided in your mcu's toolchain.
 
 The delay() function  takes its parameter in milli seconds.
 
@@ -139,7 +137,7 @@ The m_aci_spi_transfer() function in hal_aci_tl.cpp then examines the length fie
 
 The function will then continue clocking on the SPI for the larger of the length fields.
 
-###Portable C code
+##Portable C code
 
 The aci_queue functions in aci_queue.cpp are portable to any micro controller that supports C. 
 These functions implement a circular FIFO using indices.
@@ -150,10 +148,10 @@ dequeue to remove from the head of the queue and peek to peek into the queue.
 The functions in the lib_aci.cpp are portable and are implemented in C.
 
 The lib_aci.cpp functions in the Arduino SDK pack the nRF8001 Events and Commands on a byte boundary. 
-If your mcu’s toolchain does not support the ability to pack the messages on a byte boundary (or is not a 8 bit mcu), 
+If your mcu's toolchain does not support the ability to pack the messages on a byte boundary (or is not a 8 bit mcu), 
 then use the decode functions in acilib.cpp to modify the lib_aci_event _get() function.
 
-###Testing of the ACI transport
+##Testing of the ACI transport
 
 Use the ble_aci_transport_layer_verification project to verify your ACI driver for the nRF8001. 
 The nRF8001 provides the ACI Echo command (available in the nRF8001 Test mode), 
@@ -163,8 +161,4 @@ The ACI Echo command is sent with data and the nRF8001 responds with an ACI Echo
 This allows you to verify that the SPI connectivity is ok on the board. 
 You can also vary the length of the Echo commands to send short packets followed by long packets 
 so that the ability of the SPI to handle packets of different lengths in a duplex SPI connection is confirmed.
-
-###First project after verifying the ACI transport
-
-UART over BLE template 
 
