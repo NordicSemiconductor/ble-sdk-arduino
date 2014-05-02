@@ -60,6 +60,9 @@ You need to run this again whenever you change the configuration in nRFgo studio
   
 The nRFgo studio is a Windows program that can be run on the OS X using playonmac (tested) and could also be run on Linux using playonlinux (not tested).
 
+####Porting ACI Library
+A brief explanation of how to port the ACI library code is available in [/documentation/libraries/BLE](./documentation/libraries/BLE/nRF8001-Porting-ACI-Library.md "Go to document") 
+
 ##Forum
 [Nordic Developer Zone](http://devzone.nordicsemi.com/ "Go to nordic developer zone")
 
