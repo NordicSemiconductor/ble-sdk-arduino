@@ -1,3 +1,32 @@
+#Release notes 0.9.1:
+
+##Changes:
+* Added DFU example. Note that a new bootloader is needed for this project
+
+* Added porting document
+
+##Fixes:
+* Fixed an issue with lib_aci_close_remote_pipe
+
+##Known issues:
+1. Assert functionality has been removed and should be put back to the SDK.
+Currently the asserts have been replaced with while(1)
+
+4. The FIFO/Queue uses the "one slot" free method to detect empty and full conditions.
+This wastes one extra element in the queue.
+The algorithm can be optimized to reduce RAM usage.
+
+5. Bonding info is stored in non-volatile memory on the Arduino after an ACI Timing Event and the Timing Event may not always arrive.
+This issue is applicable for all projects that use pairing.
+
+6. Documentation for using the Nordic adapter shield for nRF8001 with the nRF8001 Development kit and the Bluetooth low energy SDK for Arduino is incomplete.
+
+7. Documentation for the Bluetooth low energy SDK for Arduino is still in progress.
+
+9. Sending zero byte value from the hello world example causes nRF UART on iOS to crash.
+
+10. Bootloader for DFU is not yet released, but it will be shortly.
+
 #Release notes 0.9.0:
 
 ##Changes:
