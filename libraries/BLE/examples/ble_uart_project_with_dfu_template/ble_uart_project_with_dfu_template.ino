@@ -480,8 +480,11 @@ void aci_loop()
         Serial.println(F("Evt Pipe Status"));
         if (lib_aci_is_pipe_available(&aci_state, PIPE_UART_OVER_BTLE_UART_TX_TX) && (false == timing_change_done))
         {
-          lib_aci_change_timing_GAP_PPCP(); // change the timing on the link as specified in the nRFgo studio -> nRF8001 conf. -> GAP.
+          lib_aci_change_timing_GAP_PPCP();
+          
+          // change the timing on the link as specified in the nRFgo studio -> nRF8001 conf. -> GAP.
           // Used to increase or decrease bandwidth
+          
           timing_change_done = true;
         }
         break;
@@ -561,8 +564,9 @@ void aci_loop()
         Serial.println(aci_evt->params.pipe_error.error_code, HEX);
 
         //Increment the credit available as the data packet was not sent.
-        //The pipe error also represents the Attribute protocol Error Response sent from the peer and that should not be counted
-        //for the credit.
+        //The pipe error also represents the Attribute protocol Error Response 
+        //sent from the peer and that should not be counted for the credit.
+        
         if (ACI_STATUS_ERROR_PEER_ATT_ERROR != aci_evt->params.pipe_error.error_code)
         {
           aci_state.data_credit_available++;
