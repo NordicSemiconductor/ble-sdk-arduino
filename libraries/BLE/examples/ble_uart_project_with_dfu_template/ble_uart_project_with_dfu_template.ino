@@ -189,56 +189,97 @@ uint16_t crc_16_ccitt(uint16_t crc, uint8_t * data_in, uint16_t data_len)
   return crc;
 }
 
-/* This creates an array of the DFU data that should be stored in EEPROM,
- * computes a CRC value for the data, compares that CRC value with the one in
- * EEPROM and stores our data in EEPROM if there is a CRC mismatch
+/* This function collects the data needed for the bootloader to transfer a
+ * new application over BLE. It computes the CRC for this data, and writes
+ * the data to EEPROM if the computed CRC is different from the one in EEPROM
+ * (or if there is no valid CRC in EEPROM at all).
+ *
+ * Stored is a byte telling the bootloader that BLE config data is in EEPROM,
+ * the pin configuration the user has chosen in setup(), the amount of total
+ * credit available (current credit must equal total credit before jumping to
+ * bootloader, so there is no need to store both), the pipes used for a DFU
+ * transfer, found in this example's services.h, the connection timeout and the
+ * connection advertisement interval.
  */
-bool store_dfu_info_in_eeprom (void)
+bool store_dfu_info_in_eeprom (aci_state_t *state, uint16_t conn_timeout,
+    uint16_t adv_interval)
 {
-  uint8_t crc; uint8_t addr; uint16_t
-  crc_seed = 0xFFFF;
+  uint8_t i;
+  uint8_t addr;
+  uint16_t crc_eeprom;
+  uint16_t crc_local;
 
-  const uint16_t len = 17;
-  uint8_t data[len] = {
-    digitalPinToPort (aci_state.aci_pins.reqn_pin),
-    digitalPinToBitMask (aci_state.aci_pins.reqn_pin),
-    digitalPinToPort (aci_state.aci_pins.rdyn_pin),
-    digitalPinToBitMask (aci_state.aci_pins.rdyn_pin),
-    digitalPinToPort (aci_state.aci_pins.mosi_pin),
-    digitalPinToBitMask (aci_state.aci_pins.mosi_pin),
-    digitalPinToPort (aci_state.aci_pins.miso_pin),
-    digitalPinToBitMask (aci_state.aci_pins.miso_pin),
-    digitalPinToPort (aci_state.aci_pins.sck_pin),
-    digitalPinToBitMask (aci_state.aci_pins.sck_pin),
-    digitalPinToPort (aci_state.aci_pins.reset_pin),
-    digitalPinToBitMask (aci_state.aci_pins.reset_pin),
-    aci_state.data_credit_total,
-    aci_state.data_credit_available,
+  /* Data to be stored */
+  uint8_t valid_ble = 1;
+  uint8_t *p = (uint8_t *) &(state->aci_pins);
+  uint8_t pipes[] = {
     PIPE_DEVICE_FIRMWARE_UPDATE_BLE_SERVICE_DFU_PACKET_RX,
     PIPE_DEVICE_FIRMWARE_UPDATE_BLE_SERVICE_DFU_CONTROL_POINT_TX,
-    PIPE_DEVICE_FIRMWARE_UPDATE_BLE_SERVICE_DFU_CONTROL_POINT_RX_ACK_AUTO
-  };
+    PIPE_DEVICE_FIRMWARE_UPDATE_BLE_SERVICE_DFU_CONTROL_POINT_RX_ACK_AUTO};
+  uint8_t timeout_h = (uint8_t) conn_timeout >> 8;
+  uint8_t timeout_l = (uint8_t) conn_timeout >> 0;
+  uint8_t interval_h = (uint8_t) adv_interval >> 8;
+  uint8_t interval_l = (uint8_t) adv_interval >> 0;
+
+  /* len = valid data flag + pin struct + credit byte + pipe array +
+   * timeout + interval + crc
+   */
+  uint8_t len = 1 + sizeof(aci_pins_t) + 1 + sizeof(pipes) + 6;
 
   /* Compute CRC16 */
-  crc = crc_16_ccitt(crc_seed, data, len);
+  crc_local = crc_16_ccitt(0xFFFF, &valid_ble, 1);
+  crc_local = crc_16_ccitt(crc_local, p, sizeof(aci_pins_t));
+  crc_local = crc_16_ccitt(crc_local, &(state->data_credit_total), 1);
+  crc_local = crc_16_ccitt(crc_local, pipes, sizeof(pipes));
+  crc_local = crc_16_ccitt(crc_local, &timeout_l, 1);
+  crc_local = crc_16_ccitt(crc_local, &timeout_h, 1);
+  crc_local = crc_16_ccitt(crc_local, &interval_l, 1);
+  crc_local = crc_16_ccitt(crc_local, &interval_h, 1);
 
-  addr = 0;
-  if (EEPROM.read(addr) == crc)
+  /* Read previously stored CRC. If no CRC has been stored previously,
+   * this will be a garbage number that very probably won't match, so
+   * everything works out okay */
+  addr = len - 2;
+  crc_eeprom = (uint16_t) EEPROM.read(addr++);
+  crc_eeprom |= (uint16_t) (EEPROM.read(addr) << 8);
+
+  /* Abort the EEPROM write if the stored CRC matches the one above */
+  if (crc_local == crc_eeprom)
   {
-    Serial.println(F("CRC matches EEPROM"));
     return false;
   }
-  Serial.println(F("CRC does not match EEPROM"));
+
+  Serial.println(F("CRC does not match EEPROM. Writing new data."));
 
   /* As the computed CRC value does not match the one in EEPROM,
-   * we write the crc and data[] to EEPROM
+   * we write the data and CRC to EEPROM
    */
-  EEPROM.write(addr++, crc);
+  addr = 0;
 
-  for (uint8_t i = 0; i++; i < len)
+  EEPROM.write(addr++, valid_ble);
+
+  for (uint8_t i = 0; i < sizeof(aci_pins_t); i++)
   {
-    EEPROM.write(addr++, data[i]);
+    EEPROM.write(addr++, *((uint8_t *) &(state->aci_pins) + i));
   }
+
+  EEPROM.write(addr++, state->data_credit_total);
+
+  for (uint8_t i = 0; i < sizeof(pipes); i++)
+  {
+    EEPROM.write(addr++, pipes[i]);
+  }
+
+  /* Write connetion timeout */
+  EEPROM.write(addr++, timeout_l);
+  EEPROM.write(addr++, timeout_h);
+
+  /* Write advertisement interval */
+  EEPROM.write(addr++, interval_l);
+  EEPROM.write(addr++, interval_h);
+
+  EEPROM.write(addr++, (uint8_t) crc_local);
+  EEPROM.write(addr++, (uint8_t) (crc_local >> 8));
 
   return true;
 }
@@ -298,9 +339,6 @@ void setup(void)
 
   aci_state.aci_pins.interface_is_interrupt	  = false;
   aci_state.aci_pins.interrupt_number			  = 1;
-
-
-  store_dfu_info_in_eeprom();
 
   /* We reset the nRF8001 here by toggling the RESET line connected to the nRF8001
    * If the RESET line is not available we call the ACI Radio Reset to soft reset the nRF8001
@@ -438,6 +476,8 @@ void aci_loop()
                 lib_aci_connect(180/* in seconds */, 0x0050 /* advertising interval 50ms*/);
                 Serial.println(F("Advertising started"));
               }
+
+              store_dfu_info_in_eeprom(&aci_state, 180, 0x0050);
 
               break;
           }
