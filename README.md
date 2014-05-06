@@ -38,16 +38,24 @@ The SPI lines are available on Digital 11, 12, 13 and the central ICSP connector
 To change the REQN and RDYN line to a different Arduino pin, cut the track on the PCB connecting the lines and wire the nRF8001 pins on the shield adapter at P10 to the required Arduino pin.
 
 ####Configure the MCU to nRF8001 PIN connection
-    aci_state.aci_pins.board_name = //See board.h for details, Use REDBEARLAB_SHIELD_V1_1 or BOARD_DEFAULT
-    aci_state.aci_pins.reqn_pin   = //SS for Nordic adapter shield , 9 for REDBEARLAB_SHIELD_V1_1 and REDBEARLAB_SHIELD_V2
-    aci_state.aci_pins.rdyn_pin   = // 3 for Nordic adapter shield ,  8 for REDBEARLAB_SHIELD_V1_1 and REDBEARLAB_SHIELD_V2
+    aci_state.aci_pins.board_name = 
+    //See board.h for details, Use REDBEARLAB_SHIELD_V1_1 or BOARD_DEFAULT
+    
+    aci_state.aci_pins.reqn_pin   = 
+    //SS for Nordic adapter shield , 9 for REDBEARLAB_SHIELD_V1_1 and REDBEARLAB_SHIELD_V2
+    
+    aci_state.aci_pins.rdyn_pin   = 
+    // 3 for Nordic adapter shield ,  8 for REDBEARLAB_SHIELD_V1_1 and REDBEARLAB_SHIELD_V2
+    
     aci_state.aci_pins.mosi_pin   = MOSI;
     aci_state.aci_pins.miso_pin   = MISO;
     aci_state.aci_pins.sck_pin    = SCK;
     
     aci_state.aci_pins.spi_clock_divider     = SPI_CLOCK_DIV8; //This divides the input clock by 8 to get the SPI clock
       
-    aci_state.aci_pins.reset_pin             = //4 for Nordic adapter shield, UNUSED for REDBEARLAB_SHIELD_V1_1, 4 or 7 or UNUSED for REDBEARLAB_SHIELD_V2
+    aci_state.aci_pins.reset_pin             = 
+    //4 for Nordic adapter shield, UNUSED for REDBEARLAB_SHIELD_V1_1, 4 or 7 or UNUSED for REDBEARLAB_SHIELD_V2
+    
     aci_state.aci_pins.active_pin            = UNUSED;
     aci_state.aci_pins.optional_chip_sel_pin = UNUSED;
       
