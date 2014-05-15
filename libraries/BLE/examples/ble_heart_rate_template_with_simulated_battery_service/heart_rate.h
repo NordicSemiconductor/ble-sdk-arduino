@@ -111,14 +111,14 @@ bool heart_rate_send_hr_16bits(uint16_t meas_hr);
  *  @param expended_energy Measured expended energy.
  *  @return : True when the ACI command is successfully placed in the ACI command queue
  */
-bool heart_rate_send_hr_expended_energy(uint8_t meas_hr, uint16_t expended_energy, bool is_freshest_sample);
+bool heart_rate_send_hr_expended_energy(uint8_t meas_hr, uint16_t expended_energy);
 
 /** @brief Function to send a heart rate measurement (16 bits) with expended energy.
  *  @param meas_hr Measured heart_rate to send.
  *  @param expended_energy Measured expended energy.
  *  @return : True when the ACI command is successfully placed in the ACI command queue
  */
-bool heart_rate_send_hr_16bits_expended_energy(uint16_t meas_hr, uint16_t expended_energy, bool is_freshest_sample);
+bool heart_rate_send_hr_16bits_expended_energy(uint16_t meas_hr, uint16_t expended_energy);
 
 /** @brief Function to send a heart rate measurement (8 bits) with rr_intervals
  *  @param meas_hr Measured heart_rate to send.
@@ -126,7 +126,7 @@ bool heart_rate_send_hr_16bits_expended_energy(uint16_t meas_hr, uint16_t expend
  *  @param nb_intervals Number of rr_intervals.
  *  @return : True when the ACI command is successfully placed in the ACI command queue
  */
-bool heart_rate_send_hr_rr_interval(uint8_t meas_hr, uint16_t *p_rr_intervals, uint8_t nb_intervals, bool is_freshest_sample);
+bool heart_rate_send_hr_rr_interval(uint8_t meas_hr, uint16_t *p_rr_intervals, uint8_t nb_intervals);
 
 /** @brief Function to send a heart rate measurement (16 bits) with rr_intervals
  *  @param meas_hr Measured heart_rate to send.
@@ -134,7 +134,7 @@ bool heart_rate_send_hr_rr_interval(uint8_t meas_hr, uint16_t *p_rr_intervals, u
  *  @param nb_intervals Number of rr_intervals.
  *  @return : True when the ACI command is successfully placed in the ACI command queue
  */
-bool heart_rate_send_hr_16bits_rr_interval(uint16_t meas_hr, uint16_t *p_rr_intervals, uint8_t nb_intervals, bool is_freshest_sample);
+bool heart_rate_send_hr_16bits_rr_interval(uint16_t meas_hr, uint16_t *p_rr_intervals, uint8_t nb_intervals);
 
 /** @brief Function to send a heart rate measurement (8 bits) with expended energy with rr_intervals
  *  @param meas_hr Measured heart_rate to send.
@@ -143,7 +143,7 @@ bool heart_rate_send_hr_16bits_rr_interval(uint16_t meas_hr, uint16_t *p_rr_inte
  *  @param nb_intervals Number of rr_intervals.
  *  @return : True when the ACI command is successfully placed in the ACI command queue
  */
-bool heart_rate_send_hr_expended_energy_rr_interval(uint8_t meas_hr, uint16_t expended_energy, uint16_t *p_rr_intervals, uint8_t nb_intervals, bool is_freshest_sample);
+bool heart_rate_send_hr_expended_energy_rr_interval(uint8_t meas_hr, uint16_t expended_energy, uint16_t *p_rr_intervals, uint8_t nb_intervals);
 
 /** @brief Function to send a heart rate measurement (16 bits) with expended energy with rr_intervals
  *  @param meas_hr measured heart_rate to send.
@@ -152,7 +152,7 @@ bool heart_rate_send_hr_expended_energy_rr_interval(uint8_t meas_hr, uint16_t ex
  *  @param nb_intervals Number of rr_intervals.
  *  @return : True when the ACI command is successfully placed in the ACI command queue
  */
-bool heart_rate_send_hr_16bits_expended_energy_rr_interval(uint16_t meas_hr, uint16_t expended_energy, uint16_t *p_rr_intervals, uint8_t nb_intervals, bool is_freshest_sample);
+bool heart_rate_send_hr_16bits_expended_energy_rr_interval(uint16_t meas_hr, uint16_t expended_energy, uint16_t *p_rr_intervals, uint8_t nb_intervals);
 
 /** @brief Function to check received data
  *  @details Call this function each time data is received (on @c ACI_EVT_DATA_RECEIVED on the control point pipe ).

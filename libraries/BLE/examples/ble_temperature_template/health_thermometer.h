@@ -113,8 +113,6 @@ void health_thermometer_set_unit_f();
 /** @brief Function to send a temperature measurement without time_stamp.
  *  @details Call this function to send (indicate) a new temperature measurement.
  *  @param meas_temp Measured temperature to send.
- *  @param is_freshest_sample Set it to true if you want to overwrite an eventual pending transaction on this pipe.
- *  @return : True if is_freshest_sample true. Otherwise return false if a transaction on this pipe is already pending, true otherwise.
  */
 bool health_thermometer_send_measure(uint32_t meas_temp);
 
@@ -122,8 +120,6 @@ bool health_thermometer_send_measure(uint32_t meas_temp);
  *  @details Call this function to send (indicate) a new temperature measurement with a time_stamp.
  *  @param meas_temp Measured temperature to send.
  *  @param t_stamp Time stamp.
- *  @param is_freshest_sample Set it to true if you want to overwrite an eventual pending transaction on this pipe.
- *  @return : True if is_freshest_sample true. Otherwise return false if a transaction on this pipe is already pending, true otherwise.
  */
 bool health_thermometer_send_measure_with_t_stamp(uint32_t meas_temp, time_stamp_t *t_stamp);
 

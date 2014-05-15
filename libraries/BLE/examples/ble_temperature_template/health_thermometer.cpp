@@ -80,7 +80,7 @@ bool health_thermometer_send_measure(uint32_t meas_temp)
   return lib_aci_send_data(PIPE_HEALTH_THERMOMETER_TEMPERATURE_MEASUREMENT_TX_ACK, (uint8_t *)&h_temperature, measurement_size);
 }
 
-bool health_thermometer_send_measure_with_t_stamp(uint32_t meas_temp, time_stamp_t *t_stamp, bool is_freshest_sample)
+bool health_thermometer_send_measure_with_t_stamp(uint32_t meas_temp, time_stamp_t *t_stamp)
 {
   uint8_t measurement_size = 12;
   uint8_t *p_in_val = (uint8_t *)&meas_temp;
