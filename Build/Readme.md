@@ -64,7 +64,7 @@ When you define this environmental variables it is important to set them to be r
 
 ## Make each BLE example
 
-You could make each ble example file. To do this, first open the Cygwin console. Go to the folder where the example is located. Type `make`
+You could make each BLE example file. To do this, first open the Cygwin console. Go to the folder where the example is located. Type `make`
 
 In order to upload the just made file. Type `upload`. For further details go to the Sudar's manual description
 
@@ -75,5 +75,6 @@ In order to upload the just made file. Type `upload`. For further details go to 
 
 There are two python scripts with in this folder that can make all the examples and upload all of them to the Arduino.
 
-For usgin these two files, first go to the folder called `Build`. For making all the examples type `python BuildBLE.py` and for flashing all of them type `python FlashBLE.py`
+For using these two files, first go to the folder called `Build`. For making all the examples type `python BuildBLE.py` and for flashing all of them type `python FlashBLE.py`
+
 ----
