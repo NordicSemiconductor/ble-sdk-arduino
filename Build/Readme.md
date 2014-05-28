@@ -17,7 +17,7 @@ It is important to mention that this Makefile was tested on a Windows platform. 
 
 ## Install Cygwin
 
-In order to run this makefile on Windows it is recommended to install Cygwin as well as its the Make utility.
+In order to run this makefile on Windows it is recommended to install Cygwin as well as its Make utility.
 
 ----
 
@@ -54,6 +54,7 @@ MONITOR_PORT=com3ARDMK_DIR
 ARDMK_DIR=/cygdrive/c/Users/"Your_user"/Arduino-Makefile
 ARDUINO_DIR=../../../../../Arduino
 ```
+The ARDMK_DIR variable is the location where this Makefile was downloaded.
 AVR_TOOLS_DIR is optional. If you use the default tools from the Arduino folder you do not have to set this variable as the makefile will detect it. Its default value should be:
 ```Makefile
 AVR_TOOLS_DIR=../../../../../Arduino/hardware/tools/avr
@@ -64,7 +65,7 @@ When you define this environmental variables it is important to set them to be r
 
 ## Make each BLE example
 
-You can make each BLE example file. To do this, first open the Cygwin console. Go to the folder where the example is located and type `make`.
+You can make each BLE example. To do this, first open the Cygwin console. Go to the folder where the example is located and type `make`.
 
 In order to upload the just made file type `upload`. For further details go to the Sudar's manual description
 
