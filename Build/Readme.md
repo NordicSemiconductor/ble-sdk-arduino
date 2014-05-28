@@ -17,7 +17,7 @@ It is important to mention that this Makefile was tested on a Windows platform. 
 
 ## Install Cygwin
 
-For this makefile to work on Windows it is recommended to install Cygwin in order to use the Make utility.
+In order to run this makefile on Windows it is recommended to install Cygwin as well as its the Make utility.
 
 ----
 
@@ -25,12 +25,12 @@ For this makefile to work on Windows it is recommended to install Cygwin in orde
 
 The extra tools that have to be installed into Cygwin for using this Makefile are:
 
-*make
-*perl
-*python 
-*perl package "Device::SerialPort"
+*	make
+*	perl
+*	python 
+*	perl package `Device::SerialPort`
 
-For installing this extra tools please open again the Cygwin installer and when it ask you for select which packages to be installed select the ones mentioned above.
+For installing this extra tools please open again the Cygwin installer and when it asks you to select which packages to be installed select the ones mentioned above.
 
 ----
 
@@ -40,7 +40,7 @@ A symbolic link should be created for the Arduino folder in case your default in
 
 `mklink`
 
-on the windows command prompt. This is very useful on Windows as sometimes the Make utility will have problem when dealing with the folders name if they have strange characters.
+on the windows command prompt. This is very useful on Windows as sometimes the Make utility will have problems when dealing with the windows naming conventions for folders.
 
 ----
 
@@ -54,26 +54,26 @@ MONITOR_PORT=com3ARDMK_DIR
 ARDMK_DIR=/cygdrive/c/Users/"Your_user"/Arduino-Makefile
 ARDUINO_DIR=../../../../../Arduino
 ```
-AVR_TOOLS_DIR is optional. If you use the default tools from the Arduino folder you do not have to set this variable as the makefile will detect it. Its default value should be
+AVR_TOOLS_DIR is optional. If you use the default tools from the Arduino folder you do not have to set this variable as the makefile will detect it. Its default value should be:
 ```Makefile
 AVR_TOOLS_DIR=../../../../../Arduino/hardware/tools/avr
 ```
-When you define this environmental variables it is important to set them to be relative. Otherwise the Makefile will not work properly
+When you define this environmental variables it is important to set them to be relative. Otherwise the Makefile will not work properly.
 
 ----
 
 ## Make each BLE example
 
-You could make each BLE example file. To do this, first open the Cygwin console. Go to the folder where the example is located. Type `make`
+You can make each BLE example file. To do this, first open the Cygwin console. Go to the folder where the example is located and type `make`.
 
-In order to upload the just made file. Type `upload`. For further details go to the Sudar's manual description
+In order to upload the just made file type `upload`. For further details go to the Sudar's manual description
 
 
 ----
 
 ## Python scripts
 
-There are two python scripts with in this folder that can make all the examples and upload all of them to the Arduino.
+There are two python scripts within this folder that can make and upload all the BLE examples to the Arduino.
 
 For using these two files, first go to the folder called `Build`. For making all the examples type `python BuildBLE.py` and for flashing all of them type `python FlashBLE.py`
 
