@@ -1,0 +1,27 @@
+
+For more details please refer https://github.com/sudar/Arduino-Makefile
+This is just a quick guide.
+
+The variables that have to be set are:
+
+ARDMK_DIR and ARDUINO_DIR. AVR_TOOLS_DIR is optional. If you use the default tools from the Arduino folder
+you do not have to set this variable as the makefile will detect it. For windows you have to download:
+
+Cygwin, and its tools: make, perl, python and the perl package Device::SerialPort.
+
+You should also create a symbolic link for Arduino folder in case your default installation folder has either
+spaces, or special characters such as, ( , etc. For creating the symbolic link you have to use the command
+mklink on the windows command window.
+
+The variables should be:
+
+ARDMK_DIR=/cygdrive/c/Users/emga/Arduino-Makefile
+
+ARDUINO_DIR=../../../../../Arduino
+
+AVR_TOOLS_DIR=../../../../../Arduino/hardware/tools/avr
+
+BOARD_TAG=mega2560
+
+MONITOR_PORT=com3
+
