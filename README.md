@@ -1,7 +1,7 @@
 #ble-sdk-arduino
 
-Bluetooth low energy SDK for Arduino (uses the nRF8001 from [Nordic Semiconductor](https://www.nordicsemi.com/ "Go to Nordic semiconductors homepage")). 
-This has been tested using the Arduino UNO, Mega and Leaonardo boards with the nRF2740/nRF2741 module or the Bluetooth low energy shield from Redbearlab. 
+Bluetooth low energy SDK for Arduino and chipKIT (uses the nRF8001 from [Nordic Semiconductor](https://www.nordicsemi.com/ "Go to Nordic semiconductors homepage")). 
+This has been tested using the chipKIT Uno32, Arduino UNO, Mega and Leaonardo boards with the nRF2740/nRF2741 module or the Bluetooth low energy shield from Redbearlab. 
 The shield is available from seeedstudio and makershed.
 
 ##Contents
@@ -51,10 +51,12 @@ To change the REQN and RDYN line to a different Arduino pin, cut the track on th
     aci_state.aci_pins.miso_pin   = MISO;
     aci_state.aci_pins.sck_pin    = SCK;
     
-    aci_state.aci_pins.spi_clock_divider     = SPI_CLOCK_DIV8; //This divides the input clock by 8 to get the SPI clock
+    //This divides the input clock by 8 to get the SPI clock
+    aci_state.aci_pins.spi_clock_divider     = SPI_CLOCK_DIV8;
       
     aci_state.aci_pins.reset_pin             = 
-    //4 for Nordic adapter shield, UNUSED for REDBEARLAB_SHIELD_V1_1, 4 or 7 or UNUSED for REDBEARLAB_SHIELD_V2
+    //Reset pin is 4 for Nordic adapter shield, UNUSED for REDBEARLAB_SHIELD_V1_1
+    //Reset pin is 4 or 7 or UNUSED for REDBEARLAB_SHIELD_V2 or later
     
     aci_state.aci_pins.active_pin            = UNUSED;
     aci_state.aci_pins.optional_chip_sel_pin = UNUSED;
