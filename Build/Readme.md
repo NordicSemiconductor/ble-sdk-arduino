@@ -113,8 +113,9 @@ When you define this environmental variables it is important to set them to be r
 
 The Build process is the next. 
 
-* Go to the folder example you want to compile and type Make. 
+* Go to the folder example you want to compile and type `make`. 
 * On each example there is a makefile that calls the main makefile located on this Build folder.
+* The main Makefile will compile the example.
 
 In case you want to compile and test all the examples, then:
 
