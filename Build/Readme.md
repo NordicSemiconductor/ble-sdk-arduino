@@ -25,12 +25,31 @@ In order to run this makefile on Windows it is recommended to install Cygwin as 
 
 For installing the extra tools required please open again the Cygwin installer and when it asks you to select which packages to be installed select the ones mentioned below. The extra tools that have to be installed into Cygwin for using this Makefile are:
 
-*	make: This utility is under the package "D-Level". Also install all the options that say Make from the "Debug" package.If you type "Make" in the search box you will find all of them.
-*	perl: This is a package it self, so just click next to its name to change the configuration from Default to Installed.
-*	python: This is a package it self, so just click next to its name to change the configuration from Default to Installed. 
-*	perl package `Device::SerialPort`: This package has to be installed via Cygwin
+*	make: This utility is under the package "D-Level". Also install all the options that say Make from the "Debug" package. If you type "Make" in the search box you will find all of them.
+*	perl: This is a package itself, so just click next to its name to change the configuration from Default to Installed.
+*	python: This is a package itself, so just click next to its name to change the configuration from Default to Installed. 
+*	perl module `Device::SerialPort`: For installing this module there are two options, you can download it from this webpage :
 
+http://search.cpan.org/~cook/Device-SerialPort-1.04/SerialPort.pm
 
+or install it simply with the command:
+
+  `cpan Device::SerialPort`
+
+if you're on Ubuntu or Debian-like distributions:
+
+    `sudo apt-get install libdevice-serialport-perl`
+
+If you downloaded the package in order to install it you have to run the following commands:
+
+	perl Makefile.PL
+	make
+	make test
+	make install
+
+This other github repository explains the use of this module in case you are interested on knowing more about how to use it.  
+
+https://github.com/syxanash/Device-SerialPort-Arduino
 
 ----
 
