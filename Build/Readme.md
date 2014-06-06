@@ -22,7 +22,7 @@ It is important to mention that this Makefile was tested on a Windows platform. 
 
 ## Install Cygwin
 
-In order to run this makefile on Windows it is recommended to install Cygwin as well as its Make utility.
+In order to run this makefile on Windows it is recommended to install Cygwin as well as all its packages which are selected by defualt.
 
 ----
 
@@ -30,6 +30,7 @@ In order to run this makefile on Windows it is recommended to install Cygwin as 
 
 For installing the extra tools required please open again the Cygwin installer and when it asks you to select which packages to be installed select the ones mentioned below. The extra tools that have to be installed into Cygwin for using this Makefile are:
 
+*	gcc: Install gcc in case it was not selected as a default package. Gcc is under the package "D-Level". Also install all the options that say Make from the "Debug" package. If you type "gcc" in the search box you will find all of them.
 *	make: This utility is under the package "D-Level". Also install all the options that say Make from the "Debug" package. If you type "Make" in the search box you will find all of them.
 *	perl: This is a package itself, so just click next to its name to change the configuration from Default to Installed.
 *	python: This is a package itself, so just click next to its name to change the configuration from Default to Installed. 
