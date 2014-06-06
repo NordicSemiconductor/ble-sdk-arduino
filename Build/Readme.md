@@ -4,6 +4,10 @@ This Arduino makefile is based on the one from Sudar. For more details please re
 
 https://github.com/sudar/Arduino-Makefile
 
+or this other guide.
+
+http://hardwarefun.com/tutorials/compiling-arduino-sketches-using-makefile
+
 This is just a quick guide. In addition to the steps explained on Sudar's manual this readme file explains some recommended settings.
 
 It is important to mention that this Makefile was tested on a Windows platform. The following are the extra steps recommended for using the Arduino Makefile.
@@ -12,6 +16,7 @@ It is important to mention that this Makefile was tested on a Windows platform. 
 *	[Install extra components for Cygwin](#Install-extra-components-for-cygwin)
 *	[Create symbolic link for the Arduino Folder](#Create-symbolic-link-for-the-arduino-folder)
 *	[Modify or create environmental variables](#Modify-or-create-environmental-variables)
+*	[Modify each makefile from each example](#Modify-each-makefile-from-each-example)
 *	[Make each BLE example](#Make-each-ble-example)
 *	[Python scripts](#Python-scripts)
 
@@ -101,6 +106,22 @@ AVR_TOOLS_DIR is optional. If you use the default tools from the Arduino folder 
 AVR_TOOLS_DIR=../../../../../Arduino/hardware/tools/avr
 ```
 When you define this environmental variables it is important to set them to be relative. Otherwise the Makefile will not work properly.
+
+----
+
+## Modify each makefile from each example
+
+The Build process is the next. 
+
+* Go to the folder example you want to compile and type Make. 
+* On each example there is a makefile that calls the main makefile located on this Build folder.
+
+In case you want to compile and test all the examples, then:
+
+* Go to the Build folder and type the mentioned python commands below in the next section.
+* This python script will go sequentially through all the examples and compile each one.
+
+In order to compile any of the two options mentioned above. You have to modify each make file for each example. This make file has variables which were defined previously and overwrites them. The makefile has comments and it is self-explanatory.
 
 ----
 
