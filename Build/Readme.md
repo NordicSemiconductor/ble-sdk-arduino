@@ -80,7 +80,13 @@ This is very useful on Windows as sometimes the `Make` utility on Cygwin will ha
 
 ## Modify or create environmental variables
 
-The variables that have to be set are mainly:
+In order for this Makefile to work, some enviromental variables have to set either on Windows or on Cygwin. For doing this on Windows from the Desktop, right-click My Computer and click Properties. Click Advanced System Settings link in the left column. In the System Properties window click the Environment Variables button. Now you can add new variables or modify the value of the old ones.
+
+In Cygwin you have to execute the command `export` for defining a new enviromental variables and `unset` for deleting it. Further details can be found on:
+
+http://cygwin.com/cygwin-ug-net/setup-env.html
+
+All of this variables are recommended to be set on Windows. The variables that have to be set are mainly:
 
 ```Makefile
 BOARD_TAG=mega2560
@@ -88,7 +94,8 @@ MONITOR_PORT=com3
 ARDMK_DIR=/cygdrive/c/Users/"Your_user"/Arduino-Makefile
 ARDUINO_DIR=../../../../../Arduino
 ```
-The ARDMK_DIR variable is the location where this Makefile was downloaded.
+The ARDMK_DIR variable is the location where this Makefile was downloaded. The value of this variable will change depending on the location in your computer where the Arduino Makefile was downloaded.
+
 AVR_TOOLS_DIR is optional. If you use the default tools from the Arduino folder you do not have to set this variable as the makefile will detect it. Its default value should be:
 ```Makefile
 AVR_TOOLS_DIR=../../../../../Arduino/hardware/tools/avr
