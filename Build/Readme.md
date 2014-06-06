@@ -50,7 +50,7 @@ The variables that have to be set are mainly:
 
 ```Makefile
 BOARD_TAG=mega2560
-MONITOR_PORT=com3ARDMK_DIR 
+MONITOR_PORT=com3
 ARDMK_DIR=/cygdrive/c/Users/"Your_user"/Arduino-Makefile
 ARDUINO_DIR=../../../../../Arduino
 ```
