@@ -115,7 +115,7 @@ The Build process is the next.
 
 * Go to the folder example you want to compile and type `make`. 
 * On each example there is a makefile that calls the main makefile located on this Build folder.
-* The main Makefile will compile the example.
+* The main Makefile will compile the example based on some information provided by the Makefile located on each example folder.
 
 In case you want to compile and test all the examples, then:
 
