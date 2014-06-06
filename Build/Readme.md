@@ -55,11 +55,26 @@ https://github.com/syxanash/Device-SerialPort-Arduino
 
 ## Create symbolic link for the Arduino Folder
 
-A symbolic link should be created for the Arduino folder in case your default installation folder has either spaces or special characters such as "(". For creating the symbolic link you have to use the command:
+A symbolic link should be created for the Arduino folder(Folder where the Arduino IDE and other tools are installed on your computer) in case your default installation folder has either spaces or special characters such as "(". For example, if your Arduino directory is in:
 
-`mklink`
+    c:\Program Files (x86)\Arduino
 
-on the windows command prompt. This is very useful on Windows as sometimes the Make utility will have problems when dealing with the windows naming conventions for folders.
+You will get problems with the special characters on the directory name. More details about this can be found in [issue #94](https://github.com/sudar/Arduino-Makefile/issues/94)
+
+To create a symbolic link, you can use the command “mklink” on the windows command prompt, e.g.
+
+    mklink /d c:\Arduino c:\Program Files (x86)\Arduino
+
+After this the envorimental variables used should be:
+
+    ARDUINO_DIR=../../../../../Arduino
+
+Instead of:
+
+    ARDUINO_DIR=../../../../../Program\ Files\ \(x86\)/Arduino
+
+
+This is very useful on Windows as sometimes the `Make` utility on Cygwin will have problems when dealing with the windows naming conventions for folders.
 
 ----
 
