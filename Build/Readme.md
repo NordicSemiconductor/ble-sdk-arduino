@@ -119,7 +119,7 @@ The Build process is the next.
 
 In case you want to compile and test all the examples, then:
 
-* Go to the Build folder and type the mentioned python commands below in the next section.
+* Go to the Build folder and type the mentioned python commands below in the [Python scripts](#Python-scripts).
 * This python script will go sequentially through all the examples and compile each one.
 
 In order to compile any of the two options mentioned above. You have to modify each make file for each example. This make file has variables which were defined previously and overwrites them. The makefile has comments and it is self-explanatory.
