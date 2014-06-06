@@ -23,14 +23,14 @@ In order to run this makefile on Windows it is recommended to install Cygwin as 
 
 ## Install extra components for Cygwin
 
-The extra tools that have to be installed into Cygwin for using this Makefile are:
+For installing the extra tools required please open again the Cygwin installer and when it asks you to select which packages to be installed select the ones mentioned below. The extra tools that have to be installed into Cygwin for using this Makefile are:
 
-*	make
-*	perl
-*	python 
-*	perl package `Device::SerialPort`
+*	make: This utility is under the package "D-Level". Also install all the options that say Make from the "Debug" package.If you type "Make" in the search box you will find all of them.
+*	perl: This is a package it self, so just click next to its name to change the configuration from Default to Installed.
+*	python: This is a package it self, so just click next to its name to change the configuration from Default to Installed. 
+*	perl package `Device::SerialPort`: This package has to be installed via Cygwin
 
-For installing this extra tools please open again the Cygwin installer and when it asks you to select which packages to be installed select the ones mentioned above.
+
 
 ----
 
