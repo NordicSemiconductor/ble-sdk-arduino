@@ -46,7 +46,7 @@ if you're on Ubuntu or Debian-like distributions:
 
     `sudo apt-get install libdevice-serialport-perl`
 
-If you downloaded the package in order to install it you have to run the following commands:
+If you downloaded the package in order to install it first you have to unpack it, and then inside the folder it has you have to run the following commands:
 
 	perl Makefile.PL
 	make
