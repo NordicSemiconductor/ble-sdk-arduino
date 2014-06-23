@@ -66,7 +66,6 @@ The following instructions describe the steps to be made on the Windows PC:
 #include <aci_setup.h>
 #include "uart_over_ble.h"
 #include <avr/io.h>
-#include <avr/wdt.h>
 
 /**
 Put the nRF8001 setup in the RAM of the nRF8001.
@@ -106,61 +105,6 @@ static uint8_t         uart_buffer_len = 0;
 String inputString     = "";     // a string to hold incoming data
 bool stringComplete = false;  // whether the string is complete
 
-#define BOOTLOADER_START_ADDR 0x7000
-#define BOOTLOADER_KEY        0xDC42
-uint16_t boot_key __attribute__ ((section (".noinit")));
-void bootloader_jump_check (void) __attribute__ ((used, naked, section (".init3")));
-void bootloader_jump_check (void)
-{
-  uint8_t wdt_flag = MCUSR & (1 << WDRF);
-
-  MCUSR &= ~(1 << WDRF);
-  wdt_disable();
-
-  if (wdt_flag && (boot_key == BOOTLOADER_KEY)) {
-    boot_key = 0;
-
-    ((void (*)(void)) BOOTLOADER_START_ADDR) ();
-  }
-}
-
-static bool bootloader_jump()
-{
-  Serial.println("Jumping to bootloader");
-  delay(100);
-
-  if ((aci_state.data_credit_available != aci_state.data_credit_total)) {
-    return false;
-  }
-
-  if (!lib_aci_is_pipe_available(&aci_state,
-        PIPE_DEVICE_FIRMWARE_UPDATE_BLE_SERVICE_DFU_PACKET_RX)) {
-    return false;
-  }
-
-  if (!lib_aci_is_pipe_available(&aci_state,
-        PIPE_DEVICE_FIRMWARE_UPDATE_BLE_SERVICE_DFU_CONTROL_POINT_TX)) {
-    return false;
-  }
-
-  if (!lib_aci_is_pipe_available(&aci_state,
-        PIPE_DEVICE_FIRMWARE_UPDATE_BLE_SERVICE_DFU_CONTROL_POINT_RX_ACK_AUTO)) {
-    return false;
-  }
-
-  /* Wait until ready line goes low before jump */
-  while (digitalRead(aci_state.aci_pins.rdyn_pin));
-
-  /* Set the special bootloader key value */
-  boot_key = BOOTLOADER_KEY;
-
-
-  wdt_enable(WDTO_15MS);
-  while(1);
-
-  return true;
-}
-
 /* Define how assert should function in the BLE library */
 void __ble_assert(const char *file, uint16_t line)
 {
@@ -170,77 +114,6 @@ void __ble_assert(const char *file, uint16_t line)
   Serial.print(line);
   Serial.print("\n");
   while(1);
-}
-
-/* crc function to re-calulate the CRC after making changes to the setup data. */
-uint16_t crc_16_ccitt(uint16_t crc, uint8_t * data_in, uint16_t data_len)
-{
-  uint16_t i;
-
-  for(i = 0; i < data_len; i++)
-  {
-    crc  = (unsigned char)(crc >> 8) | (crc << 8);
-    crc ^= pgm_read_byte(&data_in[i]);
-    crc ^= (unsigned char)(crc & 0xff) >> 4;
-    crc ^= (crc << 8) << 4;
-    crc ^= ((crc & 0xff) << 4) << 1;
-  }
-
-  return crc;
-}
-
-/* This creates an array of the DFU data that should be stored in EEPROM,
- * computes a CRC value for the data, compares that CRC value with the one in
- * EEPROM and stores our data in EEPROM if there is a CRC mismatch
- */
-bool store_dfu_info_in_eeprom (void)
-{
-  uint8_t crc; uint8_t addr; uint16_t
-  crc_seed = 0xFFFF;
-
-  const uint16_t len = 17;
-  uint8_t data[len] = {
-    digitalPinToPort (aci_state.aci_pins.reqn_pin),
-    digitalPinToBitMask (aci_state.aci_pins.reqn_pin),
-    digitalPinToPort (aci_state.aci_pins.rdyn_pin),
-    digitalPinToBitMask (aci_state.aci_pins.rdyn_pin),
-    digitalPinToPort (aci_state.aci_pins.mosi_pin),
-    digitalPinToBitMask (aci_state.aci_pins.mosi_pin),
-    digitalPinToPort (aci_state.aci_pins.miso_pin),
-    digitalPinToBitMask (aci_state.aci_pins.miso_pin),
-    digitalPinToPort (aci_state.aci_pins.sck_pin),
-    digitalPinToBitMask (aci_state.aci_pins.sck_pin),
-    digitalPinToPort (aci_state.aci_pins.reset_pin),
-    digitalPinToBitMask (aci_state.aci_pins.reset_pin),
-    aci_state.data_credit_total,
-    aci_state.data_credit_available,
-    PIPE_DEVICE_FIRMWARE_UPDATE_BLE_SERVICE_DFU_PACKET_RX,
-    PIPE_DEVICE_FIRMWARE_UPDATE_BLE_SERVICE_DFU_CONTROL_POINT_TX,
-    PIPE_DEVICE_FIRMWARE_UPDATE_BLE_SERVICE_DFU_CONTROL_POINT_RX_ACK_AUTO
-  };
-
-  /* Compute CRC16 */
-  crc = crc_16_ccitt(crc_seed, data, len);
-
-  addr = 0;
-  if (EEPROM.read(addr) == crc)
-  {
-    Serial.println(F("CRC matches EEPROM"));
-    return false;
-  }
-  Serial.println(F("CRC does not match EEPROM"));
-
-  /* As the computed CRC value does not match the one in EEPROM,
-   * we write the crc and data[] to EEPROM
-   */
-  EEPROM.write(addr++, crc);
-
-  for (uint8_t i = 0; i++; i < len)
-  {
-    EEPROM.write(addr++, data[i]);
-  }
-
-  return true;
 }
 
 /*
@@ -298,9 +171,6 @@ void setup(void)
 
   aci_state.aci_pins.interface_is_interrupt	  = false;
   aci_state.aci_pins.interrupt_number			  = 1;
-
-
-  store_dfu_info_in_eeprom();
 
   /* We reset the nRF8001 here by toggling the RESET line connected to the nRF8001
    * If the RESET line is not available we call the ACI Radio Reset to soft reset the nRF8001
@@ -439,6 +309,8 @@ void aci_loop()
                 Serial.println(F("Advertising started"));
               }
 
+              bootloader_data_store(&aci_state, 180, 0x0050);
+
               break;
           }
         }
@@ -546,7 +418,7 @@ void aci_loop()
             if (1 == aci_evt->params.data_received.rx_data.aci_data[0] &&
                 lib_aci_is_pipe_available(&aci_state, PIPE_DEVICE_FIRMWARE_UPDATE_BLE_SERVICE_DFU_CONTROL_POINT_TX))
             {
-              bootloader_jump();
+              bootloader_jump_required = true;
             }
             break;
         }
@@ -613,7 +485,7 @@ void aci_loop()
    */
   if (bootloader_jump_required)
   {
-    bootloader_jump ();
+    bootloader_jump();
   }
 }
 
