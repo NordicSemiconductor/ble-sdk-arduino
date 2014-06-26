@@ -70,7 +70,7 @@ The following instructions describe the steps to be made on the Windows PC:
 /**
 Put the nRF8001 setup in the RAM of the nRF8001.
 */
-#include "services_lock.h"
+#include "services.h"
 /**
 Include the services_lock.h to put the setup in the OTP memory of the nRF8001.
 This would mean that the setup cannot be changed once put in.
