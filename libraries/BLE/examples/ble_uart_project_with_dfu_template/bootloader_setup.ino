@@ -1,4 +1,5 @@
 #include <avr/wdt.h>
+#include <EEPROM.h>
 #include "bootloader_setup.h"
 
 /* This variable is put in .noinit which means it is not initialized
@@ -14,7 +15,7 @@ static uint16_t crc_16_ccitt(uint16_t crc, uint8_t * data_in, uint16_t len)
   for(i = 0; i < len; i++)
   {
     crc  = (unsigned char)(crc >> 8) | (crc << 8);
-    crc ^= pgm_read_byte(&data_in[i]);
+    crc ^= data_in[i];
     crc ^= (unsigned char)(crc & 0xff) >> 4;
     crc ^= (crc << 8) << 4;
     crc ^= ((crc & 0xff) << 4) << 1;
@@ -88,28 +89,31 @@ bool bootloader_data_store (aci_state_t *state, uint16_t conn_timeout,
 {
   uint8_t i;
   uint8_t addr;
+  uint8_t readback_buff[256];
   uint16_t crc_eeprom;
-  uint16_t crc_local;
+  uint16_t crc_readback;
 
-  /* Data to be stored */
+  /* Data to be stored, if it is found to be different from what
+   * is stored already
+  */
   uint8_t valid_app = 1;
   uint8_t valid_ble = 1;
   uint8_t *p = (uint8_t *) &(state->aci_pins);
   uint8_t pipes[] = {
     PIPE_DEVICE_FIRMWARE_UPDATE_BLE_SERVICE_DFU_PACKET_RX,
     PIPE_DEVICE_FIRMWARE_UPDATE_BLE_SERVICE_DFU_CONTROL_POINT_TX,
-    PIPE_DEVICE_FIRMWARE_UPDATE_BLE_SERVICE_DFU_CONTROL_POINT_RX_ACK_AUTO};
+    PIPE_DEVICE_FIRMWARE_UPDATE_BLE_SERVICE_DFU_CONTROL_POINT_RX_ACK_AUTO
+    };
   uint8_t timeout_h = (uint8_t) conn_timeout >> 8;
   uint8_t timeout_l = (uint8_t) conn_timeout >> 0;
   uint8_t interval_h = (uint8_t) adv_interval >> 8;
   uint8_t interval_l = (uint8_t) adv_interval >> 0;
+  uint16_t crc_local;
 
-  /* len = valid app flag + valid data flag + pin struct + credit byte + pipe array +
-   * timeout + interval + crc
-   */
-  uint8_t len = 2 + sizeof(aci_pins_t) + 1 + sizeof(pipes) + 6;
+  /* Length of the data to be stored, excluding CRC */
+  uint8_t len = 2 + sizeof(aci_pins_t) + 1 + sizeof(pipes) + 4;
 
-  /* Compute CRC16 */
+  /* Compute CRC16 for our data */
   crc_local = crc_16_ccitt(0xFFFF, &valid_app, 1);
   crc_local = crc_16_ccitt(crc_local, &valid_ble, 1);
   crc_local = crc_16_ccitt(crc_local, p, sizeof(aci_pins_t));
@@ -122,49 +126,59 @@ bool bootloader_data_store (aci_state_t *state, uint16_t conn_timeout,
 
   /* Read previously stored CRC. If no CRC has been stored previously,
    * this will be a garbage number that very probably won't match, so
-   * everything works out okay */
-  addr = len - 2;
+   * everything works out okay
+   */
+  addr = len;
   crc_eeprom = (uint16_t) EEPROM.read(addr++);
   crc_eeprom |= (uint16_t) (EEPROM.read(addr) << 8);
 
-  /* Abort the EEPROM write if the stored CRC matches the one above */
-  if (crc_local == crc_eeprom)
+  /* If the two CRC values do not match, we proceed with updating the EEPROM */
+  if (crc_local != crc_eeprom)
   {
-    return false;
+    Serial.println(F("CRC does not match EEPROM. Writing new data."));
+
+    addr = 0;
+    EEPROM.write(addr++, valid_app);
+    EEPROM.write(addr++, valid_ble);
+
+    for (uint8_t i = 0; i < sizeof(aci_pins_t); i++)
+    {
+      EEPROM.write(addr++, *((uint8_t *) &(state->aci_pins) + i));
+    }
+
+    EEPROM.write(addr++, state->data_credit_total);
+
+    for (uint8_t i = 0; i < sizeof(pipes); i++)
+    {
+      EEPROM.write(addr++, pipes[i]);
+    }
+
+    EEPROM.write(addr++, timeout_l);
+    EEPROM.write(addr++, timeout_h);
+    EEPROM.write(addr++, interval_l);
+    EEPROM.write(addr++, interval_h);
+    EEPROM.write(addr++, (uint8_t) crc_local);
+    EEPROM.write(addr++, (uint8_t) (crc_local >> 8));
+
+    /* Because EEPROM is susceptible to wear, we read the data back and
+     * compute a CRC16 for the data actually in EEPROM to compare with
+     * the CRC already in EEPROM.
+     */
+    for (addr = 0; addr < len; addr++)
+    {
+      readback_buff[addr] = EEPROM.read(addr);
+    }
+
+    crc_eeprom = (uint16_t) EEPROM.read(addr++);
+    crc_eeprom |= (uint16_t) (EEPROM.read(addr) << 8);
+
+    crc_readback = crc_16_ccitt(0xFFFF, readback_buff, len);
+
+    return crc_eeprom == crc_readback;
   }
-
-  Serial.println(F("CRC does not match EEPROM. Writing new data."));
-
-  /* As the computed CRC value does not match the one in EEPROM,
-   * we write the data and CRC to EEPROM
-   */
-  addr = 0;
-
-  EEPROM.write(addr++, valid_app);
-  EEPROM.write(addr++, valid_ble);
-
-  for (uint8_t i = 0; i < sizeof(aci_pins_t); i++)
+  else
   {
-    EEPROM.write(addr++, *((uint8_t *) &(state->aci_pins) + i));
+    /* Computed CRC matched EEPROM CRC. No write necessary */
+    return true;
   }
-
-  EEPROM.write(addr++, state->data_credit_total);
-
-  for (uint8_t i = 0; i < sizeof(pipes); i++)
-  {
-    EEPROM.write(addr++, pipes[i]);
-  }
-
-  /* Write connetion timeout */
-  EEPROM.write(addr++, timeout_l);
-  EEPROM.write(addr++, timeout_h);
-
-  /* Write advertisement interval */
-  EEPROM.write(addr++, interval_l);
-  EEPROM.write(addr++, interval_h);
-
-  EEPROM.write(addr++, (uint8_t) crc_local);
-  EEPROM.write(addr++, (uint8_t) (crc_local >> 8));
-
-  return true;
 }

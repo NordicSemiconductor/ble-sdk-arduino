@@ -309,7 +309,10 @@ void aci_loop()
                 Serial.println(F("Advertising started"));
               }
 
-              bootloader_data_store(&aci_state, 180, 0x0050);
+              if (!bootloader_data_store(&aci_state, 180, 0x0050))
+              {
+                Serial.println(F("Unable to write connection data to EEPROM. Bootloading over BLE will not work"));
+              }
 
               break;
           }
