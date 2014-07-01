@@ -92,6 +92,7 @@ bool bootloader_data_store (aci_state_t *state, uint16_t conn_timeout,
   uint16_t crc_local;
 
   /* Data to be stored */
+  uint8_t valid_app = 1;
   uint8_t valid_ble = 1;
   uint8_t *p = (uint8_t *) &(state->aci_pins);
   uint8_t pipes[] = {
@@ -103,13 +104,14 @@ bool bootloader_data_store (aci_state_t *state, uint16_t conn_timeout,
   uint8_t interval_h = (uint8_t) adv_interval >> 8;
   uint8_t interval_l = (uint8_t) adv_interval >> 0;
 
-  /* len = valid data flag + pin struct + credit byte + pipe array +
+  /* len = valid app flag + valid data flag + pin struct + credit byte + pipe array +
    * timeout + interval + crc
    */
-  uint8_t len = 1 + sizeof(aci_pins_t) + 1 + sizeof(pipes) + 6;
+  uint8_t len = 2 + sizeof(aci_pins_t) + 1 + sizeof(pipes) + 6;
 
   /* Compute CRC16 */
-  crc_local = crc_16_ccitt(0xFFFF, &valid_ble, 1);
+  crc_local = crc_16_ccitt(0xFFFF, &valid_app, 1);
+  crc_local = crc_16_ccitt(crc_local, &valid_ble, 1);
   crc_local = crc_16_ccitt(crc_local, p, sizeof(aci_pins_t));
   crc_local = crc_16_ccitt(crc_local, &(state->data_credit_total), 1);
   crc_local = crc_16_ccitt(crc_local, pipes, sizeof(pipes));
@@ -138,6 +140,7 @@ bool bootloader_data_store (aci_state_t *state, uint16_t conn_timeout,
    */
   addr = 0;
 
+  EEPROM.write(addr++, valid_app);
   EEPROM.write(addr++, valid_ble);
 
   for (uint8_t i = 0; i < sizeof(aci_pins_t); i++)
