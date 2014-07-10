@@ -417,9 +417,9 @@ void aci_loop()
                 aci_evt->len - 2); //Subtract for Opcode and Pipe number
             break;
 
-          case PIPE_DEVICE_FIRMWARE_UPDATE_BLE_SERVICE_DFU_CONTROL_POINT_RX_ACK_AUTO:
+          case PIPE_NORDIC_DEVICE_FIRMWARE_UPDATE_SERVICE_DFU_CONTROL_POINT_RX_ACK_AUTO:
             if (1 == aci_evt->params.data_received.rx_data.aci_data[0] &&
-                lib_aci_is_pipe_available(&aci_state, PIPE_DEVICE_FIRMWARE_UPDATE_BLE_SERVICE_DFU_CONTROL_POINT_TX))
+                lib_aci_is_pipe_available(&aci_state, PIPE_NORDIC_DEVICE_FIRMWARE_UPDATE_SERVICE_DFU_CONTROL_POINT_TX))
             {
               bootloader_jump_required = true;
             }

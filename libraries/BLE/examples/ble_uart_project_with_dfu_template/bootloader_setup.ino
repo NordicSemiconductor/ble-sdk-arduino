@@ -48,17 +48,17 @@ void bootloader_jump(void)
   }
 
   if (!lib_aci_is_pipe_available(&aci_state,
-        PIPE_DEVICE_FIRMWARE_UPDATE_BLE_SERVICE_DFU_PACKET_RX)) {
+        PIPE_NORDIC_DEVICE_FIRMWARE_UPDATE_SERVICE_DFU_PACKET_RX)) {
     return;
   }
 
   if (!lib_aci_is_pipe_available(&aci_state,
-        PIPE_DEVICE_FIRMWARE_UPDATE_BLE_SERVICE_DFU_CONTROL_POINT_TX)) {
+        PIPE_NORDIC_DEVICE_FIRMWARE_UPDATE_SERVICE_DFU_CONTROL_POINT_TX)) {
     return;
   }
 
   if (!lib_aci_is_pipe_available(&aci_state,
-        PIPE_DEVICE_FIRMWARE_UPDATE_BLE_SERVICE_DFU_CONTROL_POINT_RX_ACK_AUTO)) {
+        PIPE_NORDIC_DEVICE_FIRMWARE_UPDATE_SERVICE_DFU_CONTROL_POINT_RX_ACK_AUTO)) {
     return;
   }
 
@@ -101,9 +101,9 @@ bool bootloader_data_store (aci_state_t *state, uint16_t conn_timeout,
   uint8_t valid_ble = 1;
   uint8_t *p = (uint8_t *) &(state->aci_pins);
   uint8_t pipes[] = {
-    PIPE_DEVICE_FIRMWARE_UPDATE_BLE_SERVICE_DFU_PACKET_RX,
-    PIPE_DEVICE_FIRMWARE_UPDATE_BLE_SERVICE_DFU_CONTROL_POINT_TX,
-    PIPE_DEVICE_FIRMWARE_UPDATE_BLE_SERVICE_DFU_CONTROL_POINT_RX_ACK_AUTO
+    PIPE_NORDIC_DEVICE_FIRMWARE_UPDATE_SERVICE_DFU_PACKET_RX,
+    PIPE_NORDIC_DEVICE_FIRMWARE_UPDATE_SERVICE_DFU_CONTROL_POINT_TX,
+    PIPE_NORDIC_DEVICE_FIRMWARE_UPDATE_SERVICE_DFU_CONTROL_POINT_RX_ACK_AUTO
     };
   uint8_t timeout_h = (uint8_t) conn_timeout >> 8;
   uint8_t timeout_l = (uint8_t) conn_timeout >> 0;
