@@ -8,6 +8,10 @@
  */
 #define BOOTLOADER_KEY        0xDC42
 
+/* This is the size of the data block we reserve in EEPROM.
+ */
+#define BOOTLOADER_EEPROM_SIZE 32
+
 /* Store data needed for the bootloader to use BLE in EEPROM
  * Returns true if the write was successful, or false
  */

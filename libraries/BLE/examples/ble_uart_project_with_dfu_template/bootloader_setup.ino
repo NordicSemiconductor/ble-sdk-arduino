@@ -87,9 +87,10 @@ void bootloader_jump(void)
 bool bootloader_data_store (aci_state_t *state, uint16_t conn_timeout,
     uint16_t adv_interval)
 {
-  uint8_t i;
-  uint8_t addr;
-  uint8_t readback_buff[256];
+  const uint16_t eeprom_base_addr = E2END - BOOTLOADER_EEPROM_SIZE;
+
+  uint8_t readback_buff[BOOTLOADER_EEPROM_SIZE];
+  uint16_t addr;
   uint16_t crc_eeprom;
   uint16_t crc_readback;
 
@@ -128,7 +129,7 @@ bool bootloader_data_store (aci_state_t *state, uint16_t conn_timeout,
    * this will be a garbage number that very probably won't match, so
    * everything works out okay
    */
-  addr = len;
+  addr = eeprom_base_addr + len;
   crc_eeprom = (uint16_t) EEPROM.read(addr++);
   crc_eeprom |= (uint16_t) (EEPROM.read(addr) << 8);
 
@@ -137,7 +138,7 @@ bool bootloader_data_store (aci_state_t *state, uint16_t conn_timeout,
   {
     Serial.println(F("CRC does not match EEPROM. Writing new data."));
 
-    addr = 0;
+    addr = eeprom_base_addr;
     EEPROM.write(addr++, valid_app);
     EEPROM.write(addr++, valid_ble);
 
@@ -164,7 +165,7 @@ bool bootloader_data_store (aci_state_t *state, uint16_t conn_timeout,
      * compute a CRC16 for the data actually in EEPROM to compare with
      * the CRC already in EEPROM.
      */
-    for (addr = 0; addr < len; addr++)
+    for (addr = eeprom_base_addr; addr < eeprom_base_addr + len; addr++)
     {
       readback_buff[addr] = EEPROM.read(addr);
     }
