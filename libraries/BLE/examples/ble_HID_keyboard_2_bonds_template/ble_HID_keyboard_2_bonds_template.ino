@@ -242,7 +242,7 @@ aci_status_code_t bond_data_restore(aci_state_t *aci_stat, uint8_t bond_index)
   uint8_t len =0;
 
   eeprom_status      = EEPROM.read(bond_index * BYTES_PER_BOND_IN_HEADER);
-  if (0x00 == eeprom_status)
+  if (eeprom_status == 0xFF)
   {
     return (aci_status_code_t)BOND_DOES_NOT_EXIST_AT_INDEX;
   }
@@ -394,7 +394,7 @@ bool bond_data_read_store(aci_state_t *aci_stat, uint8_t new_bond_index)
       {
         //We failed the read dymanic data
         //Set the flag in the EEPROM that the contents of the EEPROM is invalid
-        EEPROM.write(new_bond_index * BYTES_PER_BOND_IN_HEADER, 0x00);
+        EEPROM.write(new_bond_index * BYTES_PER_BOND_IN_HEADER, 0xFF);
 
         status = false;
         break;
@@ -457,12 +457,12 @@ void aci_loop()
                   //Reset the number of bonds and count from the EEPROM header
                   bond_number = 0;
                   eeprom_status = EEPROM.read(0);
-                  if (eeprom_status != 0x00)
+                  if (eeprom_status != 0xFF)
                   {
                     bond_number++;
                     //Update the write offset to the correct number
                     eeprom_write_offset = EEPROM.read(bond_number * BYTES_PER_BOND_IN_HEADER + 1);
-                    if (0x00 != EEPROM.read(2))
+                    if (EEPROM.read(2) != 0xFF)
                     {
                       bond_number++;
                       //This is needed only if we wanted to add a 3rd bond
@@ -698,12 +698,12 @@ void aci_loop()
           //Reset the number of bonds and count from the EEPROM header
           bond_number = 0;
           eeprom_status = EEPROM.read(0);
-          if (eeprom_status != 0x00)
+          if (eeprom_status != 0xFF)
           {
             bond_number++;
             //Update the write offset to the correct number
             eeprom_write_offset = EEPROM.read(bond_number * BYTES_PER_BOND_IN_HEADER + 1);
-            if (0x00 != EEPROM.read(2))
+            if (EEPROM.read(2) != 0xFF)
             {
               bond_number++;
               //This is needed only if we wanted to add a 3rd bond
@@ -834,10 +834,10 @@ void setup(void)
     //Clear the pairing
     Serial.println(F("Pairing cleared. Remove the wire on Pin 6 and reset the board for normal operation."));
     //Address. Value
-    EEPROM.write(0, 0);
-    EEPROM.write(1, 0);
-    EEPROM.write(2, 0);
-    EEPROM.write(3, 0);
+    EEPROM.write(0, 0xFF);
+    EEPROM.write(1, 0xFF);
+    EEPROM.write(2, 0xFF);
+    EEPROM.write(3, 0xFF);
     while(1) {};
   }
 }
