@@ -341,7 +341,7 @@ bool bond_data_read_store(aci_state_t *aci_stat)
       {
         //We failed the read dymanic data
         //Set the flag in the EEPROM that the contents of the EEPROM is invalid
-        EEPROM.write(0, 0x00);
+        EEPROM.write(0, 0xFF);
 
         status = false;
         break;
@@ -401,7 +401,7 @@ void aci_loop()
               {
                 uint8_t eeprom_status = 0;
                 eeprom_status = EEPROM.read(0);
-                if (eeprom_status != 0x00)
+                if (eeprom_status != 0xFF)
                 {
                   Serial.println(F("Previous Bond present. Restoring"));
                   Serial.println(F("Using existing bond stored in EEPROM."));
@@ -611,7 +611,7 @@ void aci_loop()
         {
           uint8_t eeprom_status = 0;
           eeprom_status = EEPROM.read(0);
-          if (eeprom_status != 0x00)
+          if (eeprom_status != 0xFF)
           {
             Serial.println(F("Previous Bond present. Restoring"));
             Serial.println(F("Using existing bond stored in EEPROM."));
@@ -735,7 +735,7 @@ void setup(void)
     //Clear the pairing
     Serial.println(F("Pairing cleared. Remove the wire on Pin 6 and reset the board for normal operation."));
     //Address. Value
-    EEPROM.write(0, 0);
+    EEPROM.write(0, 0xFF);
     while(1) {};
   }
 
