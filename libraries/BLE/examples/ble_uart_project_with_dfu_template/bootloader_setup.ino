@@ -89,7 +89,7 @@ bool bootloader_data_store (aci_state_t *state, uint16_t conn_timeout,
 {
   const uint16_t eeprom_base_addr = E2END - BOOTLOADER_EEPROM_SIZE;
 
-  uint8_t readback_buff[BOOTLOADER_EEPROM_SIZE];
+  uint8_t readback_buf;
   uint16_t addr;
   uint16_t crc_eeprom;
   uint16_t crc_readback;
@@ -165,15 +165,18 @@ bool bootloader_data_store (aci_state_t *state, uint16_t conn_timeout,
      * compute a CRC16 for the data actually in EEPROM to compare with
      * the CRC already in EEPROM.
      */
-    for (addr = eeprom_base_addr; addr < eeprom_base_addr + len; addr++)
+    addr = eeprom_base_addr;
+    readback_buf = EEPROM.read(addr++);
+    crc_readback = crc_16_ccitt(0xFFFF, &readback_buf, 1);
+    for (; addr < eeprom_base_addr + len; addr++)
     {
-      readback_buff[addr] = EEPROM.read(addr);
+      readback_buf = EEPROM.read(addr);
+      crc_readback = crc_16_ccitt(crc_readback, &readback_buf, 1);
     }
 
     crc_eeprom = (uint16_t) EEPROM.read(addr++);
     crc_eeprom |= (uint16_t) (EEPROM.read(addr) << 8);
 
-    crc_readback = crc_16_ccitt(0xFFFF, readback_buff, len);
 
     return crc_eeprom == crc_readback;
   }
