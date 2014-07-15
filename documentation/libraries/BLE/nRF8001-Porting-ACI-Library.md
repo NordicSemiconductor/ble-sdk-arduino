@@ -1,11 +1,11 @@
 ####[BLE](https://github.com/NordicSemiconductor/ble-sdk-arduino/tree/master/documentation/libraries/BLE "Go to BLE folder")
 
-#Porting the nRF8001 SDK for Arduino (0.9.0) to your chosen micro controller 
+#Porting the nRF8001 SDK for Arduino (0.9.0) to your chosen microcontroller 
 
-The nRF8001 SDK for Arduino is portable C code that can be easily ported to a different micro controller. 
-A few parts of the SDK however must be re-implemented on the new micro controller, 
+The nRF8001 SDK for Arduino is portable C code that can be easily ported to a different microcontroller. 
+A few parts of the SDK however must be re-implemented on the new microcontroller, 
 these are the SPI/ACI interface, GPIO interface, delay and optionally the interrupt interface. 
-All other code in the SDK can be ported to the new micro controller.
+All other code in the SDK can be ported to the new microcontroller.
 
 ##Getting the nRF8001 SDK for Arduino ready for porting:
 
@@ -36,8 +36,7 @@ aci_state.aci_pins.interface_is_interrupt = false;
 
 Remove the interface from the SDK that will not be used in your target mcu
 
-###Removing the interrupt interface: (Assuming this interface is not used in the target micro controller)
-
+###Removing the interrupt interface: (Assuming this interface is not used in the target microcontroller)
 Remove the function static void m_aci_isr(void) from the hal_aci_tl.cpp
 
 Remove all instances of noInterrupts(); and interrupts();
@@ -139,7 +138,7 @@ The function will then continue clocking on the SPI for the larger of the length
 
 ##Portable C code
 
-The aci_queue functions in aci_queue.cpp are portable to any micro controller that supports C. 
+The aci_queue functions in aci_queue.cpp are portable to any microcontroller that supports C. 
 These functions implement a circular FIFO using indices.
 
 The queue functions implemented are enqueue to add to the tail of the queue, 
