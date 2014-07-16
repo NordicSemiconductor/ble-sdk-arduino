@@ -1,3 +1,55 @@
+#Release notes 0.9.3:
+
+##Changes:
+* Added Device Firmware Update support for Arduino UNO(ATmega328p)
+ - New ble-optiboot has been released to bootload over BLE
+ - https://github.com/NordicSemiconductor/ble-optiboot
+ - This new bootloader supports both UART and BLE interfaces and is a drop-in replacement
+   for the Arduino bootloader.
+* Added example projects for DFU for Arduino with the UART template and the Proximity template.
+ - DFU is supported over encrypted and over open links
+
+##Fixes:
+* Setup data structs are added to readmy_modify_setup.docx in \documentation\libraries\BLE\examples\ble_modify_setup_data
+* Bootloader is now available
+
+##Known issues:
+1. Assert functionality has been removed and should be put back to the SDK.
+Currently the asserts have been replaced with while(1)
+
+4. The FIFO/Queue uses the "one slot" free method to detect empty and full conditions.
+This wastes one extra element in the queue.
+The algorithm can be optimized to reduce RAM usage.
+
+5. Bonding info is stored in non-volatile memory on the Arduino after an ACI Timing Event and the Timing Event may not always arrive.
+This issue is applicable for all projects that use pairing.
+
+6. Documentation for using the Nordic adapter shield for nRF8001 with the nRF8001 Development kit and the Bluetooth low energy SDK for Arduino is incomplete.
+
+7. Documentation for the Bluetooth low energy SDK for Arduino is still in progress.
+
+9. Sending zero byte value from the hello world example causes nRF UART on iOS to crash.
+
+11. A patch is needed to prevent compilation errors with Android 1.0.5 on linux. Won't fix this as the fix creates conflicts on OS X.
+```
+find:
+static hal_aci_data_t setup_msgs[NB_SETUP_MESSAGES] PROGMEM
+
+replace:
+static const hal_aci_data_t setup_msgs[NB_SETUP_MESSAGES] PROGMEM
+
+find:
+aci_state.aci_setup_info.setup_msgs = setup_msgs;
+
+replace:
+aci_state.aci_setup_info.setup_msgs = (hal_aci_data_t*)setup_msgs;
+```
+
+#Release notes 0.9.2:
+
+##Fixes:
+* Removed is_freshest_sample from Health thermometer and Heart rate service files.
+
 #Release notes 0.9.1:
 
 ##Changes:
