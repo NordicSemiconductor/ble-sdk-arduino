@@ -27,7 +27,9 @@
 #include "hal_platform.h"
 #include "hal_aci_tl.h"
 #include "aci_queue.h"
+#if !defined(__SAM3X8E__)
 #include <avr/sleep.h>
+#endif
 
 /*
 PIC32 supports only MSbit transfer on SPI and the nRF8001 uses LSBit
@@ -79,7 +81,7 @@ void m_aci_data_print(hal_aci_data_t *p_data)
   Interrupt service routine called when the RDYN line goes low. Runs the SPI transfer.
 */
 static void m_aci_isr(void)
-{
+{	
   hal_aci_data_t data_to_send;
   hal_aci_data_t received_data;
 
@@ -345,6 +347,12 @@ void hal_aci_tl_init(aci_pins_t *a_pins, bool debug)
 
   The SPI library assumes that the hardware pins are used
   */
+#if defined(__SAM3X8E__)
+	SPI.begin          (DUE_SPI_CSN);
+  SPI.setBitOrder    (DUE_SPI_CSN, LSBFIRST);
+  SPI.setClockDivider(DUE_SPI_CSN, a_pins->spi_clock_divider); /* This will run the SPI at 3MHz assuming a 84MHz clock to the mcu*/
+  SPI.setDataMode    (DUE_SPI_CSN, SPI_MODE0);
+#else
   SPI.begin();
   //Board dependent defines
   #if defined (__AVR__)
@@ -356,6 +364,7 @@ void hal_aci_tl_init(aci_pins_t *a_pins, bool debug)
   #endif
   SPI.setClockDivider(a_pins->spi_clock_divider);
   SPI.setDataMode(SPI_MODE0);
+#endif
 
   /* Initialize the ACI Command queue. This must be called after the delay above. */
   aci_queue_init(&aci_tx_q);
@@ -428,6 +437,8 @@ static uint8_t spi_readwrite(const uint8_t aci_byte)
     uint8_t tmp_bits;
     tmp_bits = SPI.transfer(REVERSE_BITS(aci_byte));
 	return REVERSE_BITS(tmp_bits);
+#elif defined(__SAM3X8E__)
+	return SPI.transfer(DUE_SPI_CSN, aci_byte, SPI_CONTINUE);
 #endif
 }
 

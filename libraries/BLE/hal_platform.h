@@ -71,6 +71,19 @@
 	
 	//Redefine the function for reading from flash in ChipKit
 	#define memcpy_P        memcpy
+#elif defined(__SAM3X8E__)
+		/* definition for DUE */
+		#include "Arduino.h"
+
+		#define F(X) (X)
+		#undef PSTR
+		#define PSTR(x) (x)
+		#define PROGMEM
+		
+		#define pgm_read_byte_near(x) (x)
+		#define memcpy_P memcpy
+		
+		#define DUE_SPI_CSN            52
 #endif
 
 #endif /* PLATFORM_H__ */
