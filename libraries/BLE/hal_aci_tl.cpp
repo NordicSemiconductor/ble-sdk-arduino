@@ -27,8 +27,9 @@
 #include "hal_platform.h"
 #include "hal_aci_tl.h"
 #include "aci_queue.h"
+#if ( !defined(__SAM3X8E__) && !defined(__PIC32MX__) )
 #include <avr/sleep.h>
-
+#endif
 /*
 PIC32 supports only MSbit transfer on SPI and the nRF8001 uses LSBit
 Use the REVERSE_BITS macro to convert from MSBit to LSBit
