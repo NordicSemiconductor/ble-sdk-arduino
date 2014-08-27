@@ -97,4 +97,6 @@ typedef struct {
  *  @param pipe_num Pipe which has received data.
  *  @param buffer Pointer to the received data.
  */
- void ancs_evt_rcvd(uint8_t pipe_num, uint8_t *buffer);
+ void ancs_notification_evt_rcvd(uint8_t pipe_num, uint8_t *buffer);
+ 
+void ancs_data_evt_rcvd(uint8_t pipe_num, uint8_t *buffer);

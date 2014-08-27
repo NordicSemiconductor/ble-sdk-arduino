@@ -25,26 +25,24 @@
 #include "ancs.h"
 
 
-void ancs_evt_rcvd(uint8_t pipe_num, uint8_t *buffer)
+void ancs_notification_evt_rcvd(uint8_t pipe_num, uint8_t *buffer)
 {
-  switch (pipe_num)
-  {
-    case PIPE_ANCS_NOTIFICATION_SOURCE_RX :
     Serial.print(F("PIPE_ANCS_NOTIFICATION_SOURCE_RX: "));
       for(uint8_t counter = 0; counter <= 20; counter++)
       {
         Serial.write(buffer[counter]); //uint8_t file_name[20];
       }
       Serial.println();
-      break;
+}
     
-    case PIPE_ANCS_DATA_SOURCE_RX :
+void ancs_data_evt_rcvd(uint8_t pipe_num, uint8_t *buffer)
+{
       Serial.print(F("PIPE_ANCS_DATA_SOURCE_RX: "));
       for(uint8_t counter = 0; counter <= ACI_PIPE_RX_DATA_MAX_LEN; counter++)
       {
         Serial.write(buffer[counter]); //uint8_t file_name[20];
       }
       Serial.println();
-      break;
-  }
+
 }
+

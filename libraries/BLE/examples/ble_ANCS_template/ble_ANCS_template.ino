@@ -526,9 +526,20 @@ void aci_loop()
         Serial.println(aci_evt->params.data_received.rx_data.aci_data[0], DEC);
         link_loss_pipes_updated_evt_rcvd(aci_evt->params.data_received.rx_data.pipe_number,
                                          &aci_evt->params.data_received.rx_data.aci_data[0]);
-        //ancs_evt_rcvd(aci_evt->params.data_received.rx_data.pipe_number,
-        //              &aci_evt->params.data_received.rx_data.aci_data[0]);
-        if (PIPE_ANCS_NOTIFICATION_SOURCE_RX==aci_evt->params.data_received.rx_data.pipe_number)
+        
+        switch (aci_evt->params.data_received.rx_data.pipe_number)
+        {
+          case PIPE_ANCS_NOTIFICATION_SOURCE_RX :
+            ancs_notification_evt_rcvd(aci_evt->params.data_received.rx_data.pipe_number,
+                          &aci_evt->params.data_received.rx_data.aci_data[0]);
+          break;
+          
+          case PIPE_ANCS_DATA_SOURCE_RX :
+            ancs_data_evt_rcvd(aci_evt->params.data_received.rx_data.pipe_number,
+                          &aci_evt->params.data_received.rx_data.aci_data[0]);
+          break;
+        }
+       /* if (PIPE_ANCS_NOTIFICATION_SOURCE_RX==aci_evt->params.data_received.rx_data.pipe_number)
         {
           Serial.print(F("PIPE_ANCS_NOTIFICATION_SOURCE_RX: "));
           for(uint8_t counter = 0; counter <= 20; counter++)
@@ -545,8 +556,8 @@ void aci_loop()
             Serial.write(aci_evt->params.data_received.rx_data.aci_data[counter]); //uint8_t file_name[20];
           }
           Serial.println();
-        }
-        break;
+        }*/
+        //break;
    
       case ACI_EVT_DATA_CREDIT:
         aci_state.data_credit_available = aci_state.data_credit_available + aci_evt->params.data_credit.credit;
