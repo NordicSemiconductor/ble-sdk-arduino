@@ -1,3 +1,11 @@
+#Release notes 0.9.4:
+
+##Changes:
+* Added limited ANCS template
+* Removed sleep.h for !defined(__SAM3X8E__) && !defined(__PIC32MX__)
+* Attempted to reduce RAM usage
+
+
 #Release notes 0.9.3:
 
 ##Changes:
