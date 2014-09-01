@@ -39,7 +39,7 @@ Remove the interface from the SDK that will not be used in your target mcu
 ###Removing the interrupt interface: (Assuming this interface is not used in the target microcontroller)
 Remove the function static void m_aci_isr(void) from the hal_aci_tl.cpp
 
-Remove all instances of noInterrupts(); and interrupts();
+Remove all instances of noInterrupts(); , interrupts(); , attachInterrupt and detachInterrupt.
 
 Remove the below code in hal_aci_tl.cpp in the function 
 bool hal_aci_tl_event_get(hal_aci_data_t *p_aci_data)
