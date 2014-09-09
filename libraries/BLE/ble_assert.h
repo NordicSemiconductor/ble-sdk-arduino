@@ -27,10 +27,16 @@
  #define BLE_ASSERT_H__
 
 extern void __ble_assert(const char *file, uint16_t line);
+extern void __ble_assert_isr();
 
 #define ble_assert(expr)              \
   ((expr)                             \
   ? ((void) 0)                        \
   : __ble_assert (__FILE__, __LINE__))
+
+#define ble_assert_isr(expr)          \
+  ((expr)                             \
+  ? ((void) 0)                        \
+  : __ble_assert_isr ())
 
 #endif /* BLE_ASSERT_H__ */
