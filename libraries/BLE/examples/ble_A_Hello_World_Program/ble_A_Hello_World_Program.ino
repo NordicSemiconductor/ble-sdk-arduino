@@ -340,7 +340,7 @@ void aci_loop()
             }
             else
             {
-              lib_aci_connect(0/* in seconds : 0 means forever */, 0x0050 /* advertising interval 50ms*/);
+              lib_aci_connect(0/* in seconds : 0 means forever */, 0x0032 /* advertising interval in hexadecimal: 50ms*/);
               Serial.println(F("Advertising started : Tap Connect on the nRF UART app"));
             }
 
@@ -406,7 +406,7 @@ void aci_loop()
 
       case ACI_EVT_DISCONNECTED:
         Serial.println(F("Evt Disconnected/Advertising timed out"));
-        lib_aci_connect(0/* in seconds  : 0 means forever */, 0x0050 /* advertising interval 50ms*/);
+        lib_aci_connect(0/* in seconds : 0 means forever */, 0x0032 /* advertising interval in hexadecimal: 50ms*/);
         Serial.println(F("Advertising started. Tap Connect on the nRF UART app"));
         break;
 
@@ -476,7 +476,7 @@ void aci_loop()
           Serial.write(aci_evt->params.hw_error.file_name[counter]); //uint8_t file_name[20];
         }
         Serial.println();
-        lib_aci_connect(0/* in seconds, 0 means forever */, 0x0050 /* advertising interval 50ms*/);
+        lib_aci_connect(0/* in seconds : 0 means forever */, 0x0032 /* advertising interval in hexadecimal: 50ms*/);
         Serial.println(F("Advertising started. Tap Connect on the nRF UART app"));
         break;
 
