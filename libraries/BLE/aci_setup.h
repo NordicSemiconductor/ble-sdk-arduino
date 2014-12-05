@@ -23,6 +23,8 @@
 #ifndef H_ACI_SETUP
 #define H_ACI_SETUP
 
+#include "lib_aci.h"
+
 #define SETUP_SUCCESS                        0
 #define SETUP_FAIL_COMMAND_QUEUE_NOT_EMPTY   1
 #define SETUP_FAIL_EVENT_QUEUE_NOT_EMPTY     2
