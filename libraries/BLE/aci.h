@@ -48,6 +48,9 @@
  *
  */
 
+
+#include <stdint.h>
+
 #ifndef ACI_H__
 #define ACI_H__
 
