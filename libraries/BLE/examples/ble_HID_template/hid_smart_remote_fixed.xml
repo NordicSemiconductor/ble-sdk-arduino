@@ -11,10 +11,10 @@
             <Uuid>2a4d</Uuid>
             <DefaultValue></DefaultValue>
             <UsePresentationFormat>0</UsePresentationFormat>
-            <UserDescription></UserDescription>
             <MaxDataLength>8</MaxDataLength>
             <AttributeLenType>2</AttributeLenType>
             <ForceOpen>false</ForceOpen>
+            <ForceEncryption>false</ForceEncryption>
             <Properties>
                 <WriteWithoutResponse>false</WriteWithoutResponse>
                 <Write>false</Write>
@@ -29,6 +29,7 @@
             <ProfileDescriptors>
                 <ProfileDescriptor Name="Report Reference" MaxDataLength="2" DefaultValue="0101" AttributeLenType="1">
                     <ForceOpen>false</ForceOpen>
+                    <forceEncryption>false</forceEncryption>
                     <Properties>
                         <Write>false</Write>
                         <Read>true</Read>
@@ -45,10 +46,10 @@
             <Uuid>2a4d</Uuid>
             <DefaultValue></DefaultValue>
             <UsePresentationFormat>0</UsePresentationFormat>
-            <UserDescription></UserDescription>
             <MaxDataLength>2</MaxDataLength>
             <AttributeLenType>2</AttributeLenType>
             <ForceOpen>false</ForceOpen>
+            <ForceEncryption>false</ForceEncryption>
             <Properties>
                 <WriteWithoutResponse>true</WriteWithoutResponse>
                 <Write>true</Write>
@@ -63,6 +64,7 @@
             <ProfileDescriptors>
                 <ProfileDescriptor Name="Report Reference" MaxDataLength="2" DefaultValue="0102" AttributeLenType="1">
                     <ForceOpen>false</ForceOpen>
+                    <forceEncryption>false</forceEncryption>
                     <Properties>
                         <Write>false</Write>
                         <Read>true</Read>
@@ -79,10 +81,10 @@
             <Uuid>2a4a</Uuid>
             <DefaultValue>11010003</DefaultValue>
             <UsePresentationFormat>0</UsePresentationFormat>
-            <UserDescription></UserDescription>
             <MaxDataLength>4</MaxDataLength>
             <AttributeLenType>1</AttributeLenType>
             <ForceOpen>false</ForceOpen>
+            <ForceEncryption>false</ForceEncryption>
             <Properties>
                 <WriteWithoutResponse>false</WriteWithoutResponse>
                 <Write>false</Write>
@@ -101,10 +103,10 @@
             <Uuid>2a4e</Uuid>
             <DefaultValue>01</DefaultValue>
             <UsePresentationFormat>0</UsePresentationFormat>
-            <UserDescription></UserDescription>
             <MaxDataLength>1</MaxDataLength>
             <AttributeLenType>1</AttributeLenType>
             <ForceOpen>false</ForceOpen>
+            <ForceEncryption>false</ForceEncryption>
             <Properties>
                 <WriteWithoutResponse>true</WriteWithoutResponse>
                 <Write>false</Write>
@@ -123,10 +125,10 @@
             <Uuid>2a4c</Uuid>
             <DefaultValue></DefaultValue>
             <UsePresentationFormat>0</UsePresentationFormat>
-            <UserDescription></UserDescription>
             <MaxDataLength>1</MaxDataLength>
             <AttributeLenType>1</AttributeLenType>
             <ForceOpen>false</ForceOpen>
+            <ForceEncryption>false</ForceEncryption>
             <Properties>
                 <WriteWithoutResponse>true</WriteWithoutResponse>
                 <Write>false</Write>
@@ -145,10 +147,10 @@
             <Uuid>2a4b</Uuid>
             <DefaultValue>05010906A1018501050719e029e71500250175019508810295017508810195057501050819012905910295017503910195067508150025650507190029658100C005010902A10185020901A1009505750105091901290515002501810295017503810175089501050109381581257F8106050C0A380295018106C085030901A100750c95020501093009311601F826FF078106C0C0050C0901A1018504150025017501950109CD810609B7810609B5810609B6810609EA810609E981060A250281060A24028106C0</DefaultValue>
             <UsePresentationFormat>0</UsePresentationFormat>
-            <UserDescription></UserDescription>
             <MaxDataLength>200</MaxDataLength>
             <AttributeLenType>1</AttributeLenType>
             <ForceOpen>false</ForceOpen>
+            <ForceEncryption>false</ForceEncryption>
             <Properties>
                 <WriteWithoutResponse>false</WriteWithoutResponse>
                 <Write>false</Write>
@@ -167,10 +169,10 @@
             <Uuid>2a22</Uuid>
             <DefaultValue>0000000000000000</DefaultValue>
             <UsePresentationFormat>0</UsePresentationFormat>
-            <UserDescription></UserDescription>
             <MaxDataLength>8</MaxDataLength>
             <AttributeLenType>1</AttributeLenType>
             <ForceOpen>false</ForceOpen>
+            <ForceEncryption>false</ForceEncryption>
             <Properties>
                 <WriteWithoutResponse>false</WriteWithoutResponse>
                 <Write>false</Write>
@@ -189,10 +191,10 @@
             <Uuid>2a32</Uuid>
             <DefaultValue>00</DefaultValue>
             <UsePresentationFormat>0</UsePresentationFormat>
-            <UserDescription></UserDescription>
             <MaxDataLength>1</MaxDataLength>
             <AttributeLenType>1</AttributeLenType>
             <ForceOpen>false</ForceOpen>
+            <ForceEncryption>false</ForceEncryption>
             <Properties>
                 <WriteWithoutResponse>true</WriteWithoutResponse>
                 <Write>true</Write>
@@ -211,10 +213,10 @@
             <Uuid>2a4d</Uuid>
             <DefaultValue>0000</DefaultValue>
             <UsePresentationFormat>0</UsePresentationFormat>
-            <UserDescription></UserDescription>
             <MaxDataLength>3</MaxDataLength>
             <AttributeLenType>1</AttributeLenType>
             <ForceOpen>false</ForceOpen>
+            <ForceEncryption>false</ForceEncryption>
             <Properties>
                 <WriteWithoutResponse>false</WriteWithoutResponse>
                 <Write>false</Write>
@@ -229,6 +231,7 @@
             <ProfileDescriptors>
                 <ProfileDescriptor Name="Report Reference" MaxDataLength="2" DefaultValue="0201" AttributeLenType="1">
                     <ForceOpen>false</ForceOpen>
+                    <forceEncryption>false</forceEncryption>
                     <Properties>
                         <Write>false</Write>
                         <Read>true</Read>
@@ -245,10 +248,10 @@
             <Uuid>2a4d</Uuid>
             <DefaultValue>000000</DefaultValue>
             <UsePresentationFormat>0</UsePresentationFormat>
-            <UserDescription></UserDescription>
             <MaxDataLength>3</MaxDataLength>
             <AttributeLenType>2</AttributeLenType>
             <ForceOpen>false</ForceOpen>
+            <ForceEncryption>false</ForceEncryption>
             <Properties>
                 <WriteWithoutResponse>false</WriteWithoutResponse>
                 <Write>false</Write>
@@ -263,6 +266,7 @@
             <ProfileDescriptors>
                 <ProfileDescriptor Name="Report Reference" MaxDataLength="2" DefaultValue="0301" AttributeLenType="1">
                     <ForceOpen>false</ForceOpen>
+                    <forceEncryption>false</forceEncryption>
                     <Properties>
                         <Write>false</Write>
                         <Read>true</Read>
@@ -279,10 +283,10 @@
             <Uuid>2a4d</Uuid>
             <DefaultValue>00</DefaultValue>
             <UsePresentationFormat>0</UsePresentationFormat>
-            <UserDescription></UserDescription>
             <MaxDataLength>1</MaxDataLength>
             <AttributeLenType>2</AttributeLenType>
             <ForceOpen>false</ForceOpen>
+            <ForceEncryption>false</ForceEncryption>
             <Properties>
                 <WriteWithoutResponse>false</WriteWithoutResponse>
                 <Write>false</Write>
@@ -297,6 +301,7 @@
             <ProfileDescriptors>
                 <ProfileDescriptor Name="Report Reference" MaxDataLength="2" DefaultValue="0401" AttributeLenType="1">
                     <ForceOpen>false</ForceOpen>
+                    <forceEncryption>false</forceEncryption>
                     <Properties>
                         <Write>false</Write>
                         <Read>true</Read>
@@ -317,10 +322,10 @@
             <Uuid>2a19</Uuid>
             <DefaultValue>64</DefaultValue>
             <UsePresentationFormat>0</UsePresentationFormat>
-            <UserDescription></UserDescription>
             <MaxDataLength>1</MaxDataLength>
             <AttributeLenType>1</AttributeLenType>
             <ForceOpen>false</ForceOpen>
+            <ForceEncryption>false</ForceEncryption>
             <Properties>
                 <WriteWithoutResponse>false</WriteWithoutResponse>
                 <Write>false</Write>
@@ -339,10 +344,10 @@
             <Uuid>2a1a</Uuid>
             <DefaultValue>2F</DefaultValue>
             <UsePresentationFormat>0</UsePresentationFormat>
-            <UserDescription></UserDescription>
             <MaxDataLength>1</MaxDataLength>
             <AttributeLenType>1</AttributeLenType>
             <ForceOpen>false</ForceOpen>
+            <ForceEncryption>false</ForceEncryption>
             <Properties>
                 <WriteWithoutResponse>false</WriteWithoutResponse>
                 <Write>false</Write>
@@ -365,10 +370,10 @@
             <Uuid>2a4f</Uuid>
             <DefaultValue></DefaultValue>
             <UsePresentationFormat>0</UsePresentationFormat>
-            <UserDescription></UserDescription>
             <MaxDataLength>4</MaxDataLength>
             <AttributeLenType>1</AttributeLenType>
             <ForceOpen>false</ForceOpen>
+            <ForceEncryption>false</ForceEncryption>
             <Properties>
                 <WriteWithoutResponse>true</WriteWithoutResponse>
                 <Write>false</Write>
@@ -391,10 +396,10 @@
             <Uuid>2a50</Uuid>
             <DefaultValue>0115193D000100</DefaultValue>
             <UsePresentationFormat>0</UsePresentationFormat>
-            <UserDescription></UserDescription>
             <MaxDataLength>7</MaxDataLength>
             <AttributeLenType>1</AttributeLenType>
             <ForceOpen>false</ForceOpen>
+            <ForceEncryption>false</ForceEncryption>
             <Properties>
                 <WriteWithoutResponse>false</WriteWithoutResponse>
                 <Write>false</Write>
@@ -419,7 +424,7 @@
         <AuthenticationReq>0</AuthenticationReq>
         <IoCapabilities>0</IoCapabilities>
         <BondTimeout>600</BondTimeout>
-        <SecurityRequestDelay>0</SecurityRequestDelay>
+        <SecurityRequestDelay>5</SecurityRequestDelay>
         <MinimumKeySize>16</MinimumKeySize>
         <MaximumKeySize>16</MaximumKeySize>
         <AdvertisingDataBondedBitmap>205f</AdvertisingDataBondedBitmap>
@@ -439,6 +444,9 @@
         <MaximumConnectionInterval>12</MaximumConnectionInterval>
         <SlaveLatency>20</SlaveLatency>
         <TimeoutMultipler>250</TimeoutMultipler>
+        <AddServiceUpdateCharacteristic>false</AddServiceUpdateCharacteristic>
+        <AddServiceUpdateCharacteristicPipe>false</AddServiceUpdateCharacteristicPipe>
+        <TimingChangeDelay>5</TimingChangeDelay>
         <ServiceToAdvertise>
             <Uuid>1812</Uuid>
         </ServiceToAdvertise>
