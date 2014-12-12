@@ -14,6 +14,7 @@
             <MaxDataLength>9</MaxDataLength>
             <AttributeLenType>2</AttributeLenType>
             <ForceOpen>false</ForceOpen>
+            <ForceEncryption>false</ForceEncryption>
             <Properties>
                 <WriteWithoutResponse>false</WriteWithoutResponse>
                 <Write>false</Write>
@@ -35,6 +36,7 @@
             <MaxDataLength>20</MaxDataLength>
             <AttributeLenType>2</AttributeLenType>
             <ForceOpen>false</ForceOpen>
+            <ForceEncryption>false</ForceEncryption>
             <Properties>
                 <WriteWithoutResponse>false</WriteWithoutResponse>
                 <Write>false</Write>
@@ -56,6 +58,7 @@
             <MaxDataLength>8</MaxDataLength>
             <AttributeLenType>2</AttributeLenType>
             <ForceOpen>false</ForceOpen>
+            <ForceEncryption>false</ForceEncryption>
             <Properties>
                 <WriteWithoutResponse>false</WriteWithoutResponse>
                 <Write>false</Write>
@@ -77,6 +80,7 @@
             <MaxDataLength>4</MaxDataLength>
             <AttributeLenType>2</AttributeLenType>
             <ForceOpen>false</ForceOpen>
+            <ForceEncryption>false</ForceEncryption>
             <Properties>
                 <WriteWithoutResponse>false</WriteWithoutResponse>
                 <Write>false</Write>
@@ -98,6 +102,7 @@
             <MaxDataLength>7</MaxDataLength>
             <AttributeLenType>1</AttributeLenType>
             <ForceOpen>false</ForceOpen>
+            <ForceEncryption>false</ForceEncryption>
             <Properties>
                 <WriteWithoutResponse>false</WriteWithoutResponse>
                 <Write>false</Write>
@@ -114,15 +119,16 @@
     </Service>
     <Service Type="local" PrimaryService="true">
         <Name>Device Firmware Update BLE Service</Name>
-        <Uuid BaseUUID="000000001212EFDE1523785FEABCD123" BaseUUIDName="DFU Base UUID">1530</Uuid>
+        <Uuid BaseUUID="000000001212EFDE1523785FEABCD123" BaseUUIDName="Nordic DFU Base UUID">1530</Uuid>
         <Characteristic>
             <Name>DFU Packet</Name>
-            <Uuid BaseUUID="000000001212EFDE1523785FEABCD123" BaseUUIDName="DFU Base UUID">1532</Uuid>
+            <Uuid BaseUUID="000000001212EFDE1523785FEABCD123" BaseUUIDName="Nordic DFU Base UUID">1532</Uuid>
             <DefaultValue></DefaultValue>
             <UsePresentationFormat>0</UsePresentationFormat>
             <MaxDataLength>20</MaxDataLength>
             <AttributeLenType>2</AttributeLenType>
             <ForceOpen>false</ForceOpen>
+            <ForceEncryption>false</ForceEncryption>
             <Properties>
                 <WriteWithoutResponse>true</WriteWithoutResponse>
                 <Write>false</Write>
@@ -138,12 +144,13 @@
         </Characteristic>
         <Characteristic>
             <Name>DFU Control Point</Name>
-            <Uuid BaseUUID="000000001212EFDE1523785FEABCD123" BaseUUIDName="DFU Base UUID">1531</Uuid>
+            <Uuid BaseUUID="000000001212EFDE1523785FEABCD123" BaseUUIDName="Nordic DFU Base UUID">1531</Uuid>
             <DefaultValue></DefaultValue>
             <UsePresentationFormat>0</UsePresentationFormat>
             <MaxDataLength>20</MaxDataLength>
             <AttributeLenType>2</AttributeLenType>
             <ForceOpen>false</ForceOpen>
+            <ForceEncryption>false</ForceEncryption>
             <Properties>
                 <WriteWithoutResponse>false</WriteWithoutResponse>
                 <Write>true</Write>
@@ -160,15 +167,16 @@
     </Service>
     <Service Type="local" PrimaryService="true">
         <Name>UART over BTLE</Name>
-        <Uuid BaseUUID="6E400000B5A3F393E0A9E50E24DCCA9E" BaseUUIDName="UART Base UUID">0001</Uuid>
+        <Uuid BaseUUID="6E400000B5A3F393E0A9E50E24DCCA9E" BaseUUIDName="Custom UART">0001</Uuid>
         <Characteristic>
             <Name>UART RX</Name>
-            <Uuid BaseUUID="6E400000B5A3F393E0A9E50E24DCCA9E" BaseUUIDName="UART Base UUID">0002</Uuid>
+            <Uuid BaseUUID="6E400000B5A3F393E0A9E50E24DCCA9E" BaseUUIDName="Custom UART">0002</Uuid>
             <DefaultValue></DefaultValue>
             <UsePresentationFormat>0</UsePresentationFormat>
             <MaxDataLength>20</MaxDataLength>
             <AttributeLenType>2</AttributeLenType>
             <ForceOpen>false</ForceOpen>
+            <ForceEncryption>false</ForceEncryption>
             <Properties>
                 <WriteWithoutResponse>true</WriteWithoutResponse>
                 <Write>false</Write>
@@ -184,12 +192,13 @@
         </Characteristic>
         <Characteristic>
             <Name>UART TX</Name>
-            <Uuid BaseUUID="6E400000B5A3F393E0A9E50E24DCCA9E" BaseUUIDName="UART Base UUID">0003</Uuid>
+            <Uuid BaseUUID="6E400000B5A3F393E0A9E50E24DCCA9E" BaseUUIDName="Custom UART">0003</Uuid>
             <DefaultValue></DefaultValue>
             <UsePresentationFormat>0</UsePresentationFormat>
             <MaxDataLength>20</MaxDataLength>
             <AttributeLenType>2</AttributeLenType>
             <ForceOpen>false</ForceOpen>
+            <ForceEncryption>false</ForceEncryption>
             <Properties>
                 <WriteWithoutResponse>false</WriteWithoutResponse>
                 <Write>false</Write>
@@ -205,12 +214,13 @@
         </Characteristic>
         <Characteristic>
             <Name>UART Control Point</Name>
-            <Uuid BaseUUID="6E400000B5A3F393E0A9E50E24DCCA9E" BaseUUIDName="UART Base UUID">0004</Uuid>
+            <Uuid BaseUUID="6E400000B5A3F393E0A9E50E24DCCA9E" BaseUUIDName="Custom UART">0004</Uuid>
             <DefaultValue></DefaultValue>
             <UsePresentationFormat>0</UsePresentationFormat>
             <MaxDataLength>9</MaxDataLength>
             <AttributeLenType>2</AttributeLenType>
             <ForceOpen>false</ForceOpen>
+            <ForceEncryption>false</ForceEncryption>
             <Properties>
                 <WriteWithoutResponse>true</WriteWithoutResponse>
                 <Write>false</Write>
@@ -226,12 +236,13 @@
         </Characteristic>
         <Characteristic>
             <Name>UART Link Timing Current</Name>
-            <Uuid BaseUUID="6E400000B5A3F393E0A9E50E24DCCA9E" BaseUUIDName="UART Base UUID">0005</Uuid>
+            <Uuid BaseUUID="6E400000B5A3F393E0A9E50E24DCCA9E" BaseUUIDName="Custom UART">0005</Uuid>
             <DefaultValue>FFFFFFFFFFFF</DefaultValue>
             <UsePresentationFormat>0</UsePresentationFormat>
             <MaxDataLength>6</MaxDataLength>
             <AttributeLenType>1</AttributeLenType>
             <ForceOpen>false</ForceOpen>
+            <ForceEncryption>false</ForceEncryption>
             <Properties>
                 <WriteWithoutResponse>false</WriteWithoutResponse>
                 <Write>false</Write>
@@ -272,14 +283,15 @@
         <AdvertisingDataGeneralScanResponseBitmapCustom>1</AdvertisingDataGeneralScanResponseBitmapCustom>
         <AdvertisingDataBrodcastScanResponseBitmapCustom>0</AdvertisingDataBrodcastScanResponseBitmapCustom>
         <TxPowerLevelOffset>0</TxPowerLevelOffset>
-        <MinimumConnectionInterval>10</MinimumConnectionInterval>
-        <MaximumConnectionInterval>18</MaximumConnectionInterval>
+        <MinimumConnectionInterval>16</MinimumConnectionInterval>
+        <MaximumConnectionInterval>40</MaximumConnectionInterval>
         <SlaveLatency>0</SlaveLatency>
-        <TimeoutMultipler>10</TimeoutMultipler>
+        <TimeoutMultipler>20</TimeoutMultipler>
         <AddServiceUpdateCharacteristic>true</AddServiceUpdateCharacteristic>
         <AddServiceUpdateCharacteristicPipe>true</AddServiceUpdateCharacteristicPipe>
+        <TimingChangeDelay>5</TimingChangeDelay>
         <ServiceToAdvertise>
-            <Uuid BaseUUID="000000001212EFDE1523785FEABCD123" BaseUUIDName="DFU Base UUID">1530</Uuid>
+            <Uuid BaseUUID="6E400000B5A3F393E0A9E50E24DCCA9E" BaseUUIDName="Custom UART">0001</Uuid>
         </ServiceToAdvertise>
         <CustomAdTypes>
             <AdType index="1">
