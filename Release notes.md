@@ -1,3 +1,11 @@
+#Release notes 0.9.5:
+
+##Changes:
+* Update timing fields of aci_state on ACI_EVT_CONNECTED
+* Changed xml file for ble_uart_project_template - more relaxed connection parameters
+* Changed service request delay in xml files to prevent an iOS 8.x issue.
+
+
 #Release notes 0.9.4:
 
 ##Changes:
