@@ -1,0 +1,37 @@
+= Broadcast example with Pipe
+
+This example demonstrates the use of a Broadcast Pipe for the Health Thermometer Service. The nRF8001's temperature sensor is used to read the temperature.
+The temperature is then Broadcast using the Service Data Advertising type.
+
+== About
+The example reads the temperature of the nRF8001 using the ACI command GetTemperature, the lib\_aci\_get\_temperature() function is used to get the temperature. The temperature is returned in the ACI Command Response Event for the ACI command.
+
+The temperature is broadcast using the lib_aci_set_local_data() function. This function places the ACI SetLocalData command in the ACI command queue. When the
+ACI SetLocalData command is executed, the value of the Broadcast Pipe is updated.
+
+The ACI Broadcast command is to send ADV_NON_CONN_IND advertisements with the Service Data Advertising type. This will broadcast the Temperature as advertisement packets.
+
+The temperature is read and the Broadcast Pipe is updated every 4 seconds. A Timer on the Arduino is used to measure 4 seconds. The timer functionality is provided with a Timer library.
+
+
+== ACI Commands used and ACI Events consumed 
+
+[cols="1"]
+.ACI Commands used
+|===
+|ACI Broadcast
+|ACI SetLocalData
+|ACI GetTemperature
+|ACI Setup
+|===
+
+[cols="1"]
+.ACI Events consumed
+|===
+|ACI Device Started Event
+|ACI Command Response Event
+|===
+
+
+
+
