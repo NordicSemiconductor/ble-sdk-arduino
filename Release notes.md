@@ -1,3 +1,7 @@
+#Release notes 0.9.7:
+##Fixes:
+* Removed compile errors for Arduino 1.6.0 in all example projects
+
 #Release notes 0.9.6:
 
 ##Changes:
