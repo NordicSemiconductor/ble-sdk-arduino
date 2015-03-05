@@ -36,6 +36,7 @@ Note: Serial Event is NOT compatible with Leonardo, Micro, Esplora
 @todo: Test this to make sure it works with both the pyhon script and nRFgo studio: You can send the DTM commands from the nRFgo studio or from a Nordic Semiconductor supplied python script on a Windows PC.
  */
 #include <SPI.h>
+#include <EEPROM.h>
 #include <hal_aci_tl.h>
 #include <lib_aci.h>
 

@@ -86,7 +86,7 @@ However this removes the need to do the setup of the nRF8001 on every reset.
 #endif
 
 /* Store the setup for the nRF8001 in the flash of the AVR to save on RAM */
-static hal_aci_data_t setup_msgs[NB_SETUP_MESSAGES] PROGMEM =
+static const hal_aci_data_t setup_msgs[NB_SETUP_MESSAGES] PROGMEM =
   SETUP_MESSAGES_CONTENT;
 
 static struct aci_state_t aci_state;
@@ -150,7 +150,7 @@ void setup(void)
     aci_state.aci_setup_info.services_pipe_type_mapping = NULL;
   }
   aci_state.aci_setup_info.number_of_pipes    = NUMBER_OF_PIPES;
-  aci_state.aci_setup_info.setup_msgs         = setup_msgs;
+  aci_state.aci_setup_info.setup_msgs         = (hal_aci_data_t*) setup_msgs;
   aci_state.aci_setup_info.num_setup_msgs     = NB_SETUP_MESSAGES;
 
   /* Tell the ACI library, the MCU to nRF8001 pin connections.
