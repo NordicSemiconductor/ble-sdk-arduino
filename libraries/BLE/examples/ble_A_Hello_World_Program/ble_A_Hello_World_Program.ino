@@ -60,6 +60,7 @@ The following instructions describe the steps to be made on the Windows PC:
  *
  */
 #include <SPI.h>
+#include <EEPROM.h>
 #include <lib_aci.h>
 #include <aci_setup.h>
 #include "uart_over_ble.h"

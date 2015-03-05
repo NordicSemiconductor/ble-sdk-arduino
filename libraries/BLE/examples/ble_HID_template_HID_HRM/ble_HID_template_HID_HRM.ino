@@ -69,7 +69,7 @@ The setup() and the loop() functions are the equvivlent of
   static services_pipe_type_mapping_t * services_pipe_type_mapping = NULL;
 #endif
 
-static hal_aci_data_t setup_msgs[NB_SETUP_MESSAGES] PROGMEM = SETUP_MESSAGES_CONTENT;
+static const hal_aci_data_t setup_msgs[NB_SETUP_MESSAGES] PROGMEM = SETUP_MESSAGES_CONTENT;
 
 // aci_struct that will contain
 // total initial credits
@@ -614,7 +614,7 @@ void setup(void)
     aci_state.aci_setup_info.services_pipe_type_mapping = NULL;
   }
   aci_state.aci_setup_info.number_of_pipes    = NUMBER_OF_PIPES;
-  aci_state.aci_setup_info.setup_msgs         = setup_msgs;
+  aci_state.aci_setup_info.setup_msgs         = (hal_aci_data_t*) setup_msgs;
   aci_state.aci_setup_info.num_setup_msgs     = NB_SETUP_MESSAGES;
 
   /*

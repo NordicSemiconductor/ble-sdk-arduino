@@ -38,6 +38,7 @@ received in the ACI echo event should be the same.
 
 #define DEBUG_ENABLE CODED_TRACES
 #include <SPI.h>
+#include <EEPROM.h>
 #include <lib_aci.h>
 
 // aci_struct that will contain
