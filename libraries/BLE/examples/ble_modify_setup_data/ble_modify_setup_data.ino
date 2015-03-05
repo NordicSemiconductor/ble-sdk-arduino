@@ -137,7 +137,7 @@ Initialize the radio_ack. This is the ack received for every transmitted packet.
 
 /** crc function to re-calulate the CRC after making changes to the setup data.
 */
-uint16_t crc_16_ccitt(uint16_t crc, uint8_t * data_in, uint16_t data_len) {
+uint16_t crc_16_ccitt(uint16_t crc, hal_aci_data_t * data_in, uint16_t data_len) {
 
   uint16_t i;
 
@@ -200,7 +200,7 @@ void setup(void)
     }
     Serial.print(F("0x"));
     Serial.println(msg_len, HEX);
-    crc_seed = crc_16_ccitt(crc_seed, &setup_msgs[crc_loop].buffer[0], msg_len);
+    crc_seed = crc_16_ccitt(crc_seed, (hal_aci_data_t*) &setup_msgs[crc_loop].buffer[0], msg_len);
   }
   Serial.print(F("0x"));
   Serial.println(crc_seed, HEX);
