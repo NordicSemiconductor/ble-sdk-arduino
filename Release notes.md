@@ -1,3 +1,12 @@
+#Release notes 0.9.6:
+
+##Changes:
+* Added temperature_bcast_example
+* Moved bootloader support functions to library
+
+##Fixes:
+* Removed compile errors for Arduino 1.6.0
+
 #Release notes 0.9.5:
 
 ##Changes:
