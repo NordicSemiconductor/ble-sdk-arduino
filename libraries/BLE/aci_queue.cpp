@@ -78,6 +78,7 @@ bool aci_queue_enqueue(aci_queue_t *aci_q, hal_aci_data_t *p_data)
 {
   const uint8_t length = p_data->buffer[0];
 
+  ble_assert(length <= HAL_ACI_MAX_LENGTH);
   ble_assert(NULL != aci_q);
   ble_assert(NULL != p_data);
 
@@ -97,8 +98,9 @@ bool aci_queue_enqueue_from_isr(aci_queue_t *aci_q, hal_aci_data_t *p_data)
 {
   const uint8_t length = p_data->buffer[0];
 
-  ble_assert(NULL != aci_q);
-  ble_assert(NULL != p_data);
+  ble_assert_isr(length <= HAL_ACI_MAX_LENGTH);
+  ble_assert_isr(NULL != aci_q);
+  ble_assert_isr(NULL != p_data);
 
   if (aci_queue_is_full_from_isr(aci_q))
   {
