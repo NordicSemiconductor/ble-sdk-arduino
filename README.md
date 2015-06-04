@@ -6,7 +6,9 @@ The shield is available from seeedstudio and makershed.
 
 ##Contents
 The folder \src\ contains the ported bluetooth library (ACI library) and an example project folder \examples\.
-This folder (BLE) should be extracted into the Arduino "libraries" folder. 
+This SDK should be extracted or import into the Arduino "libraries" folder.
+
+* See [this](http://www.arduino.cc/en/Guide/Libraries) for more details about installing libraries.
 
 ####Start using the SDK
 1. Download the SDK by clicking "Download ZIP" at the bottom of the right side menu.
