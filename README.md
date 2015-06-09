@@ -1,18 +1,19 @@
 #ble-sdk-arduino
 
 Bluetooth low energy SDK for Arduino (uses the nRF8001 from [Nordic Semiconductor](https://www.nordicsemi.com/ "Go to Nordic semiconductors homepage")). 
-This has been tested using the Arduino UNO, Mega and Leaonardo boards with the nRF2740/nRF2741 module or the Bluetooth low energy shield from Redbearlab. 
+This has been tested using the Arduino UNO, Mega and Leaonardo boards with the nRF2740/nRF2741 module or the Bluetooth low energy shield from RedBearLab. 
 The shield is available from seeedstudio and makershed.
 
 ##Contents
-The BLE folder in \libraries\ contains the ported bluetooth library (ACI library) and an example project folder.
-This folder (BLE) should be extracted into the Arduino "libraries" folder. 
+The folder \src\ contains the ported bluetooth library (ACI library) and an example project folder \examples\.
+This SDK should be extracted or import into the Arduino "libraries" folder.
+
+* See [this](http://www.arduino.cc/en/Guide/Libraries) for more details about installing libraries.
 
 ####Start using the SDK
 1. Download the SDK by clicking "Download ZIP" at the bottom of the right side menu.
-2. Unzip the file.
-3. In the arduino IDE, click 'Sketch' and choose 'Import library' and 'Add Library...'
-4. From the ble-sdk-arduino folder, choose to import the \libraries\BLE folder.
+2. In the arduino IDE, click 'Sketch' and choose 'Import library' and 'Add .ZIP Library...'
+3. Choose the zip file just downloaded to import.
 
 ####When using the Bluetooth low energy shield v.1.1 or v.2012.07:
 Plug the Bluetooth low energy shield onto the Arduino. Set the "Default Handshaking" switch to ON.
