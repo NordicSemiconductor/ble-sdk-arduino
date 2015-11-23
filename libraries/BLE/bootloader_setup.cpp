@@ -38,32 +38,13 @@ void bootloader_jump_check (void)
   }
 }
 
-void bootloader_jump(void)
+void bootloader_jump(aci_state_t *state)
 {
   Serial.println("Jumping to bootloader");
   delay(100);
 
-  if ((aci_state.data_credit_available != aci_state.data_credit_total)) {
-    return;
-  }
-
-  if (!lib_aci_is_pipe_available(&aci_state,
-        PIPE_NORDIC_DEVICE_FIRMWARE_UPDATE_SERVICE_DFU_PACKET_RX)) {
-    return;
-  }
-
-  if (!lib_aci_is_pipe_available(&aci_state,
-        PIPE_NORDIC_DEVICE_FIRMWARE_UPDATE_SERVICE_DFU_CONTROL_POINT_TX)) {
-    return;
-  }
-
-  if (!lib_aci_is_pipe_available(&aci_state,
-        PIPE_NORDIC_DEVICE_FIRMWARE_UPDATE_SERVICE_DFU_CONTROL_POINT_RX_ACK_AUTO)) {
-    return;
-  }
-
   /* Wait until ready line goes low before jump */
-  while (digitalRead(aci_state.aci_pins.rdyn_pin));
+  while (digitalRead(state->aci_pins.rdyn_pin));
 
   /* Set the special bootloader key value */
   boot_key = BOOTLOADER_KEY;
@@ -85,11 +66,11 @@ void bootloader_jump(void)
  * connection advertisement interval.
  */
 bool bootloader_data_store (aci_state_t *state, uint16_t conn_timeout,
-    uint16_t adv_interval)
+    uint16_t adv_interval, uint8_t *pipes, uint8_t n_pipes)
 {
   const uint16_t eeprom_base_addr = E2END - BOOTLOADER_EEPROM_SIZE;
 
-  uint8_t readback_buff[BOOTLOADER_EEPROM_SIZE];
+  uint8_t readback_buf;
   uint16_t addr;
   uint16_t crc_eeprom;
   uint16_t crc_readback;
@@ -100,11 +81,6 @@ bool bootloader_data_store (aci_state_t *state, uint16_t conn_timeout,
   uint8_t valid_app = 1;
   uint8_t valid_ble = 1;
   uint8_t *p = (uint8_t *) &(state->aci_pins);
-  uint8_t pipes[] = {
-    PIPE_NORDIC_DEVICE_FIRMWARE_UPDATE_SERVICE_DFU_PACKET_RX,
-    PIPE_NORDIC_DEVICE_FIRMWARE_UPDATE_SERVICE_DFU_CONTROL_POINT_TX,
-    PIPE_NORDIC_DEVICE_FIRMWARE_UPDATE_SERVICE_DFU_CONTROL_POINT_RX_ACK_AUTO
-    };
   uint8_t timeout_h = (uint8_t) conn_timeout >> 8;
   uint8_t timeout_l = (uint8_t) conn_timeout >> 0;
   uint8_t interval_h = (uint8_t) adv_interval >> 8;
@@ -165,15 +141,18 @@ bool bootloader_data_store (aci_state_t *state, uint16_t conn_timeout,
      * compute a CRC16 for the data actually in EEPROM to compare with
      * the CRC already in EEPROM.
      */
-    for (addr = eeprom_base_addr; addr < eeprom_base_addr + len; addr++)
+    addr = eeprom_base_addr;
+    readback_buf = EEPROM.read(addr++);
+    crc_readback = crc_16_ccitt(0xFFFF, &readback_buf, 1);
+    for (; addr < eeprom_base_addr + len; addr++)
     {
-      readback_buff[addr] = EEPROM.read(addr);
+      readback_buf = EEPROM.read(addr);
+      crc_readback = crc_16_ccitt(crc_readback, &readback_buf, 1);
     }
 
     crc_eeprom = (uint16_t) EEPROM.read(addr++);
     crc_eeprom |= (uint16_t) (EEPROM.read(addr) << 8);
 
-    crc_readback = crc_16_ccitt(0xFFFF, readback_buff, len);
 
     return crc_eeprom == crc_readback;
   }

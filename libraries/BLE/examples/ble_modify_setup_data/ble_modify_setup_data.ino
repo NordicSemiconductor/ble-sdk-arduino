@@ -56,6 +56,7 @@ The following instructions describe the steps to be made on the Windows PC:
  *
  */
 #include <SPI.h>
+#include <EEPROM.h>
 #include <lib_aci.h>
 #include <aci_setup.h>
 
@@ -85,7 +86,7 @@ However this removes the need to do the setup of the nRF8001 on every reset
 #endif
 
 /* Store the setup for the nRF8001 in the flash of the AVR to save on RAM */
-static hal_aci_data_t setup_msgs[NB_SETUP_MESSAGES] PROGMEM = SETUP_MESSAGES_CONTENT;
+static const hal_aci_data_t setup_msgs[NB_SETUP_MESSAGES] PROGMEM = SETUP_MESSAGES_CONTENT;
 
 // aci_struct that will contain
 // total initial credits
@@ -136,7 +137,7 @@ Initialize the radio_ack. This is the ack received for every transmitted packet.
 
 /** crc function to re-calulate the CRC after making changes to the setup data.
 */
-uint16_t crc_16_ccitt(uint16_t crc, uint8_t * data_in, uint16_t data_len) {
+uint16_t crc_16_ccitt(uint16_t crc, hal_aci_data_t * data_in, uint16_t data_len) {
 
   uint16_t i;
 
@@ -199,7 +200,7 @@ void setup(void)
     }
     Serial.print(F("0x"));
     Serial.println(msg_len, HEX);
-    crc_seed = crc_16_ccitt(crc_seed, &setup_msgs[crc_loop].buffer[0], msg_len);
+    crc_seed = crc_16_ccitt(crc_seed, (hal_aci_data_t*) &setup_msgs[crc_loop].buffer[0], msg_len);
   }
   Serial.print(F("0x"));
   Serial.println(crc_seed, HEX);
@@ -217,7 +218,7 @@ void setup(void)
     aci_state.aci_setup_info.services_pipe_type_mapping = NULL;
   }
   aci_state.aci_setup_info.number_of_pipes    = NUMBER_OF_PIPES;
-  aci_state.aci_setup_info.setup_msgs         = setup_msgs;
+  aci_state.aci_setup_info.setup_msgs         = (hal_aci_data_t*) setup_msgs;
   aci_state.aci_setup_info.num_setup_msgs     = NB_SETUP_MESSAGES;
 
   /*

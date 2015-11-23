@@ -11,10 +11,10 @@
             <Uuid>2a25</Uuid>
             <DefaultValue>1587</DefaultValue>
             <UsePresentationFormat>1</UsePresentationFormat>
-            <UserDescription></UserDescription>
             <MaxDataLength>4</MaxDataLength>
             <AttributeLenType>1</AttributeLenType>
             <ForceOpen>false</ForceOpen>
+            <ForceEncryption>false</ForceEncryption>
             <Properties>
                 <WriteWithoutResponse>false</WriteWithoutResponse>
                 <Write>false</Write>
@@ -33,10 +33,10 @@
             <Uuid>2a29</Uuid>
             <DefaultValue>NordicSemiconductor</DefaultValue>
             <UsePresentationFormat>1</UsePresentationFormat>
-            <UserDescription></UserDescription>
             <MaxDataLength>20</MaxDataLength>
             <AttributeLenType>1</AttributeLenType>
             <ForceOpen>false</ForceOpen>
+            <ForceEncryption>false</ForceEncryption>
             <Properties>
                 <WriteWithoutResponse>false</WriteWithoutResponse>
                 <Write>false</Write>
@@ -55,10 +55,10 @@
             <Uuid>2a23</Uuid>
             <DefaultValue>55AA55AA55AA55AA</DefaultValue>
             <UsePresentationFormat>0</UsePresentationFormat>
-            <UserDescription></UserDescription>
             <MaxDataLength>8</MaxDataLength>
             <AttributeLenType>1</AttributeLenType>
             <ForceOpen>false</ForceOpen>
+            <ForceEncryption>false</ForceEncryption>
             <Properties>
                 <WriteWithoutResponse>false</WriteWithoutResponse>
                 <Write>false</Write>
@@ -77,10 +77,10 @@
             <Uuid>2a26</Uuid>
             <DefaultValue>01.1</DefaultValue>
             <UsePresentationFormat>1</UsePresentationFormat>
-            <UserDescription></UserDescription>
             <MaxDataLength>4</MaxDataLength>
             <AttributeLenType>1</AttributeLenType>
             <ForceOpen>false</ForceOpen>
+            <ForceEncryption>false</ForceEncryption>
             <Properties>
                 <WriteWithoutResponse>false</WriteWithoutResponse>
                 <Write>false</Write>
@@ -103,10 +103,10 @@
             <Uuid>2a37</Uuid>
             <DefaultValue></DefaultValue>
             <UsePresentationFormat>0</UsePresentationFormat>
-            <UserDescription></UserDescription>
             <MaxDataLength>19</MaxDataLength>
             <AttributeLenType>2</AttributeLenType>
             <ForceOpen>false</ForceOpen>
+            <ForceEncryption>false</ForceEncryption>
             <Properties>
                 <WriteWithoutResponse>false</WriteWithoutResponse>
                 <Write>false</Write>
@@ -125,10 +125,10 @@
             <Uuid>2a38</Uuid>
             <DefaultValue>03</DefaultValue>
             <UsePresentationFormat>0</UsePresentationFormat>
-            <UserDescription></UserDescription>
             <MaxDataLength>1</MaxDataLength>
             <AttributeLenType>1</AttributeLenType>
             <ForceOpen>false</ForceOpen>
+            <ForceEncryption>false</ForceEncryption>
             <Properties>
                 <WriteWithoutResponse>false</WriteWithoutResponse>
                 <Write>false</Write>
@@ -147,10 +147,10 @@
             <Uuid>2a39</Uuid>
             <DefaultValue></DefaultValue>
             <UsePresentationFormat>0</UsePresentationFormat>
-            <UserDescription></UserDescription>
             <MaxDataLength>1</MaxDataLength>
             <AttributeLenType>1</AttributeLenType>
             <ForceOpen>false</ForceOpen>
+            <ForceEncryption>false</ForceEncryption>
             <Properties>
                 <WriteWithoutResponse>false</WriteWithoutResponse>
                 <Write>true</Write>
@@ -173,10 +173,10 @@
             <Uuid>2a19</Uuid>
             <DefaultValue>64</DefaultValue>
             <UsePresentationFormat>0</UsePresentationFormat>
-            <UserDescription></UserDescription>
             <MaxDataLength>1</MaxDataLength>
             <AttributeLenType>1</AttributeLenType>
             <ForceOpen>false</ForceOpen>
+            <ForceEncryption>false</ForceEncryption>
             <Properties>
                 <WriteWithoutResponse>false</WriteWithoutResponse>
                 <Write>false</Write>
@@ -201,7 +201,7 @@
         <AuthenticationReq>0</AuthenticationReq>
         <IoCapabilities>0</IoCapabilities>
         <BondTimeout>0</BondTimeout>
-        <SecurityRequestDelay>0</SecurityRequestDelay>
+        <SecurityRequestDelay>5</SecurityRequestDelay>
         <MinimumKeySize>7</MinimumKeySize>
         <MaximumKeySize>16</MaximumKeySize>
         <AdvertisingDataBondedBitmap>1f</AdvertisingDataBondedBitmap>
@@ -221,6 +221,9 @@
         <MaximumConnectionInterval>800</MaximumConnectionInterval>
         <SlaveLatency>0</SlaveLatency>
         <TimeoutMultipler>502</TimeoutMultipler>
+        <AddServiceUpdateCharacteristic>false</AddServiceUpdateCharacteristic>
+        <AddServiceUpdateCharacteristicPipe>false</AddServiceUpdateCharacteristicPipe>
+        <TimingChangeDelay>5</TimingChangeDelay>
         <ServiceToAdvertise>
             <Uuid>180d</Uuid>
         </ServiceToAdvertise>

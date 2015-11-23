@@ -14,6 +14,7 @@
             <MaxDataLength>8</MaxDataLength>
             <AttributeLenType>2</AttributeLenType>
             <ForceOpen>false</ForceOpen>
+            <ForceEncryption>false</ForceEncryption>
             <Properties>
                 <WriteWithoutResponse>false</WriteWithoutResponse>
                 <Write>false</Write>
@@ -28,6 +29,7 @@
             <ProfileDescriptors>
                 <ProfileDescriptor Name="Report Reference" MaxDataLength="2" DefaultValue="0001" AttributeLenType="1">
                     <ForceOpen>false</ForceOpen>
+                    <forceEncryption>false</forceEncryption>
                     <Properties>
                         <Write>false</Write>
                         <Read>true</Read>
@@ -47,6 +49,7 @@
             <MaxDataLength>4</MaxDataLength>
             <AttributeLenType>1</AttributeLenType>
             <ForceOpen>false</ForceOpen>
+            <ForceEncryption>false</ForceEncryption>
             <Properties>
                 <WriteWithoutResponse>false</WriteWithoutResponse>
                 <Write>false</Write>
@@ -68,6 +71,7 @@
             <MaxDataLength>1</MaxDataLength>
             <AttributeLenType>1</AttributeLenType>
             <ForceOpen>false</ForceOpen>
+            <ForceEncryption>false</ForceEncryption>
             <Properties>
                 <WriteWithoutResponse>true</WriteWithoutResponse>
                 <Write>false</Write>
@@ -89,6 +93,7 @@
             <MaxDataLength>1</MaxDataLength>
             <AttributeLenType>1</AttributeLenType>
             <ForceOpen>false</ForceOpen>
+            <ForceEncryption>false</ForceEncryption>
             <Properties>
                 <WriteWithoutResponse>true</WriteWithoutResponse>
                 <Write>false</Write>
@@ -110,6 +115,7 @@
             <MaxDataLength>76</MaxDataLength>
             <AttributeLenType>1</AttributeLenType>
             <ForceOpen>false</ForceOpen>
+            <ForceEncryption>false</ForceEncryption>
             <Properties>
                 <WriteWithoutResponse>false</WriteWithoutResponse>
                 <Write>false</Write>
@@ -131,6 +137,7 @@
             <MaxDataLength>1</MaxDataLength>
             <AttributeLenType>2</AttributeLenType>
             <ForceOpen>false</ForceOpen>
+            <ForceEncryption>false</ForceEncryption>
             <Properties>
                 <WriteWithoutResponse>true</WriteWithoutResponse>
                 <Write>true</Write>
@@ -145,6 +152,7 @@
             <ProfileDescriptors>
                 <ProfileDescriptor Name="Report Reference" MaxDataLength="2" DefaultValue="0002" AttributeLenType="1">
                     <ForceOpen>false</ForceOpen>
+                    <forceEncryption>false</forceEncryption>
                     <Properties>
                         <Write>false</Write>
                         <Read>true</Read>
@@ -164,6 +172,7 @@
             <MaxDataLength>8</MaxDataLength>
             <AttributeLenType>1</AttributeLenType>
             <ForceOpen>false</ForceOpen>
+            <ForceEncryption>false</ForceEncryption>
             <Properties>
                 <WriteWithoutResponse>false</WriteWithoutResponse>
                 <Write>false</Write>
@@ -185,6 +194,7 @@
             <MaxDataLength>1</MaxDataLength>
             <AttributeLenType>1</AttributeLenType>
             <ForceOpen>false</ForceOpen>
+            <ForceEncryption>false</ForceEncryption>
             <Properties>
                 <WriteWithoutResponse>true</WriteWithoutResponse>
                 <Write>true</Write>
@@ -210,6 +220,7 @@
             <MaxDataLength>1</MaxDataLength>
             <AttributeLenType>1</AttributeLenType>
             <ForceOpen>false</ForceOpen>
+            <ForceEncryption>false</ForceEncryption>
             <Properties>
                 <WriteWithoutResponse>false</WriteWithoutResponse>
                 <Write>false</Write>
@@ -231,6 +242,7 @@
             <MaxDataLength>1</MaxDataLength>
             <AttributeLenType>1</AttributeLenType>
             <ForceOpen>false</ForceOpen>
+            <ForceEncryption>false</ForceEncryption>
             <Properties>
                 <WriteWithoutResponse>false</WriteWithoutResponse>
                 <Write>false</Write>
@@ -256,6 +268,7 @@
             <MaxDataLength>4</MaxDataLength>
             <AttributeLenType>1</AttributeLenType>
             <ForceOpen>false</ForceOpen>
+            <ForceEncryption>false</ForceEncryption>
             <Properties>
                 <WriteWithoutResponse>true</WriteWithoutResponse>
                 <Write>false</Write>
@@ -277,6 +290,7 @@
             <MaxDataLength>1</MaxDataLength>
             <AttributeLenType>2</AttributeLenType>
             <ForceOpen>false</ForceOpen>
+            <ForceEncryption>false</ForceEncryption>
             <Properties>
                 <WriteWithoutResponse>false</WriteWithoutResponse>
                 <Write>false</Write>
@@ -302,6 +316,7 @@
             <MaxDataLength>7</MaxDataLength>
             <AttributeLenType>1</AttributeLenType>
             <ForceOpen>false</ForceOpen>
+            <ForceEncryption>false</ForceEncryption>
             <Properties>
                 <WriteWithoutResponse>false</WriteWithoutResponse>
                 <Write>false</Write>
@@ -323,6 +338,7 @@
             <MaxDataLength>9</MaxDataLength>
             <AttributeLenType>2</AttributeLenType>
             <ForceOpen>false</ForceOpen>
+            <ForceEncryption>false</ForceEncryption>
             <Properties>
                 <WriteWithoutResponse>false</WriteWithoutResponse>
                 <Write>false</Write>
@@ -347,7 +363,7 @@
         <AuthenticationReq>0</AuthenticationReq>
         <IoCapabilities>0</IoCapabilities>
         <BondTimeout>600</BondTimeout>
-        <SecurityRequestDelay>0</SecurityRequestDelay>
+        <SecurityRequestDelay>5</SecurityRequestDelay>
         <MinimumKeySize>16</MinimumKeySize>
         <MaximumKeySize>16</MaximumKeySize>
         <AdvertisingDataBondedBitmap>201f</AdvertisingDataBondedBitmap>
@@ -369,6 +385,7 @@
         <TimeoutMultipler>300</TimeoutMultipler>
         <AddServiceUpdateCharacteristic>false</AddServiceUpdateCharacteristic>
         <AddServiceUpdateCharacteristicPipe>false</AddServiceUpdateCharacteristicPipe>
+        <TimingChangeDelay>5</TimingChangeDelay>
         <ServiceToAdvertise>
             <Uuid>1812</Uuid>
         </ServiceToAdvertise>

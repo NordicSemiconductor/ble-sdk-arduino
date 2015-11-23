@@ -41,6 +41,7 @@
  * The format used is IEEE 11073-20601 FLOAT
  */
 #include <SPI.h>
+#include <EEPROM.h>
 #include <avr/sleep.h>
 #include <avr/power.h>
 
@@ -61,7 +62,7 @@
 
 #define TEMPERATURE_NUM_SAMPLES  10
 
-static hal_aci_data_t setup_msgs[NB_SETUP_MESSAGES] PROGMEM = SETUP_MESSAGES_CONTENT;
+static const hal_aci_data_t setup_msgs[NB_SETUP_MESSAGES] PROGMEM = SETUP_MESSAGES_CONTENT;
 // aci_struct that will contain
 // total initial credits
 // current credit
@@ -362,7 +363,7 @@ void setup(void)
     aci_state.aci_setup_info.services_pipe_type_mapping = NULL;
   }
   aci_state.aci_setup_info.number_of_pipes    = NUMBER_OF_PIPES;
-  aci_state.aci_setup_info.setup_msgs         = setup_msgs;
+  aci_state.aci_setup_info.setup_msgs         = (hal_aci_data_t*) setup_msgs;
   aci_state.aci_setup_info.num_setup_msgs     = NB_SETUP_MESSAGES;
 
   /*

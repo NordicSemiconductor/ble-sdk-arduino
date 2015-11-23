@@ -66,6 +66,7 @@ The following instructions describe the steps to be made on the Windows PC:
 #include <aci_setup.h>
 #include "uart_over_ble.h"
 #include <avr/io.h>
+#include <bootloader_setup.h>
 
 /**
 Put the nRF8001 setup in the RAM of the nRF8001.
@@ -86,7 +87,7 @@ However this removes the need to do the setup of the nRF8001 on every reset.
 #endif
 
 /* Store the setup for the nRF8001 in the flash of the AVR to save on RAM */
-static hal_aci_data_t setup_msgs[NB_SETUP_MESSAGES] PROGMEM =
+static const hal_aci_data_t setup_msgs[NB_SETUP_MESSAGES] PROGMEM =
   SETUP_MESSAGES_CONTENT;
 
 static struct aci_state_t aci_state;
@@ -150,7 +151,7 @@ void setup(void)
     aci_state.aci_setup_info.services_pipe_type_mapping = NULL;
   }
   aci_state.aci_setup_info.number_of_pipes    = NUMBER_OF_PIPES;
-  aci_state.aci_setup_info.setup_msgs         = setup_msgs;
+  aci_state.aci_setup_info.setup_msgs         = (hal_aci_data_t*) setup_msgs;
   aci_state.aci_setup_info.num_setup_msgs     = NB_SETUP_MESSAGES;
 
   /* Tell the ACI library, the MCU to nRF8001 pin connections.
@@ -269,6 +270,11 @@ void aci_loop()
 {
   static bool setup_required = false;
   static bool bootloader_jump_required = false;
+  static uint8_t pipes[] = {
+    PIPE_NORDIC_DEVICE_FIRMWARE_UPDATE_SERVICE_DFU_PACKET_RX,
+    PIPE_NORDIC_DEVICE_FIRMWARE_UPDATE_SERVICE_DFU_CONTROL_POINT_TX,
+    PIPE_NORDIC_DEVICE_FIRMWARE_UPDATE_SERVICE_DFU_CONTROL_POINT_RX_ACK_AUTO
+  };
 
   // We enter the if statement only when there is a ACI event available to be processed
   if (lib_aci_event_get(&aci_state, &aci_data))
@@ -309,7 +315,7 @@ void aci_loop()
                 Serial.println(F("Advertising started"));
               }
 
-              if (!bootloader_data_store(&aci_state, 180, 0x0050))
+              if (!bootloader_data_store(&aci_state, 180, 0x0050, pipes, sizeof(pipes)))
               {
                 Serial.println(F("Unable to write connection data to EEPROM. Bootloading over BLE will not work"));
               }
@@ -484,11 +490,19 @@ void aci_loop()
   }
 
   /* If the bootloader_jump_required flag has been set, we attempt to jump to bootloader.
-   * The bootloader_jump() function will do a series of checks before jumping.
+   * We do a series of checks before jumping.
    */
-  if (bootloader_jump_required)
+  if (bootloader_jump_required                                            &&
+      aci_state.data_credit_available == aci_state.data_credit_total      &&
+      lib_aci_is_pipe_available(&aci_state,
+        PIPE_NORDIC_DEVICE_FIRMWARE_UPDATE_SERVICE_DFU_PACKET_RX)         &&
+      lib_aci_is_pipe_available(&aci_state,
+        PIPE_NORDIC_DEVICE_FIRMWARE_UPDATE_SERVICE_DFU_CONTROL_POINT_TX)  &&
+      lib_aci_is_pipe_available(&aci_state,
+        PIPE_NORDIC_DEVICE_FIRMWARE_UPDATE_SERVICE_DFU_CONTROL_POINT_RX_ACK_AUTO))
   {
-    bootloader_jump();
+    lib_aci_connect(180/* in seconds */, 0x0020 /* advertising interval 20ms*/);
+    bootloader_jump(&aci_state);
   }
 }
 

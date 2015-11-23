@@ -33,6 +33,7 @@ This project is to put the nRF8001 in test mode and enable the nRF8001 to accept
 You can send the DTM commands from the nRFgo studio or from a Nordic Semiconductor supplied python script on a Windows PC.
  */
 #include <SPI.h>
+#include <EEPROM.h>
 #include <lib_aci.h>
 
 // aci_struct that will contain

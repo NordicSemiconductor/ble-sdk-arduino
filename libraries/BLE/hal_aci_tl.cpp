@@ -27,7 +27,8 @@
 #include "hal_platform.h"
 #include "hal_aci_tl.h"
 #include "aci_queue.h"
-#if !defined(__SAM3X8E__)
+
+#if ( !defined(__SAM3X8E__) && !defined(__PIC32MX__) )
 #include <avr/sleep.h>
 #endif
 

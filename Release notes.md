@@ -1,3 +1,32 @@
+#Release notes 0.9.7:
+##Fixes:
+* Removed compile errors for Arduino 1.6.0 in all example projects
+
+#Release notes 0.9.6:
+
+##Changes:
+* Added temperature_bcast_example
+* Moved bootloader support functions to library
+
+##Fixes:
+* Removed compile errors for Arduino 1.6.0
+
+#Release notes 0.9.5:
+
+##Changes:
+* Update timing fields of aci_state on ACI_EVT_CONNECTED
+* Changed xml file for ble_uart_project_template - more relaxed connection parameters
+* Changed service request delay in xml files to prevent an iOS 8.x issue.
+
+
+#Release notes 0.9.4:
+
+##Changes:
+* Added limited ANCS template
+* Removed sleep.h for !defined(__SAM3X8E__) && !defined(__PIC32MX__)
+* Attempted to reduce RAM usage
+
+
 #Release notes 0.9.3:
 
 ##Changes:

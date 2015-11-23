@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE AttributeServer>
+<Profile Version="1.3">
+    <SetupId>0</SetupId>
+    <Device>nRF8001_Dx</Device>
+    <Service Type="local" PrimaryService="true">
+        <Name>Health Thermometer</Name>
+        <Uuid>1809</Uuid>
+        <Characteristic>
+            <Name>Temperature Measurement</Name>
+            <Uuid>2a1c</Uuid>
+            <DefaultValue></DefaultValue>
+            <UsePresentationFormat>0</UsePresentationFormat>
+            <MaxDataLength>13</MaxDataLength>
+            <AttributeLenType>2</AttributeLenType>
+            <ForceOpen>false</ForceOpen>
+            <ForceEncryption>false</ForceEncryption>
+            <Properties>
+                <WriteWithoutResponse>false</WriteWithoutResponse>
+                <Write>false</Write>
+                <Notify>false</Notify>
+                <Indicate>false</Indicate>
+                <Broadcast>true</Broadcast>
+            </Properties>
+            <SetPipe>true</SetPipe>
+            <AckIsAuto>true</AckIsAuto>
+            <PresentationFormatDescriptor Value="0000" Exponent="0" Format="1" NameSpace="01" Unit="0000"/>
+            <PeriodForReadingThisCharacteristic>0</PeriodForReadingThisCharacteristic>
+            <PeriodForProperties/>
+        </Characteristic>
+    </Service>
+    <Gapsettings>
+        <Name>Health_thermometer</Name>
+        <DeviceNameWriteLength>0</DeviceNameWriteLength>
+        <LocalPipeOnDeviceName>false</LocalPipeOnDeviceName>
+        <DeviceNameShortLength>5</DeviceNameShortLength>
+        <Apperance>0000</Apperance>
+        <SecurityLevel>0</SecurityLevel>
+        <AuthenticationReq>0</AuthenticationReq>
+        <IoCapabilities>0</IoCapabilities>
+        <BondTimeout>600</BondTimeout>
+        <SecurityRequestDelay>5</SecurityRequestDelay>
+        <MinimumKeySize>7</MinimumKeySize>
+        <MaximumKeySize>16</MaximumKeySize>
+        <AdvertisingDataBondedBitmap>1a</AdvertisingDataBondedBitmap>
+        <AdvertisingDataGeneralBitmap>0</AdvertisingDataGeneralBitmap>
+        <AdvertisingDataBrodcastBitmap>1000</AdvertisingDataBrodcastBitmap>
+        <AdvertisingDataBondedScanResponseBitmap>0</AdvertisingDataBondedScanResponseBitmap>
+        <AdvertisingDataGeneralScanResponseBitmap>0</AdvertisingDataGeneralScanResponseBitmap>
+        <AdvertisingDataBrodcastScanResponseBitmap>10</AdvertisingDataBrodcastScanResponseBitmap>
+        <AdvertisingDataBondedBitmapCustom>0</AdvertisingDataBondedBitmapCustom>
+        <AdvertisingDataGeneralBitmapCustom>0</AdvertisingDataGeneralBitmapCustom>
+        <AdvertisingDataBrodcastBitmapCustom>0</AdvertisingDataBrodcastBitmapCustom>
+        <AdvertisingDataBondedScanResponseBitmapCustom>0</AdvertisingDataBondedScanResponseBitmapCustom>
+        <AdvertisingDataGeneralScanResponseBitmapCustom>0</AdvertisingDataGeneralScanResponseBitmapCustom>
+        <AdvertisingDataBrodcastScanResponseBitmapCustom>0</AdvertisingDataBrodcastScanResponseBitmapCustom>
+        <TxPowerLevelOffset>0</TxPowerLevelOffset>
+        <MinimumConnectionInterval>65535</MinimumConnectionInterval>
+        <MaximumConnectionInterval>65535</MaximumConnectionInterval>
+        <SlaveLatency>0</SlaveLatency>
+        <TimeoutMultipler>65535</TimeoutMultipler>
+        <AddServiceUpdateCharacteristic>false</AddServiceUpdateCharacteristic>
+        <AddServiceUpdateCharacteristicPipe>false</AddServiceUpdateCharacteristicPipe>
+        <TimingChangeDelay>5</TimingChangeDelay>
+        <CustomAdTypes>
+            <AdType index="1">
+                <Type>0</Type>
+                <Value>00</Value>
+            </AdType>
+            <AdType index="2">
+                <Type>0</Type>
+                <Value>00</Value>
+            </AdType>
+        </CustomAdTypes>
+    </Gapsettings>
+    <Hardwaresettings>
+        <Clocksource>1</Clocksource>
+        <ClockAccuracy>1</ClockAccuracy>
+        <InitialTxPower>3</InitialTxPower>
+        <HfClkSource>0</HfClkSource>
+        <DcDcConverter>0</DcDcConverter>
+        <ActiveSignalModeIndex>0</ActiveSignalModeIndex>
+        <ActiveSignalToTickDistance>0</ActiveSignalToTickDistance>
+        <DynamicWindowLimitingEnabled>false</DynamicWindowLimitingEnabled>
+    </Hardwaresettings>
+    <CurrentInput>
+        <BatteryCharge>220</BatteryCharge>
+        <Master32KhzClockAccuracy>10</Master32KhzClockAccuracy>
+        <ConnectionInterval>1000</ConnectionInterval>
+        <PercentOfTimeSleeping>10</PercentOfTimeSleeping>
+        <PercentOfTimeAdvertising>11.1111</PercentOfTimeAdvertising>
+        <AdvertisingInterval>1280</AdvertisingInterval>
+    </CurrentInput>
+</Profile>

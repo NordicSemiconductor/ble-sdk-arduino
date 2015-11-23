@@ -1,3 +1,5 @@
+#include <lib_aci.h>
+
 /* This value should be set to the starting address of the bootloader on your
  * device. On Arduino platforms using the ATMega328(p), 0x7000 is correct.
  */
@@ -16,7 +18,7 @@
  * Returns true if the write was successful, or false
  */
 bool bootloader_data_store (aci_state_t *state, uint16_t conn_timeout,
-    uint16_t adv_interval);
+    uint16_t adv_interval, uint8_t *pipes, uint8_t n_pipes);
 
 /* bootloader_jump_check is placed in the .init3 section, which means it runs
  * before ordinary C code on reset.
@@ -26,4 +28,4 @@ bool bootloader_data_store (aci_state_t *state, uint16_t conn_timeout,
 void bootloader_jump_check(void) __attribute__ ((used, naked, section (".init3")));
 
 /* Perform the jump to bootloader. Returns only if the jump wasn't possible. */
-void bootloader_jump(void);
+void bootloader_jump(aci_state_t *state);
