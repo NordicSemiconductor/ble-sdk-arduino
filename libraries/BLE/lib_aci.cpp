@@ -103,7 +103,11 @@ void lib_aci_board_init(aci_state_t *aci_stat)
 	hal_aci_evt_t *aci_data = NULL;
 	aci_data = (hal_aci_evt_t *)&msg_to_send;
 					
-	if (REDBEARLAB_SHIELD_V1_1 == aci_stat->aci_pins.board_name)
+	if (REDBEARLAB_SHIELD_V1_1 == aci_stat->aci_pins.board_name
+		|| REDBEARLAB_SHIELD_V2012_07 == aci_stat->aci_pins.board_name
+		|| REDBEARLAB_SHIELD_V2 == aci_stat->aci_pins.board_name
+		|| REDBEARLAB_BLEND == aci_stat->aci_pins.board_name
+		|| REDBEARLAB_BLEND_MICRO == aci_stat->aci_pins.board_name)
 	{
 	  /*
 	  The Bluetooth low energy Arduino shield v1.1 requires about 100ms to reset.
