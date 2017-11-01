@@ -32,7 +32,7 @@
 ##Changes:
 * Added Device Firmware Update support for Arduino UNO(ATmega328p)
  - New ble-optiboot has been released to bootload over BLE
- - https://github.com/NordicSemiconductor/ble-optiboot
+ - https://github.com/NordicPlayground/ble-optiboot
  - This new bootloader supports both UART and BLE interfaces and is a drop-in replacement
    for the Arduino bootloader.
 * Added example projects for DFU for Arduino with the UART template and the Proximity template.
